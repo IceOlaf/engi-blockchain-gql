@@ -338,7 +338,7 @@ public class ScaleStreamTests
         Assert.Equal(new ushort[]
         {
             4, 8, 15, 16, 23, 42
-        }, stream.ReadListOfUInt16());
+        }, stream.ReadList(stream => stream.ReadUInt16()));
     }
 
     [Theory]

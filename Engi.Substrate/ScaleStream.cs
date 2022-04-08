@@ -249,30 +249,22 @@ public class ScaleStream : Stream
         return Encoding.UTF8.GetString(data);
     }
 
-    public ushort[] ReadListOfUInt16()
+    public T[] ReadList<T>(Func<ScaleStream, T> func)
     {
         int length = (int) ReadCompactInteger();
         
-        ushort[] data = new ushort[length];
-        byte[] buffer = new byte[2];
+        T[] data = new T[length];
         
         for (int i = 0; i < length; ++i)
         {
-            if (inner.Read(buffer, 0, 2) < 2)
-            {
-                throw new InvalidDataException();
-            }
-
-            data[i] = BitConverter.ToUInt16(buffer, 0);
+            data[i] = func(this);
         }
 
         return data;
     }
 
-    public object? Read<T>()
+    public object? Read(Type t)
     {
-        Type t = typeof(T);
-
         if (t.IsPrimitive)
         {
             return ReadPrimitive(Type.GetTypeCode(t));
@@ -293,13 +285,35 @@ public class ScaleStream : Stream
             return ReadCompactBigInteger();
         }
 
-        if (t == typeof(List<ushort>))
+        if (t.IsGenericType)
         {
-            return ReadListOfUInt16();
+            var genericTypeDefinition = t.GetGenericTypeDefinition();
+
+            if (genericTypeDefinition != typeof(List<>))
+            {
+                throw new NotSupportedException("Only List<T> is supported right now");
+            }
+
+            var innerType = t.GetGenericArguments().First();
+
+            if (IsValid(innerType))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot deserialize type={innerType}");
+            }
+
+            return ReadList(stream => stream.Read(innerType));
         }
 
         throw new NotSupportedException(
-            $"Reading of {typeof(T).FullName} is not supported");
+            $"Reading of {t.FullName} is not supported");
+    }
+
+    public object? Read<T>()
+    {
+        Type t = typeof(T);
+
+        return Read(t);
     }
 
     public (object result, int index) ReadUnion<T1, T2>()
@@ -343,5 +357,13 @@ public class ScaleStream : Stream
             TypeCode.String => ReadString(),
             _ => throw new NotSupportedException($"TypeCode {typeCode} is not supported")
         };
+    }
+
+    private bool IsValid(Type t)
+    {
+        return t.IsPrimitive
+               || t.IsEnum
+               || t == typeof(bool?)
+               || t == typeof(BigInteger);
     }
 }

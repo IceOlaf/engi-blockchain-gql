@@ -55,12 +55,12 @@ public class ScaleStream : Stream
         throw new NotSupportedException();
     }
 
-    [Obsolete($"Use {nameof(RequireByte)} because the semantics are different.")]
-    public override int ReadByte() => throw new NotSupportedException();
+    public override int ReadByte() => RequireByte();
 
     public bool? ReadOptionalBool()
     {
-        return inner.ReadByte() switch
+        int value = inner.ReadByte();
+        return value switch
         {
             2 => true,
             1 => false,
@@ -71,7 +71,8 @@ public class ScaleStream : Stream
 
     public bool ReadBool()
     {
-        return inner.ReadByte() switch
+        int value = inner.ReadByte();
+        return value switch
         {
             0 => false,
             1 => true,

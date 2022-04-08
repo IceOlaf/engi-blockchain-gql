@@ -7,7 +7,7 @@ public class ScaleStream : Stream
 {
     private readonly MemoryStream inner;
 
-    public ScaleStream(byte[]? data)
+    public ScaleStream(byte[] data)
     {
         if (data == null || data.Length == 0)
         {

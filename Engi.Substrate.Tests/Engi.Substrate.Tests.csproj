@@ -28,10 +28,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TestData\metadata_v11.hex">
+    <None Update="TestData\metadata_v14.hex">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="TestData\metadata_v11.json">
+    <None Update="TestData\metadata_v14.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\metadata_v14_types.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

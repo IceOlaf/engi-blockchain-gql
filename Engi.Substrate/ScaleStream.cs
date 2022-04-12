@@ -76,7 +76,7 @@ public class ScaleStream : Stream
         {
             0 => false,
             1 => true,
-            _ => throw new InvalidDataException("Invalid bool? value")
+            _ => throw new InvalidDataException("Invalid bool value")
         };
     }
 
@@ -235,9 +235,15 @@ public class ScaleStream : Stream
         return new BigInteger(data);
     }
 
-    public string ReadString()
+    public string? ReadString(bool returnNullIfEmpty = true)
     {
         int length = (int) ReadCompactInteger();
+
+        if (length == 0 && returnNullIfEmpty)
+        {
+            return null;
+        }
+
         byte[] data = new byte[length];
         
         int read = inner.Read(data, 0, length);
@@ -250,9 +256,27 @@ public class ScaleStream : Stream
         return Encoding.UTF8.GetString(data);
     }
 
+    public byte[] ReadByteArray()
+    {
+        int length = (int)ReadCompactInteger();
+        byte[] data = new byte[length];
+        
+        if (inner.Read(data, 0, length) < length)
+        {
+            throw new InvalidDataException();
+        }
+
+        return data;
+    }
+
     public T[] ReadList<T>(Func<ScaleStream, T> func)
     {
         int length = (int) ReadCompactInteger();
+
+        if (length == 0)
+        {
+            return Array.Empty<T>();
+        }
         
         T[] data = new T[length];
         
@@ -310,11 +334,16 @@ public class ScaleStream : Stream
             $"Reading of {t.FullName} is not supported");
     }
 
-    public object? Read<T>()
+    public T? Read<T>()
     {
         Type t = typeof(T);
 
-        return Read(t);
+        return (T?) Read(t);
+    }
+
+    public T? ReadOptional<T>(Func<ScaleStream, T> func)
+    {
+        return ReadBool() ? func(this) : default;
     }
 
     public (object result, int index) ReadUnion<T1, T2>()
@@ -345,7 +374,7 @@ public class ScaleStream : Stream
         return b;
     }
 
-    private object ReadPrimitive(TypeCode typeCode)
+    private object? ReadPrimitive(TypeCode typeCode)
     {
         return typeCode switch
         {

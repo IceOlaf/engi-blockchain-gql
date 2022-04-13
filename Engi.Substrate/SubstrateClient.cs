@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Engi.Substrate;
 
-class SubstrateClient
+public class SubstrateClient
 {
     private static long IdCounter = 0;
 
@@ -14,7 +14,7 @@ class SubstrateClient
         this.http = http;
     }
 
-    private async Task RpcAsync(string method)
+    public async Task<JsonElement> RpcAsync(string method)
     {
         long id = Interlocked.Increment(ref IdCounter);
 
@@ -33,11 +33,18 @@ class SubstrateClient
 
         var result = json.GetProperty("result");
 
-        if (result.ValueKind == JsonValueKind.String)
+        return result;
+    }
+
+    public async Task<TResult> RpcAsync<TResult>(string method)
+    {
+        var result = await RpcAsync(method);
+
+        if (typeof(TResult) == typeof(string))
         {
-            string s = result.GetString()!;
-
-
+            return (TResult) (object) result.GetString()!;
         }
+
+        throw new NotImplementedException(typeof(TResult).Name);
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate;
 
-class SubstrateClientOptions
+public class SubstrateClientOptions
 {
     public string? Url { get; set; }
 }

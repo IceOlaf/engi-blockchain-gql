@@ -3,8 +3,8 @@
 public class PalletConstantMetadata
 {
     public string? Name { get; set; }
-    public TType Type { get; set; }
-    public byte[] Value { get; set; }
+    public TType? Type { get; set; }
+    public byte[]? Value { get; set; }
     public string?[]? Docs { get; set; }
 
     public static PalletConstantMetadata Parse(ScaleStream stream)

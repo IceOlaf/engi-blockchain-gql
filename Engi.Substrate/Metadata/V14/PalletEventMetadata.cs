@@ -2,7 +2,7 @@
 
 public class PalletEventMetadata
 {
-    public TType Type { get; set; }
+    public TType? Type { get; set; }
 
     public static PalletEventMetadata Parse(ScaleStream stream)
     {

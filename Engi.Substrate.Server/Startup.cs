@@ -1,5 +1,4 @@
-﻿using Engi.Substrate.Server.Schemas;
-using GraphQL;
+﻿using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Server;
 using GraphQL.Server.Transports.AspNetCore;
@@ -25,7 +24,7 @@ namespace Engi.Substrate.Server
             GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
                 .AddSubscriptionDocumentExecuter()
                 .AddServer(true)
-                .AddSchema<EngiHealthSchema>()
+                .AddSchema<EngiRootSchema>()
                 .ConfigureExecution(options =>
                 {
                     options.EnableMetrics = Environment.IsDevelopment();
@@ -35,7 +34,7 @@ namespace Engi.Substrate.Server
                 .AddSystemTextJson()
                 .Configure<ErrorInfoProviderOptions>(opt => opt.ExposeExceptionStackTrace = Environment.IsDevelopment())
                 .AddWebSockets()
-                .AddGraphTypes(typeof(EngiHealthSchema).Assembly);
+                .AddGraphTypes(typeof(EngiRootSchema).Assembly);
 
             services.AddHttpClient();
             services.AddHttpClient<SubstrateClient>(http =>
@@ -60,8 +59,8 @@ namespace Engi.Substrate.Server
 
             app.UseWebSockets();
 
-            app.UseGraphQLWebSockets<EngiHealthSchema>();
-            app.UseGraphQL<EngiHealthSchema, GraphQLHttpMiddleware<EngiHealthSchema>>();
+            app.UseGraphQLWebSockets<EngiRootSchema>();
+            app.UseGraphQL<EngiRootSchema, GraphQLHttpMiddleware<EngiRootSchema>>();
 
             app.UseGraphQLPlayground();
 

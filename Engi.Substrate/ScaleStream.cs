@@ -17,6 +17,18 @@ public class ScaleStream : Stream
         inner = new MemoryStream(data, false);
     }
 
+    public ScaleStream(string hexString)
+    {
+        if (!hexString.StartsWith("0x"))
+        {
+            throw new ArgumentException("Hex string is assumed to start with 0x", nameof(hexString));
+        }
+
+        var data = Hex.GetBytes(hexString.AsSpan(2));
+
+        inner = new MemoryStream(data, false);
+    }
+
     public override bool CanRead => true;
 
     public override bool CanSeek => false;
@@ -55,7 +67,17 @@ public class ScaleStream : Stream
         throw new NotSupportedException();
     }
 
-    public override int ReadByte() => RequireByte();
+    public override int ReadByte()
+    {
+        int b = inner.ReadByte();
+
+        if (b == -1)
+        {
+            throw new InvalidDataException();
+        }
+
+        return b;
+    }
 
     public bool? ReadOptionalBool()
     {
@@ -142,7 +164,7 @@ public class ScaleStream : Stream
 
     public object ReadEnum(Type type)
     {
-        object result = Enum.ToObject(type, RequireByte());
+        object result = Enum.ToObject(type, ReadByte());
 
         if (!Enum.IsDefined(type, result))
         {
@@ -155,7 +177,7 @@ public class ScaleStream : Stream
     public T ReadEnum<T>()
         where T : struct, Enum
     {
-        T result = (T)Enum.ToObject(typeof(T), RequireByte());
+        T result = (T)Enum.ToObject(typeof(T), ReadByte());
 
         if (!Enum.IsDefined(result))
         {
@@ -167,7 +189,7 @@ public class ScaleStream : Stream
 
     public ulong ReadCompactInteger()
     {
-        int b0 = RequireByte();
+        int b0 = ReadByte();
         uint mode = (uint)b0 & 0x03;
 
         if (mode == 0)
@@ -178,7 +200,7 @@ public class ScaleStream : Stream
         if (mode == 1)
         {
             return (ulong) (
-                (b0 >> 2) + (RequireByte() << 6)
+                (b0 >> 2) + (ReadByte() << 6)
             );
         }
 
@@ -186,9 +208,9 @@ public class ScaleStream : Stream
         {
             return (ulong)(
                   (b0 >> 2) 
-                + (RequireByte() << 6)
-                + (RequireByte() << 14)
-                + (RequireByte() << 22)
+                + (ReadByte() << 6)
+                + (ReadByte() << 14)
+                + (ReadByte() << 22)
             );
         }
 
@@ -198,7 +220,7 @@ public class ScaleStream : Stream
 
     public BigInteger ReadCompactBigInteger()
     {
-        int b0 = RequireByte();
+        int b0 = ReadByte();
         uint mode = (uint)b0 & 0x03;
 
         if (mode == 0)
@@ -209,7 +231,7 @@ public class ScaleStream : Stream
         if (mode == 1)
         {
             return new BigInteger((ulong)(
-                (b0 >> 2) + (RequireByte() << 6)
+                (b0 >> 2) + (ReadByte() << 6)
             ));
         }
 
@@ -217,9 +239,9 @@ public class ScaleStream : Stream
         {
             return new BigInteger((ulong)(
                 (b0 >> 2)
-                + (RequireByte() << 6)
-                + (RequireByte() << 14)
-                + (RequireByte() << 22)
+                + (ReadByte() << 6)
+                + (ReadByte() << 14)
+                + (ReadByte() << 22)
             ));
         }
 
@@ -229,7 +251,7 @@ public class ScaleStream : Stream
 
         for(int i = 0; i < length; ++i)
         {
-            data[i] = (byte) RequireByte();
+            data[i] = (byte) ReadByte();
         }
 
         return new BigInteger(data);
@@ -348,7 +370,7 @@ public class ScaleStream : Stream
 
     public (object result, int index) ReadUnion<T1, T2>()
     {
-        int index = RequireByte();
+        int index = ReadByte();
 
         object result = index switch
         {
@@ -362,24 +384,12 @@ public class ScaleStream : Stream
 
     // helpers
 
-    private int RequireByte()
-    {
-        int b = inner.ReadByte();
-
-        if (b == -1)
-        {
-            throw new InvalidDataException();
-        }
-
-        return b;
-    }
-
     private object? ReadPrimitive(TypeCode typeCode)
     {
         return typeCode switch
         {
             TypeCode.Boolean => ReadBool(),
-            TypeCode.Byte => (byte)RequireByte(),
+            TypeCode.Byte => (byte)ReadByte(),
             TypeCode.Int32 => ReadInt32(),
             TypeCode.UInt16 => ReadUInt16(),
             TypeCode.UInt32 => ReadUInt32(),

@@ -1,10 +1,10 @@
 ﻿using GraphQL.Types;
 
-namespace Engi.Substrate.Server.Schemas;
+namespace Engi.Substrate.Server.Types;
 
-public class EngiHealthType : ObjectGraphType<EngiHealth>
+public class EngiHealthGraphType : ObjectGraphType<EngiHealth>
 {
-    public EngiHealthType()
+    public EngiHealthGraphType()
     {
         Field(x => x.Chain);
         Field(x => x.NodeName);

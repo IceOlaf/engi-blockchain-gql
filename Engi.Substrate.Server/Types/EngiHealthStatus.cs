@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Schemas;
+﻿namespace Engi.Substrate.Server.Types;
 
 public enum EngiHealthStatus
 {

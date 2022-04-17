@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using Engi.Substrate.Pallets;
 
 namespace Engi.Substrate;
 
@@ -14,7 +15,7 @@ public class SubstrateClient
         this.http = http;
     }
 
-    public async Task<JsonElement> RpcAsync(string method)
+    public async Task<JsonElement> RpcAsync(string method, params string[] @params)
     {
         long id = Interlocked.Increment(ref IdCounter);
 
@@ -22,7 +23,8 @@ public class SubstrateClient
         {
             id,
             jsonrpc = "2.0",
-            method
+            method,
+            @params 
         };
 
         var response = await http.PostAsJsonAsync(string.Empty, payload);
@@ -36,9 +38,9 @@ public class SubstrateClient
         return result;
     }
 
-    public async Task<TResult> RpcAsync<TResult>(string method)
+    public async Task<TResult> RpcAsync<TResult>(string method, params string[] @params)
     {
-        var result = await RpcAsync(method);
+        var result = await RpcAsync(method, @params);
 
         if (typeof(TResult) == typeof(string))
         {
@@ -47,4 +49,35 @@ public class SubstrateClient
 
         throw new NotImplementedException(typeof(TResult).Name);
     }
+
+    public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain");
+    public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name");
+    public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version");
+
+    public Task<T> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
+
+    public async Task<AccountInfo> GetSystemAccountAsync(string? accountId)
+    {
+        if (string.IsNullOrEmpty(accountId))
+        {
+            throw new ArgumentNullException(nameof(accountId));
+        }
+
+        byte[] accountIdBytes = Address.Decode(accountId);
+
+        string addressHex = Hex.ConcatGetOxString(
+            xxSystem,
+            xxAccount,
+            Hashing.Blake2Concat(accountIdBytes)
+        );
+
+        string result = await GetStateStorageAsync<string>(addressHex);
+
+        var scale = new ScaleStream(result);
+
+        return AccountInfo.Parse(scale);
+    }
+
+    private static readonly byte[] xxAccount = Hashing.Twox128("Account");
+    private static readonly byte[] xxSystem = Hashing.Twox128("System");
 }

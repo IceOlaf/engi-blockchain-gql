@@ -10,12 +10,12 @@ public class SubstrateClient
 
     private readonly HttpClient http;
 
-    public SubstrateClient(HttpClient http)
+    public SubstrateClient(IHttpClientFactory httpClientFactory)
     {
-        this.http = http;
+        http = httpClientFactory.CreateClient(nameof(SubstrateClient));
     }
 
-    public async Task<JsonElement> RpcAsync(string method, params string[] @params)
+    public async Task<T> RpcAsync<T>(string method, params string[] @params)
     {
         long id = Interlocked.Increment(ref IdCounter);
 
@@ -33,21 +33,16 @@ public class SubstrateClient
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
 
-        var result = json.GetProperty("result");
+        T? result = json.GetProperty("result").Deserialize<T>();
 
-        return result;
+        return result!;
     }
 
-    public async Task<TResult> RpcAsync<TResult>(string method, params string[] @params)
+    public async Task<string> RpcAsync(string method, params string[] @params)
     {
-        var result = await RpcAsync(method, @params);
+        var json = await RpcAsync<JsonElement>(method, @params);
 
-        if (typeof(TResult) == typeof(string))
-        {
-            return (TResult) (object) result.GetString()!;
-        }
-
-        throw new NotImplementedException(typeof(TResult).Name);
+        return json.GetString()!;
     }
 
     public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain");
@@ -77,6 +72,8 @@ public class SubstrateClient
 
         return AccountInfo.Parse(scale);
     }
+
+    public Task<Header> GetHeaderAsync(string hash) => RpcAsync<Header>("chain_getHeader", hash);
 
     private static readonly byte[] xxAccount = Hashing.Twox128("Account");
     private static readonly byte[] xxSystem = Hashing.Twox128("System");

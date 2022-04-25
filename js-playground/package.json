@@ -1,0 +1,13 @@
+{
+    "name": "substrate-playground",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "dependencies": {
+      "@polkadot/keyring": "^9.0.1",
+      "@polkadot/util": "^9.0.1",
+      "@polkadot/util-crypto": "^9.0.1",
+      "@polkadot/wasm-crypto": "^6.0.1"
+    }
+  }
+  

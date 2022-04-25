@@ -8,11 +8,16 @@ namespace Engi.Substrate.Server;
 
 public class EngiRootSchema : Schema
 {
-    public EngiRootSchema(IServiceProvider serviceProvider)
+    public EngiRootSchema(
+        IServiceProvider serviceProvider)
     {
         RegisterTypeMapping(typeof(AccountData), typeof(AccountDataGraphType));
+        RegisterTypeMapping(typeof(Digest), typeof(DigestType));
+        RegisterTypeMapping(typeof(AccountMetadata), typeof(AccountMetadataType));
 
         Query = new SchemaQuery(serviceProvider);
+        Mutation = new EngiMutations();
+        Subscription = new EngiSubscriptions(serviceProvider.GetRequiredService<IObservable<Header>>());
     }
 
     public class SchemaQuery : ObjectGraphType
@@ -77,6 +82,4 @@ public class EngiRootSchema : Schema
             return await substrate.GetSystemAccountAsync(accountId);
         }
     }
-
-
 }

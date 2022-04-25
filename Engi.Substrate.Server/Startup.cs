@@ -3,6 +3,7 @@ using GraphQL.Execution;
 using GraphQL.Server;
 using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.SystemReactive;
+using Microsoft.Extensions.Options;
 using Polly;
 
 namespace Engi.Substrate.Server
@@ -21,6 +22,8 @@ namespace Engi.Substrate.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<SubstrateClientOptions>(Configuration.GetRequiredSection("Substrate"));
+
             GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
                 .AddSubscriptionDocumentExecuter()
                 .AddServer(true)
@@ -37,13 +40,27 @@ namespace Engi.Substrate.Server
                 .AddGraphTypes(typeof(EngiRootSchema).Assembly);
 
             services.AddHttpClient();
-            services.AddHttpClient<SubstrateClient>(http =>
+            services.AddHttpClient(nameof(SubstrateClient), http =>
             {
-                var options = new SubstrateClientOptions();
-                Configuration.GetSection("Substrate").Bind(options);
-                http.BaseAddress = new Uri(options.Url!);
+                var options = Configuration
+                    .GetRequiredSection("Substrate")
+                    .Get<SubstrateClientOptions>();
+
+                http.BaseAddress = options.HttpsUri;
             })
             .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, @try => TimeSpan.FromSeconds(@try)));
+
+            services.AddSingleton(serviceProvider =>
+            {
+                var options = serviceProvider.GetRequiredService<IOptions<SubstrateClientOptions>>();
+                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                var logger = serviceProvider.GetRequiredService<ILogger<ChainNewHeadSubscriber>>();
+
+                IObservable<Header> subscriber = new ChainNewHeadSubscriber(
+                    options.Value.WssUri, httpClientFactory, logger);
+
+                return subscriber;
+            });
         }
 
         public void Configure(IApplicationBuilder app)

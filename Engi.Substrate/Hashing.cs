@@ -6,6 +6,11 @@ namespace Engi.Substrate;
 
 public static class Hashing
 {
+    public static byte[] Blake2(byte[] ssPrefixed, int start, int count)
+    {
+        return Blake2B.ComputeHash(ssPrefixed, start, count);
+    }
+
     public static byte[] Blake2Concat(byte[] bytes, int size = 128)
     {
         var config = new Blake2BConfig { OutputSizeInBits = size, Key = null };

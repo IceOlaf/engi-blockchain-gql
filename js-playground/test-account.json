@@ -1,0 +1,16 @@
+{
+    "encoded": "T8vviT4VXCKoDkobhsofjfoSzI2mwISzMhN6RfxvQhQAgAAAAQAAAAgAAAD6A4JrQJPwkfigUEzyT2hDXGa6HgoSGfKwPc98zb7HrEcOmXAuYBISh1MfO/2RNRKv/A7wdIYvxk8STpjPOAPBcKO/Zg22bqhYzuinXB8zMsFaxigAnvxDhY/G7zuN0+ZwzSf7yO9z+u0VqmENXQq912zjAs7xAKXf+RBU15G0Tzb2dr6C/EBtdqQh1H6w9WxYTlfslV4dbitJJ7W5",
+    "encoding": {
+      "content": ["pkcs8", "sr25519"],
+      "type": ["scrypt", "xsalsa20-poly1305"],
+      "version": "3"
+    },
+    "address": "5CSFNKvSFchQd7TjuuvPca1RheLAqZfFKiqAM6Fv6us9QhvR",
+    "meta": {
+      "isHardware": false,
+      "name": "test-1",
+      "tags": [],
+      "whenCreated": 1650701369379
+    }
+  }
+  

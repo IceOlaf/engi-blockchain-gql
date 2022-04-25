@@ -2,3 +2,5 @@ obj/
 bin/
 .vs/
 *.user
+node_modules/
+package-lock.json

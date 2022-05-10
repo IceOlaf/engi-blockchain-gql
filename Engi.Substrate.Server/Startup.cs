@@ -22,6 +22,8 @@ namespace Engi.Substrate.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks();
+
             services.Configure<SubstrateClientOptions>(Configuration.GetRequiredSection("Substrate"));
 
             GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
@@ -74,17 +76,16 @@ namespace Engi.Substrate.Server
                 app.UseHttpsRedirection();
             }
 
+            app.UseHealthChecks("/api/health");
+
             app.UseWebSockets();
 
             app.UseGraphQLWebSockets<EngiRootSchema>();
             app.UseGraphQL<EngiRootSchema, GraphQLHttpMiddleware<EngiRootSchema>>();
 
             app.UseGraphQLPlayground();
-
             app.UseGraphQLGraphiQL();
-
             app.UseGraphQLAltair();
-
             app.UseGraphQLVoyager();
         }
     }

@@ -1,0 +1,48 @@
+name: engi-graphql-dev
+
+on: 
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run: 
+        working-directory: Engi.Substrate.Server
+    env:
+      hosts: a.dev.zmvp.host,b.dev.zmvp.host,c.dev.zmvp.host
+      application_name: engi-graphql
+      working_directory: Engi.Substrate.Server
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.x' 
+        source-url: https://nuget.pkg.github.com/zerotomvp/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.NUGET_AUTH_TOKEN}}
+    - uses: actions/cache@v2
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+    - name: Update project version
+      uses: roryprimrose/set-vs-sdk-project-version@v1     
+      with:
+        projectFilter: '*.csproj'
+        version: 1.0.0.${{ github.run_number }}
+    - name: publish
+      run: dotnet publish -c Release -o deploy
+    # - uses: microsoft/variable-substitution@v1 
+    #   with:
+    #     files: ${{ env.working_directory }}/deploy/appsettings.json
+    #   env:
+    #
+    - uses: zerotomvp/rolling-systemd-update@v1-beta.7
+      with:
+        serviceName: ${{ env.application_name }}
+        hosts: ${{ env.hosts }}
+        key: ${{ secrets.DEPLOY_OPENSSH_KEY }}
+        source: ${{ env.working_directory }}/deploy

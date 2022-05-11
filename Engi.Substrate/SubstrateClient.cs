@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Engi.Substrate.Pallets;
 
 namespace Engi.Substrate;
@@ -33,7 +34,12 @@ public class SubstrateClient
 
         var json = await response.Content.ReadFromJsonAsync<JsonElement>();
 
-        T? result = json.GetProperty("result").Deserialize<T>();
+        T? result = json.GetProperty("result").Deserialize<T>(new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        });
 
         return result!;
     }
@@ -48,6 +54,7 @@ public class SubstrateClient
     public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain");
     public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name");
     public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version");
+    public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>("system_health");
 
     public Task<T> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
 

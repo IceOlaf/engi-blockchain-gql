@@ -32,18 +32,24 @@ public class EngiQuery : ObjectGraphType
 
         try
         {
-            var result = await Task.WhenAll(
-                substrate.GetSystemChainAsync(),
-                substrate.GetSystemNameAsync(),
-                substrate.GetSystemVersionAsync()
+            var chainTask = substrate.GetSystemChainAsync();
+            var nameTask = substrate.GetSystemNameAsync();
+            var versionTask = substrate.GetSystemVersionAsync();
+            var healthTask = substrate.GetSystemHealthAsync();
+
+            await Task.WhenAll(
+                chainTask,
+                nameTask,
+                versionTask,
+                healthTask
             );
 
             return new EngiHealth
             {
-                Chain = result[0],
-                NodeName = result[1],
-                Version = result[2],
-                Status = EngiHealthStatus.Online
+                Chain = chainTask.Result,
+                NodeName = nameTask.Result,
+                Version = versionTask.Result,
+                Status = healthTask.Result.Peers > 0 ? EngiHealthStatus.Online : EngiHealthStatus.Offline
             };
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Pallets;
 
 namespace Engi.Substrate;
@@ -60,6 +61,15 @@ public class SubstrateClient
     public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name");
     public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version");
     public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>("system_health");
+
+    public async Task<RuntimeMetadata> GetRuntimeMetadataAsync()
+    {
+        string result = await RpcAsync("state_getMetadata");
+
+        using var scale = new ScaleStreamReader(result);
+
+        return RuntimeMetadata.Parse(scale);
+    }
 
     public Task<T> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
 

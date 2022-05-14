@@ -2,9 +2,23 @@
 
 namespace Engi.Substrate;
 
-public static class Address
+public class Address
 {
-    public static byte[] Decode(string address)
+    public string Id { get; set; }
+
+    public byte[] Raw { get; set; }
+
+    private Address(string id, byte[] raw)
+    {
+        Id = id;
+        Raw = raw;
+    }
+
+    public static Address From(string id) => new(id, Decode(id));
+
+    public static Address From(byte[] raw) => new(Encode(raw), raw);
+
+    private static byte[] Decode(string address)
     {
         var decoded = Base58.Bitcoin.Decode(address);
         int ss58Length = (decoded[0] & 0b0100_0000) == 1 ? 2 : 1;
@@ -16,7 +30,7 @@ public static class Address
         return decoded.Slice(ss58Length, length - ss58Length).ToArray();
     }
 
-    public static string Encode(byte[] bytes)
+    private static string Encode(Span<byte> bytes)
     {
         var SR25519_PUBLIC_SIZE = 32;
         var PUBLIC_KEY_LENGTH = 32;
@@ -25,7 +39,7 @@ public static class Address
             .Repeat((byte)0x2A, 35)
             .ToArray();
 
-        bytes.CopyTo(plainAddr.AsMemory(1));
+        bytes.CopyTo(plainAddr.AsSpan(1));
 
         var ssPrefixed = new byte[SR25519_PUBLIC_SIZE + 8];
         var ssPrefixed1 = new byte[] { 0x53, 0x53, 0x35, 0x38, 0x50, 0x52, 0x45 };

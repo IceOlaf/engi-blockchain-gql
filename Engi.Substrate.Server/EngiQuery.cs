@@ -69,8 +69,8 @@ public class EngiQuery : ObjectGraphType
 
         var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
-        string? accountId = context.GetArgument<string>("id");
+        string accountId = context.GetArgument<string>("id")!;
 
-        return await substrate.GetSystemAccountAsync(accountId);
+        return await substrate.GetSystemAccountAsync(Address.From(accountId));
     }
 }

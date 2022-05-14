@@ -2,7 +2,6 @@
 using Engi.Substrate.Keys;
 using GraphQL;
 using GraphQL.Types;
-using sr25519_dotnet.lib;
 
 namespace Engi.Substrate.Server.Types;
 
@@ -43,13 +42,13 @@ public class EngiMutations : ObjectGraphType
     {
         mnemonicSalt ??= string.Empty;
 
-        byte[] secret;
+        byte[] seed;
 
         var mnemonicWords = mnemonic.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
         if (mnemonicWords.Length is 12 or 15 or 18 or 21 or 24)
         {
-            secret = KeypairFactory.CreateSecretKeyFromWordlistMnemonic(mnemonic, mnemonicSalt, Wordlists.English);
+            seed = KeypairFactory.CreateSeedFromWordlistMnemonic(mnemonic, mnemonicSalt, Wordlists.English);
         }
         else
         {
@@ -65,10 +64,10 @@ public class EngiMutations : ObjectGraphType
                     "Specified phrase is not a valid mnemonic and is invalid as a raw seed at > 32 bytes");
             }
 
-            secret = Encoding.UTF8.GetBytes(mnemonic.PadRight(32));
+            seed = Encoding.UTF8.GetBytes(mnemonic.PadRight(32));
         }
         
-        var sr25519Pair = SR25519.GenerateKeypairFromSeed(secret);
+        var sr25519Pair = KeypairFactory.CreateFromSeed(seed);
 
         bool isEncrypted = password != null;
 
@@ -76,13 +75,13 @@ public class EngiMutations : ObjectGraphType
             ? sr25519Pair.ExportToPkcs8() 
             : sr25519Pair.ExportToPkcs8(password!);
 
-        string address = Address.Encode(sr25519Pair.Public);
+        var address = Address.From(sr25519Pair.PublicKey);
 
         return new User
         {
             Encoded = Convert.ToBase64String(pkcs8),
             Name = name,
-            Address = address,
+            Address = address.Id,
             Metadata = new AccountMetadata
             {
                 Content = new[] { "pkcs8", "sr25519" },

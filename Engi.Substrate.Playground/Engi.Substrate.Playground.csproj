@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Engi.Substrate\Engi.Substrate.csproj" />
-    <ProjectReference Include="..\sr25519-dotnet.lib\sr25519-dotnet.lib.csproj" />
   </ItemGroup>
 
   <ItemGroup>

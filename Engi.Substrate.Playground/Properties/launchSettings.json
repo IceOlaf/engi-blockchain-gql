@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Engi.Substrate.Playground": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "RUST_BACKTRACE": "1"
+      }
+    }
+  }
+}

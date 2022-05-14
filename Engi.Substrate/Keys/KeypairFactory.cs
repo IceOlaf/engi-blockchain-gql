@@ -2,23 +2,30 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using sr25519_dotnet.lib;
-using sr25519_dotnet.lib.Models;
 
 namespace Engi.Substrate.Keys;
 
 public class KeypairFactory
 {
-    public static SR25519Keypair CreateFromMnemonic(string mnemonic, string password, string[] wordlist)
+    public static Keypair CreateFromMnemonic(string mnemonic, string password, string[] wordlist)
     {
-        var secretBytes = CreateSecretKeyFromWordlistMnemonic(mnemonic, password, wordlist);
+        var seed = CreateSeedFromWordlistMnemonic(mnemonic, password, wordlist);
 
-        return SR25519.GenerateKeypairFromSeed(secretBytes);
+        return CreateFromSeed(seed);
     }
 
-    public static byte[] CreateSecretKeyFromWordlistMnemonic(string mnemonic, string password, string[] wordlist)
+    public static Keypair CreateFromSeed(byte[] seed)
     {
-        var entropy = Hex.GetBytes(MnemonicToEntropy(mnemonic, wordlist));
+        var keypairBytes = new byte[96];
+
+        SR25519.KeypairFromSeed(seed, keypairBytes);
+
+        return Keypair.Create(keypairBytes);
+    }
+
+    public static byte[] CreateSeedFromWordlistMnemonic(string mnemonic, string password, string[] wordlist)
+    {
+        var entropy = MnemonicToEntropy(mnemonic, wordlist);
 
         ThrowIfEntropyIsInvalid(entropy);
 
@@ -29,7 +36,7 @@ public class KeypairFactory
         return seed.AsSpan(0, 32).ToArray();
     }
 
-    private static string MnemonicToEntropy(string mnemonic, string[] wordlist)
+    private static byte[] MnemonicToEntropy(string mnemonic, string[] wordlist)
     {
         var words = mnemonic
             .Normalize(NormalizationForm.FormKD)
@@ -79,7 +86,7 @@ public class KeypairFactory
             throw new DataException("Invalid checksum");
         }
 
-        return Hex.GetString(entropyBytes);
+        return entropyBytes;
     }
 
     private static void ThrowIfEntropyIsInvalid(byte[] entropyBytes)

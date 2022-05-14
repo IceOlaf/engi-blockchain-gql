@@ -4,13 +4,13 @@ public class VariantTypeDefinition : TypeDefinition
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Variant;
 
-    public Variant[]? Variants { get; set; }
+    public VariantCollection Variants { get; set; } = null!;
 
     internal new static VariantTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {
-            Variants = stream.ReadList(Variant.Parse)
+            Variants = new VariantCollection(stream.ReadList(Variant.Parse))
         };
     }
 }

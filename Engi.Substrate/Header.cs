@@ -35,48 +35,18 @@ public class Header : IEquatable<Header>
     public byte[] ComputeHash()
     {
         using var ms = new MemoryStream();
+        using var writer = new ScaleStreamWriter(ms);
 
-        ms.Write(Hex.GetBytes0x(ParentHash));
-        ms.Write(Compact(Number));
-        ms.Write(Hex.GetBytes0x(StateRoot));
-        ms.Write(Hex.GetBytes0x(ExtrinsicsRoot));
-        ms.Write(Compact((ulong)Digest.Logs.Length));
+        writer.WriteHex0x(ParentHash);
+        writer.WriteCompact(Number);
+        writer.WriteHex0x(StateRoot);
+        writer.WriteHex0x(ExtrinsicsRoot);
+        writer.WriteCompact((ulong)Digest.Logs.Length);
         foreach (var log in Digest.Logs)
         {
-            ms.Write(Hex.GetBytes0x(log));
+            writer.WriteHex0x(log);
         }
 
         return Blake2B.ComputeHash(ms.ToArray(), new Blake2BConfig { OutputSizeInBits = 256 });
-    }
-
-	// TODO: beginnings of a ScaleStreamWriter
-	private static byte[] Compact(ulong value)
-    {
-        int count = value switch
-        {
-            <= 0x3f => 1,
-            <= 0x3ff => 2,
-            <= 0x3fffffff => 4,
-            _ => throw new InvalidDataException()
-        };
-
-        byte[] result = new byte[count];
-
-        uint mode = count switch
-        {
-            2 => 0b01,
-            4 => 0b10,
-            _ => 0
-        };
-
-        ulong compact = (value << 2) + mode;
-
-        for (int i = 0; i < count; ++i)
-        {
-            result[i] = (byte)compact;
-            compact >>= 8;
-        }
-
-        return result;
     }
 }

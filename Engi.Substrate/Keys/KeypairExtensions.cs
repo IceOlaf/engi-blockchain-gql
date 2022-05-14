@@ -2,7 +2,6 @@
 using System.Text;
 using Chaos.NaCl;
 using CryptSharp.Core.Utility;
-using sr25519_dotnet.lib.Models;
 
 namespace Engi.Substrate.Keys;
 
@@ -11,25 +10,21 @@ public static class KeypairExtensions
     private static readonly byte[] PKCS8_DIVIDER = { 161, 35, 3, 33, 0 };
     private static readonly byte[] PKCS8_HEADER = { 48, 83, 2, 1, 1, 48, 5, 6, 3, 43, 101, 112, 4, 34, 4, 32 };
 
-    public static byte[] ExportToPkcs8(this SR25519Keypair keypair)
+    public static byte[] ExportToPkcs8(this Keypair keypair)
     {
-        int length = PKCS8_HEADER.Length + keypair.Secret.Length + PKCS8_DIVIDER.Length + keypair.Public.Length;
+        int length = PKCS8_HEADER.Length + keypair.SecretKey.Length + PKCS8_DIVIDER.Length + keypair.PublicKey.Length;
 
         byte[] result = new byte[length];
 
-        Buffer.BlockCopy(PKCS8_HEADER, 0, result,
-            0, PKCS8_HEADER.Length);
-        Buffer.BlockCopy(keypair.Secret, 0, result,
-            PKCS8_HEADER.Length, keypair.Secret.Length);
-        Buffer.BlockCopy(PKCS8_DIVIDER, 0, result,
-            PKCS8_HEADER.Length + keypair.Secret.Length, PKCS8_DIVIDER.Length);
-        Buffer.BlockCopy(keypair.Public, 0, result,
-            PKCS8_HEADER.Length + keypair.Secret.Length + PKCS8_DIVIDER.Length, keypair.Public.Length);
+        PKCS8_HEADER.CopyTo(result.AsSpan());
+        keypair.SecretKey.CopyTo(result.AsSpan(PKCS8_HEADER.Length));
+        PKCS8_DIVIDER.CopyTo(result.AsSpan(PKCS8_HEADER.Length + keypair.SecretKey.Length, PKCS8_DIVIDER.Length));
+        keypair.PublicKey.CopyTo(result.AsSpan(PKCS8_HEADER.Length + keypair.SecretKey.Length + PKCS8_DIVIDER.Length, keypair.PublicKey.Length));
 
         return result;
     }
 
-    public static byte[] ExportToPkcs8(this SR25519Keypair keypair, string passphrase)
+    public static byte[] ExportToPkcs8(this Keypair keypair, string passphrase)
     {
         byte[] salt = new byte[32];
         byte[] xsalsaNonce = new byte[24];
@@ -43,7 +38,7 @@ public static class KeypairExtensions
     /// <summary>
     /// Only used for testing
     /// </summary>
-    public static byte[] ExportToPkcs8(this SR25519Keypair keypair, string passphrase, byte[] scryptSalt, byte[] xsalsaNonce)
+    public static byte[] ExportToPkcs8(this Keypair keypair, string passphrase, byte[] scryptSalt, byte[] xsalsaNonce)
     {
         if (string.IsNullOrEmpty(passphrase))
         {

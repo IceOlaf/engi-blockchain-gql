@@ -6,13 +6,44 @@ public class RuntimeMetadata
 
     public int Version { get; set; }
 
-    public PortableType[]? Types { get; set; }
+    public Dictionary<ulong, PortableType> TypesById { get; set; } = null!;
 
-    public PalletMetadata[]? Pallets { get; set; }
+    public PalletMetadataCollection Pallets { get; set; } = null!;
 
-    public ExtrinsicMetadata? Extrinsic { get; set; }
+    public ExtrinsicMetadata Extrinsic { get; set; } = null!;
 
     public TType? TypeId { get; set; }
+
+    public PalletMetadata FindPallet(string name)
+    {
+        return Pallets.Single(
+            x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)
+    {
+        var pallet = FindPallet(palletName);
+
+        var callType = TypesById[pallet.Calls.Type.Value];
+
+        if (callType.Definition is VariantTypeDefinition variantType)
+        {
+            var variant = variantType.Variants.Single(
+                x => string.Equals(x.Name, callName, StringComparison.OrdinalIgnoreCase));
+
+            return (pallet, variant);
+        }
+
+        throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
+    }
+
+    public PortableType GetTypeByPath(params string[] path)
+    {
+        // TODO: cache
+
+        return TypesById.Values
+            .First(x => x.Path.SequenceEqual(path));
+    }
 
     public static RuntimeMetadata Parse(ScaleStreamReader stream)
     {
@@ -37,8 +68,9 @@ public class RuntimeMetadata
         {
             MagicNumber = magicNumber,
             Version = version,
-            Types = stream.ReadList(PortableType.Parse),
-            Pallets = stream.ReadList(PalletMetadata.Parse),
+            TypesById = stream.ReadList(PortableType.Parse)
+                .ToDictionary(x => x.Id, x => x),
+            Pallets = new PalletMetadataCollection(stream.ReadList(PalletMetadata.Parse)),
             Extrinsic = ExtrinsicMetadata.Parse(stream),
             TypeId = TType.Parse(stream)
         };

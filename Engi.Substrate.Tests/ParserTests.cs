@@ -22,7 +22,7 @@ namespace Engi.Substrate
 
             var metadata = RuntimeMetadataV14.Parse(stream);
 
-            var actual = metadata.Types;
+            var actual = metadata.TypesById.Values;
 
             AssetJsonEquals("./TestData/metadata_v14_types.json", actual);
         }
@@ -76,7 +76,7 @@ namespace Engi.Substrate
                     new StorageEntryConverter(),
                     new StringEnumConverter(),
                     new TTypeConverter(),
-                    new TypePortableFormConverter()
+                    new PortableTypeConverter()
                 }
             };
 
@@ -142,12 +142,18 @@ namespace Engi.Substrate
             }
         }
 
-        class TypePortableFormConverter : JsonConverter
+        class PortableTypeConverter : JsonConverter
         {
             public override void WriteJson(JsonWriter w, object value, JsonSerializer serializer)
             {
-                var t = (TypePortableForm)value;
+                var t = (PortableType)value;
 
+                w.WriteStartObject();
+
+                w.WritePropertyName("id");
+                serializer.Serialize(w, t.Id);
+
+                w.WritePropertyName("type");
                 w.WriteStartObject();
 
                 w.WritePropertyName("path");
@@ -162,6 +168,8 @@ namespace Engi.Substrate
                 w.WritePropertyName("docs");
                 serializer.Serialize(w, t.Docs);
                 
+                w.WriteEndObject();
+
                 w.WriteEndObject();
             }
 
@@ -185,7 +193,7 @@ namespace Engi.Substrate
 
             public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
-            public override bool CanConvert(Type objectType) => objectType == typeof(TypePortableForm);
+            public override bool CanConvert(Type objectType) => objectType == typeof(PortableType);
         }
 
         class TTypeConverter : JsonConverter

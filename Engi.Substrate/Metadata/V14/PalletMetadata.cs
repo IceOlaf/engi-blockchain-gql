@@ -6,7 +6,7 @@ public class PalletMetadata
 
     public PalletStorageMetadata? Storage { get; set; }
 
-    public PalletCallMetadata? Calls { get; set; }
+    public PalletCallMetadata Calls { get; set; } = null!;
 
     public PalletEventMetadata? Events { get; set; }
 
@@ -14,18 +14,19 @@ public class PalletMetadata
 
     public PalletErrorMetadata? Errors { get; set; }
 
-    public int Index { get; set; }
+    public byte Index { get; set; }
 
     public static PalletMetadata Parse(ScaleStreamReader stream)
     {
-        var metadata = new PalletMetadata();
-        metadata.Name = stream.ReadString();
-        metadata.Storage = stream.ReadOptional(PalletStorageMetadata.Parse);
-        metadata.Calls = stream.ReadOptional(PalletCallMetadata.Parse);
-        metadata.Events = stream.ReadOptional(PalletEventMetadata.Parse);
-        metadata.Constants = stream.ReadList(PalletConstantMetadata.Parse);
-        metadata.Errors = stream.ReadOptional(PalletErrorMetadata.Parse);
-        metadata.Index = stream.ReadByte();
-        return metadata;
+        return new PalletMetadata
+        {
+            Name = stream.ReadString(),
+            Storage = stream.ReadOptional(PalletStorageMetadata.Parse),
+            Calls = stream.ReadOptional(PalletCallMetadata.Parse)!,
+            Events = stream.ReadOptional(PalletEventMetadata.Parse),
+            Constants = stream.ReadList(PalletConstantMetadata.Parse),
+            Errors = stream.ReadOptional(PalletErrorMetadata.Parse),
+            Index = (byte)stream.ReadByte()
+        };
     }
 }

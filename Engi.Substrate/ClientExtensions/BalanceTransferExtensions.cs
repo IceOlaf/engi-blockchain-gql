@@ -1,0 +1,114 @@
+﻿using System.Diagnostics;
+using Engi.Substrate.Keys;
+using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Pallets;
+
+namespace Engi.Substrate
+{
+    public static class BalanceTransferExtensions
+    {
+        private const int SIGNED_EXTRINSIC = 128;
+        private static readonly string[] MultiAddressTypePath = { "sp_runtime", "multiaddress", "MultiAddress" };
+
+        public static Task<string> BalanceTransferAsync(
+            this SubstrateClient client,
+            ChainSnapshot snapshot,
+            Keypair sender,
+            AccountInfo senderAccount,
+            Address recipient,
+            ulong amount,
+            byte[] era,
+            byte tip = 0)
+        {
+            var method = GetBalanceTransferMethodPayload(snapshot.Metadata, recipient, amount);
+
+            var multiAddressType = snapshot.Metadata.GetTypeByPath(MultiAddressTypePath);
+            var multiAddressTypeDef = (VariantTypeDefinition)multiAddressType.Definition!;
+            var addressType = multiAddressTypeDef.Variants.IndexOf("Id");
+
+            var unsigned = GetSignaturePayload(method, era, senderAccount, tip, snapshot);
+
+            byte[] signature = sender.Sign(unsigned);
+
+            int payloadLength = 1 // version
+                + 1 // addressType
+                + 32 // address
+                + 1 // sig type
+                + signature.Length
+                + era.Length
+                + ScaleStreamWriter.GetCompactLength(senderAccount.Nonce)
+                + ScaleStreamWriter.GetCompactLength(tip)
+                + method.Length;
+
+            using var ms = new MemoryStream();
+            using var writer = new ScaleStreamWriter(ms);
+
+            writer.WriteCompact((ulong)payloadLength);
+            writer.Write((byte)(snapshot.Metadata.Extrinsic.Version + SIGNED_EXTRINSIC));
+            writer.Write(addressType);
+            writer.Write(sender.Address.Raw);
+            writer.Write((byte)1); // signature type
+            writer.Write(signature);
+            writer.Write(era);
+            writer.WriteCompact(senderAccount.Nonce);
+            writer.WriteCompact(tip);
+            writer.Write(method);
+
+            var payloadWithLength = ms.ToArray();
+
+            return client.AuthorSubmitExtrinsic(payloadWithLength);
+        }
+
+        private static byte[] GetSignaturePayload(
+            byte[] method,
+            byte[] era,
+            AccountInfo account,
+            byte tip,
+            ChainSnapshot snapshot)
+        {
+            using var ms = new MemoryStream();
+            using var writer = new ScaleStreamWriter(ms);
+
+            var blockHash = Era.IsImmortal(era) ? snapshot.GenesisHash : snapshot.LatestHeader.ParentHash;
+
+            writer.Write(method);
+            writer.Write(era);
+            writer.WriteCompact(account.Nonce);
+            writer.WriteCompact(tip);
+            writer.Write(snapshot.RuntimeVersion.SpecVersion);
+            writer.Write(snapshot.RuntimeVersion.TransactionVersion);
+            writer.WriteHex0x(snapshot.GenesisHash);
+            writer.WriteHex0x(blockHash);
+
+            return ms.ToArray();
+        }
+
+        private static byte[] GetBalanceTransferMethodPayload(
+            RuntimeMetadata meta,
+            Address dest,
+            ulong amount)
+        {
+            var (balances, transfer) = meta
+                .FindPalletCallVariant("balances", "transfer");
+
+            var destParamTypeId = transfer.Fields.Find("dest").Type.Value;
+            var multiAddressType = meta.GetTypeByPath(MultiAddressTypePath);
+            var multiAddressTypeDef = (VariantTypeDefinition)multiAddressType.Definition!;
+
+            Debug.Assert(destParamTypeId == multiAddressType.Id);
+
+            var addressType = multiAddressTypeDef.Variants.IndexOf("Id");
+
+            using var ms = new MemoryStream();
+            using var writer = new ScaleStreamWriter(ms);
+
+            writer.Write(balances.Index);
+            writer.Write(transfer.Index);
+            writer.Write(addressType);
+            writer.Write(dest.Raw);
+            writer.WriteCompact(amount);
+
+            return ms.ToArray();
+        }
+    }
+}

@@ -62,6 +62,11 @@ public static class Hex
 
     public static byte[] GetBytes0x(ReadOnlySpan<char> hexData)
     {
+        if (!hexData.StartsWith("0x"))
+        {
+            throw new ArgumentException("String doesn't start with 0x.", nameof(hexData));
+        }
+
         return GetBytes(hexData.Slice(2));
     }
 

@@ -13,10 +13,10 @@ public class KeypairTests
     {
         var keyPair = KeypairFactory.CreateFromMnemonic(mnemonic, "", Wordlists.English);
         
-        Assert.Equal("5CSFNKvSFchQd7TjuuvPca1RheLAqZfFKiqAM6Fv6us9QhvR", Address.Encode(keyPair.Public));
-        Assert.Equal(64, keyPair.Secret.Length);
-        Assert.Equal("EG466y9Z5pp6iTOPEbNBruc16dEtEFWrbJAOHhg/Pgc=", Convert.ToBase64String(keyPair.Public));
-        Assert.Equal("2AcLSTs5BjCb0THCfV3KHszANny4bTPlhAOZ8q0oU3B6ygidfALTnuo/AUMU1Ml31HyXz4meKy8nJtUzj36qpA==", Convert.ToBase64String(keyPair.Secret));
+        Assert.Equal("5CSFNKvSFchQd7TjuuvPca1RheLAqZfFKiqAM6Fv6us9QhvR", Address.From(keyPair.PublicKey).Id);
+        Assert.Equal(64, keyPair.SecretKey.Length);
+        Assert.Equal("EG466y9Z5pp6iTOPEbNBruc16dEtEFWrbJAOHhg/Pgc=", Convert.ToBase64String(keyPair.PublicKey));
+        Assert.Equal("2AcLSTs5BjCb0THCfV3KHszANny4bTPlhAOZ8q0oU3B6ygidfALTnuo/AUMU1Ml31HyXz4meKy8nJtUzj36qpA==", Convert.ToBase64String(keyPair.SecretKey));
     }
 
     [Fact]
@@ -26,10 +26,10 @@ public class KeypairTests
 
         Assert.Equal(
             "5FRbTVsuNAXFDq19gSnwihXUDMeEQKfhDnUWgYuUq6jFknVq", 
-            Address.Encode(keyPair.Public));
-        Assert.Equal(64, keyPair.Secret.Length);
-        Assert.Equal("lKNPr01GTwQExB7+rmxHbCF1VJL3e1cVzlKRzmAagxg=", Convert.ToBase64String(keyPair.Public));
-        Assert.Equal("4PvnUnd/nXw3qvtWvvifGLRtq6f4SJpIuFbggjicjmx2e2RqS+rWkHTHe2nRQqIZeNhnNXoiJ9FjcPimdZkQEQ==", Convert.ToBase64String(keyPair.Secret));
+            Address.From(keyPair.PublicKey).Id);
+        Assert.Equal(64, keyPair.SecretKey.Length);
+        Assert.Equal("lKNPr01GTwQExB7+rmxHbCF1VJL3e1cVzlKRzmAagxg=", Convert.ToBase64String(keyPair.PublicKey));
+        Assert.Equal("4PvnUnd/nXw3qvtWvvifGLRtq6f4SJpIuFbggjicjmx2e2RqS+rWkHTHe2nRQqIZeNhnNXoiJ9FjcPimdZkQEQ==", Convert.ToBase64String(keyPair.SecretKey));
     }
 
     [Fact]

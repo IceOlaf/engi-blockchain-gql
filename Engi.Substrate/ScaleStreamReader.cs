@@ -5,7 +5,7 @@ namespace Engi.Substrate;
 
 public class ScaleStreamReader : IDisposable
 {
-    private readonly MemoryStream inner;
+    private readonly Stream inner;
 
     public ScaleStreamReader(byte[] data)
     {
@@ -249,17 +249,23 @@ public class ScaleStreamReader : IDisposable
         return Encoding.UTF8.GetString(data);
     }
 
-    public byte[] ReadByteArray()
+    public byte[] ReadFixedSizeByteArray(int length)
     {
-        int length = (int)ReadCompactInteger();
         byte[] data = new byte[length];
-        
+
         if (inner.Read(data, 0, length) < length)
         {
             throw new InvalidDataException();
         }
 
         return data;
+    }
+
+    public byte[] ReadByteArray()
+    {
+        int length = (int)ReadCompactInteger();
+
+        return ReadFixedSizeByteArray(length);
     }
 
     public T[] ReadList<T>(Func<ScaleStreamReader, T> func)

@@ -73,7 +73,7 @@ public class ChainNewHeadSubscriber : IObservable<Header>
 
             while (current.ParentHash != lastKnownHeaderHash)
             {
-                current = await client.GetHeaderAsync(current.ParentHash);
+                current = await client.GetChainHeaderAsync(current.ParentHash);
 
                 // we go backwards
 

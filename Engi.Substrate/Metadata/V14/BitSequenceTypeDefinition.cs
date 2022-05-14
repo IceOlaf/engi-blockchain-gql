@@ -8,7 +8,7 @@ public class BitSequenceTypeDefinition : TypeDefinition
 
     public TType? OrderType { get; set; }
 
-    internal new static BitSequenceTypeDefinition Parse(ScaleStream stream)
+    internal new static BitSequenceTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

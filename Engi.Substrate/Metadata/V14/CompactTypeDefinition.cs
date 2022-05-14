@@ -6,7 +6,7 @@ public class CompactTypeDefinition : TypeDefinition
 
     public TType? Type { get; set; }
 
-    internal new static CompactTypeDefinition Parse(ScaleStream stream)
+    internal new static CompactTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

@@ -19,7 +19,7 @@ public class ScaleCompactIntegerJsonConverter : JsonConverter<object>
     {
         string hex = reader.GetString()!;
 
-        using var stream = new ScaleStream(hex);
+        using var stream = new ScaleStreamReader(hex);
 
         return stream.ReadCompactInteger();
     }

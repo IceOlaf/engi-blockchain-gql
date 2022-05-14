@@ -8,7 +8,7 @@ public class ArrayTypeDefinition : TypeDefinition
         
     public TType? Type { get; set; }
 
-    internal new static ArrayTypeDefinition Parse(ScaleStream stream)
+    internal new static ArrayTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

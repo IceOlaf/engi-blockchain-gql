@@ -75,7 +75,7 @@ public class SubstrateClient
 
         string result = await GetStateStorageAsync<string>(addressHex);
 
-        var scale = new ScaleStream(result);
+        var scale = new ScaleStreamReader(result);
 
         return AccountInfo.Parse(scale);
     }

@@ -10,7 +10,7 @@ public class Field
 
     public string?[]? Docs { get; set; }
 
-    public static Field Parse(ScaleStream stream)
+    public static Field Parse(ScaleStreamReader stream)
     {
         return new Field
         {

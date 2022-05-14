@@ -6,7 +6,7 @@ public class VariantTypeDefinition : TypeDefinition
 
     public Variant[]? Variants { get; set; }
 
-    internal new static VariantTypeDefinition Parse(ScaleStream stream)
+    internal new static VariantTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

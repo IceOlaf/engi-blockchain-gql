@@ -13,7 +13,7 @@ public class AccountData
 
     public BigInteger FeeFrozen { get; set; }
 
-    public static AccountData Parse(ScaleStream stream)
+    public static AccountData Parse(ScaleStreamReader stream)
     {
         return new()
         {

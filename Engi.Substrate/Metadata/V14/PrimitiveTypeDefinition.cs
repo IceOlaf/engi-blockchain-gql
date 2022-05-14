@@ -6,7 +6,7 @@ public class PrimitiveTypeDefinition : TypeDefinition
 
     public PrimitiveType PrimitiveType { get; set; }
 
-    internal new static PrimitiveTypeDefinition Parse(ScaleStream stream)
+    internal new static PrimitiveTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

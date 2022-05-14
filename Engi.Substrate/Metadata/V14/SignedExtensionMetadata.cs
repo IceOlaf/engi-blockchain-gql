@@ -6,7 +6,7 @@ public class SignedExtensionMetadata
     public TType? Type { get; set; }
     public TType? AdditionalSigned { get; set; }
 
-    public static SignedExtensionMetadata Parse(ScaleStream stream)
+    public static SignedExtensionMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

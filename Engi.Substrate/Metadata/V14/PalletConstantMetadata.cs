@@ -7,7 +7,7 @@ public class PalletConstantMetadata
     public byte[]? Value { get; set; }
     public string?[]? Docs { get; set; }
 
-    public static PalletConstantMetadata Parse(ScaleStream stream)
+    public static PalletConstantMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

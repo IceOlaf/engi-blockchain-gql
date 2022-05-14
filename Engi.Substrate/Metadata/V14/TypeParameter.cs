@@ -6,7 +6,7 @@ public class TypeParameter
 
     public TType? Type { get; set; }
 
-    public static TypeParameter Parse(ScaleStream stream)
+    public static TypeParameter Parse(ScaleStreamReader stream)
     {
         return new()
         {

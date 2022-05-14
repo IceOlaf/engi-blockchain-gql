@@ -5,7 +5,7 @@ public class PalletStorageMetadata
     public string? Prefix { get; set; }
     public StorageEntryMetadata[]? Items { get; set; }
 
-    public static PalletStorageMetadata Parse(ScaleStream stream)
+    public static PalletStorageMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

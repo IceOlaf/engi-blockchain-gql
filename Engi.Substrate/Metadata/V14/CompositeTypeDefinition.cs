@@ -6,7 +6,7 @@ public class CompositeTypeDefinition : TypeDefinition
 
     public Field[]? Fields { get; set; }
 
-    internal new static CompositeTypeDefinition Parse(ScaleStream stream)
+    internal new static CompositeTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

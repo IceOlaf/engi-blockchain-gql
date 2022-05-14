@@ -14,7 +14,7 @@ public class RuntimeMetadata
 
     public TType? TypeId { get; set; }
 
-    public static RuntimeMetadata Parse(ScaleStream stream)
+    public static RuntimeMetadata Parse(ScaleStreamReader stream)
     {
         const int metadataMagicNumber = 0x6174656D;
 

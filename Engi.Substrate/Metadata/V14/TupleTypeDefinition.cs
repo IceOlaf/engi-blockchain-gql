@@ -6,7 +6,7 @@ public class TupleTypeDefinition : TypeDefinition
 
     public TType[]? Fields { get; set; }
 
-    internal new static TupleTypeDefinition Parse(ScaleStream stream)
+    internal new static TupleTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

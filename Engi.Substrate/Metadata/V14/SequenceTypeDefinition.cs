@@ -5,7 +5,7 @@ public class SequenceTypeDefinition : TypeDefinition
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Sequence;
     public TType? Type { get; set; }
 
-    internal new static SequenceTypeDefinition Parse(ScaleStream stream)
+    internal new static SequenceTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {

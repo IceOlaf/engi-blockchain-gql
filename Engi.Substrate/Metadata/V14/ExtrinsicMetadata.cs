@@ -6,7 +6,7 @@ public class ExtrinsicMetadata
     public int Version { get; set; }
     public SignedExtensionMetadata[]? SignedExtensions { get; set; }
     
-    public static ExtrinsicMetadata Parse(ScaleStream stream)
+    public static ExtrinsicMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

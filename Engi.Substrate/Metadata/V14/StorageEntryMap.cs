@@ -6,7 +6,7 @@ public class StorageEntryMap : IStorageEntry
     public TType? Key { get; set; }
     public TType? Value { get; set; }
 
-    public static StorageEntryMap Parse(ScaleStream stream)
+    public static StorageEntryMap Parse(ScaleStreamReader stream)
     {
         return new StorageEntryMap
         {

@@ -8,7 +8,7 @@ public class StorageEntryMetadata
     public byte[]? Default { get; set; }
     public string?[]? Docs { get; set; }
 
-    public static StorageEntryMetadata Parse(ScaleStream stream)
+    public static StorageEntryMetadata Parse(ScaleStreamReader stream)
     {
         var item = new StorageEntryMetadata
         {

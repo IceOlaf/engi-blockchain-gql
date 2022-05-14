@@ -3,7 +3,7 @@
 public class PalletCallMetadata
 {
     public TType? Type { get; set; }
-    public static PalletCallMetadata Parse(ScaleStream stream)
+    public static PalletCallMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

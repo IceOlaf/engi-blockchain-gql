@@ -51,13 +51,13 @@ namespace Engi.Substrate
             AssetJsonEquals("./TestData/metadata_v14.json", actual);
         }
 
-        private static ScaleStream CreateScaleStreamFromFile(string filename)
+        private static ScaleStreamReader CreateScaleStreamFromFile(string filename)
         {
             string hex = File.ReadAllText(filename);
 
             byte[] data = Convert.FromHexString(hex.Substring(2));
 
-            return new ScaleStream(data);
+            return new ScaleStreamReader(data);
         }
 
         private static void AssetJsonEquals(

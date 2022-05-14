@@ -3,11 +3,11 @@ using System.Text;
 
 namespace Engi.Substrate;
 
-public class ScaleStream : Stream
+public class ScaleStreamReader : IDisposable
 {
     private readonly MemoryStream inner;
 
-    public ScaleStream(byte[] data)
+    public ScaleStreamReader(byte[] data)
     {
         if (data == null || data.Length == 0)
         {
@@ -17,7 +17,7 @@ public class ScaleStream : Stream
         inner = new MemoryStream(data, false);
     }
 
-    public ScaleStream(string hexString)
+    public ScaleStreamReader(string hexString)
     {
         if (!hexString.StartsWith("0x"))
         {
@@ -29,45 +29,16 @@ public class ScaleStream : Stream
         inner = new MemoryStream(data, false);
     }
 
-    public override bool CanRead => true;
+    public bool HasNext => inner.Position < inner.Length;
 
-    public override bool CanSeek => false;
-
-    public override bool CanWrite => false;
-
-    public override long Length => inner.Length;
-
-    public override long Position
-    {
-        get => inner.Position;
-        set => inner.Position = value;
-    }
-
-    public bool HasNext => Position < Length;
-
-    public override void Flush() { }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        throw new NotSupportedException();
-    }
-
-    public override long Seek(long offset, SeekOrigin origin)
+    public long Seek(long offset, SeekOrigin origin)
     {
         return inner.Seek(offset, origin);
     }
 
-    public override void SetLength(long value)
-    {
-        throw new NotSupportedException();
-    }
+    public void Dispose() => inner.Dispose();
 
-    public override void Write(byte[] buffer, int offset, int count)
-    {
-        throw new NotSupportedException();
-    }
-
-    public override int ReadByte()
+    public int ReadByte()
     {
         int b = inner.ReadByte();
 
@@ -291,7 +262,7 @@ public class ScaleStream : Stream
         return data;
     }
 
-    public T[] ReadList<T>(Func<ScaleStream, T> func)
+    public T[] ReadList<T>(Func<ScaleStreamReader, T> func)
     {
         int length = (int) ReadCompactInteger();
 
@@ -363,7 +334,7 @@ public class ScaleStream : Stream
         return (T?) Read(t);
     }
 
-    public T? ReadOptional<T>(Func<ScaleStream, T> func)
+    public T? ReadOptional<T>(Func<ScaleStreamReader, T> func)
     {
         return ReadBool() ? func(this) : default;
     }

@@ -7,7 +7,7 @@ public class Variant
     public int Index { get; set; }
     public string?[]? Docs { get; set; }
 
-    public static Variant Parse(ScaleStream stream)
+    public static Variant Parse(ScaleStreamReader stream)
     {
         return new()
         {

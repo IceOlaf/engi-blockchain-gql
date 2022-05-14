@@ -13,7 +13,7 @@
 
         public AccountData Data { get; set; } = null!;
 
-        public static AccountInfo Parse(ScaleStream stream)
+        public static AccountInfo Parse(ScaleStreamReader stream)
         {
             return new()
             {

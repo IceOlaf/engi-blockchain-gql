@@ -16,7 +16,7 @@ public class PalletMetadata
 
     public int Index { get; set; }
 
-    public static PalletMetadata Parse(ScaleStream stream)
+    public static PalletMetadata Parse(ScaleStreamReader stream)
     {
         var metadata = new PalletMetadata();
         metadata.Name = stream.ReadString();

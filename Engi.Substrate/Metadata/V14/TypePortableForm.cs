@@ -10,7 +10,7 @@ public class TypePortableForm
 
     public string?[]? Docs { get; set; }
 
-    public static TypePortableForm Parse(ScaleStream stream)
+    public static TypePortableForm Parse(ScaleStreamReader stream)
     {
         return new TypePortableForm
         {

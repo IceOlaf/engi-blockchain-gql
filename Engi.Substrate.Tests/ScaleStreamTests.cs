@@ -6,16 +6,16 @@ namespace Engi.Substrate;
 
 public class ScaleStreamTests
 {
-    private ScaleStream FromHex(string hex)
+    private ScaleStreamReader FromHex(string hex)
     {
-        return new ScaleStream(Convert.FromHexString(hex));
+        return new ScaleStreamReader(Convert.FromHexString(hex));
     }
 
     [Fact]
     public void Ctor_ErrorsIfNoInput()
     {
         Assert.Throws<ArgumentException>(
-            () => new ScaleStream(Array.Empty<byte>()));
+            () => new ScaleStreamReader(Array.Empty<byte>()));
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class ScaleStreamTests
     [InlineData("ffffff7f", int.MaxValue)]
     public void Int32_Positive(string hex, int expected)
     {
-        ScaleStream stream = new(Convert.FromHexString(hex));
+        ScaleStreamReader stream = new(Convert.FromHexString(hex));
 
         Assert.Equal(expected, stream.ReadInt32());
     }
@@ -105,7 +105,7 @@ public class ScaleStreamTests
     [InlineData("00000080", int.MinValue)]
     public void Int32_Negative(string hex, int expected)
     {
-        ScaleStream stream = new(Convert.FromHexString(hex));
+        ScaleStreamReader stream = new(Convert.FromHexString(hex));
 
         Assert.Equal(expected, stream.ReadInt32());
     }
@@ -146,7 +146,7 @@ public class ScaleStreamTests
     [InlineData("f00f", 0x0f_f0u)]
     public void UInt16_Read(string hex, ushort expected)
     {
-        ScaleStream stream = new(Convert.FromHexString(hex));
+        ScaleStreamReader stream = new(Convert.FromHexString(hex));
 
         Assert.Equal(expected, stream.ReadUInt16());
     }
@@ -182,7 +182,7 @@ public class ScaleStreamTests
     [InlineData("7d010000", 0x00_00_01_7du)]
     public void UInt32_ReadsAllCases(string hex, uint expected)
     {
-        ScaleStream stream = new(Convert.FromHexString(hex));
+        ScaleStreamReader stream = new(Convert.FromHexString(hex));
 
         Assert.Equal(expected, stream.ReadUInt32());
     }

@@ -4,7 +4,7 @@ public abstract class TypeDefinition
 {
     public abstract TypeDefinitionType DefinitionType { get; }
 
-    public static TypeDefinition? Parse(ScaleStream stream)
+    public static TypeDefinition? Parse(ScaleStreamReader stream)
     {
         var type = stream.ReadEnum<TypeDefinitionType>();
 

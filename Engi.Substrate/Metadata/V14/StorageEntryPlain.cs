@@ -4,7 +4,7 @@ public class StorageEntryPlain : IStorageEntry
 {
     public TType? Value { get; set; }
 
-    public static StorageEntryPlain Parse(ScaleStream stream)
+    public static StorageEntryPlain Parse(ScaleStreamReader stream)
     {
         return new()
         {

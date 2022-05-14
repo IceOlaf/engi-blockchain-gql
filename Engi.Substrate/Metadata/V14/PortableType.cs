@@ -6,7 +6,7 @@ public class PortableType
 
     public TypePortableForm? Type { get; set; }
 
-    public static PortableType Parse(ScaleStream stream)
+    public static PortableType Parse(ScaleStreamReader stream)
     {
         return new()
         {

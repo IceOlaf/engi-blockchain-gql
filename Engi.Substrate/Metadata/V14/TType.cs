@@ -4,7 +4,7 @@ public class TType
 {
     public ulong Value { get; set; }
 
-    public static TType Parse(ScaleStream stream)
+    public static TType Parse(ScaleStreamReader stream)
     {
         return new()
         {

@@ -4,7 +4,7 @@ public class PalletErrorMetadata
 {
     public TType? Type { get; set; }
 
-    public static PalletErrorMetadata Parse(ScaleStream stream)
+    public static PalletErrorMetadata Parse(ScaleStreamReader stream)
     {
         return new()
         {

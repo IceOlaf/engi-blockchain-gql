@@ -11,6 +11,11 @@ public class SubstrateClient
 
     private readonly HttpClient http;
 
+    public SubstrateClient(HttpClient http)
+    {
+        this.http = http;
+    }
+
     public SubstrateClient(IHttpClientFactory httpClientFactory)
     {
         http = httpClientFactory.CreateClient(nameof(SubstrateClient));

@@ -8,7 +8,7 @@ use std::{
 // We must make sure that this is the same as declared in the substrate source code.
 const CTX: &'static [u8] = b"substrate";
 
-/// Generate a key pair.
+/// Generate a key pair from a seed.
 ///
 /// * seed_raw: u8 array of length 32.
 /// * keypair_raw: u8 array of length 96 where the keypair will be written to
@@ -27,6 +27,28 @@ pub unsafe extern "C" fn sr25519_keypair_from_seed(seed_raw: *const u8, keypair_
 			ptr::copy_nonoverlapping(bytes, keypair_raw, 96);
 		},
 		_ => panic!("Invalid seed provided.")
+	}
+}
+
+/// Generate a key pair from a private key.
+///
+/// * secret_key_raw: u8 array of length 32.
+/// * keypair_raw: u8 array of length 96 where the keypair will be written to
+/// 
+#[no_mangle]
+pub unsafe extern "C" fn sr25519_keypair_from_secret(secret_key_raw: *const u8, keypair_raw: *mut u8) -> () {
+	let secret_key = slice::from_raw_parts(secret_key_raw, 64);
+
+	match SecretKey::from_ed25519_bytes(secret_key) {
+		Ok(secret) => {
+			let bytes = secret
+				.to_keypair()
+				.to_half_ed25519_bytes()
+				.as_mut_ptr();
+			
+			ptr::copy_nonoverlapping(bytes, keypair_raw, 96);
+		},
+		_ => panic!("Invalid key provided.")
 	}
 }
 

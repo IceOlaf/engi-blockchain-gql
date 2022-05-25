@@ -18,6 +18,16 @@ internal static class SR25519
         CharSet = CharSet.Auto,
         CallingConvention = CallingConvention.Cdecl,
         ExactSpelling = true,
+        EntryPoint = "sr25519_keypair_from_secret",
+        SetLastError = false)]
+    public static extern void KeypairFromSecretKey(
+        byte[] secretKey,
+        [Out] byte[] keypair);
+
+    [DllImport("engi_crypto",
+        CharSet = CharSet.Auto,
+        CallingConvention = CallingConvention.Cdecl,
+        ExactSpelling = true,
         EntryPoint = "sr25519_sign",
         SetLastError = false)]
     public static extern void Sign(

@@ -7,6 +7,27 @@ namespace Engi.Substrate.Keys;
 
 public class KeypairFactory
 {
+    public static Keypair CreateFromAny(string s)
+    {
+        if (s.StartsWith("0x"))
+        {
+            byte[] miniSecretOrPrivateKey = Hex.GetBytes0x(s);
+
+            if (miniSecretOrPrivateKey.Length == 32)
+            {
+                return CreateFromSeed(miniSecretOrPrivateKey);
+            }
+
+            var keypairBytes = new byte[96];
+
+            SR25519.KeypairFromSecretKey(miniSecretOrPrivateKey, keypairBytes);
+
+            return Keypair.Create(keypairBytes);
+        }
+
+        return CreateFromMnemonic(s, string.Empty, Wordlists.English);
+    }
+
     public static Keypair CreateFromMnemonic(string mnemonic, string password, string[] wordlist)
     {
         var seed = CreateSeedFromWordlistMnemonic(mnemonic, password, wordlist);

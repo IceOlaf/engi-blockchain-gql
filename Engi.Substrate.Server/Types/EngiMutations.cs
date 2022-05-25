@@ -7,8 +7,11 @@ namespace Engi.Substrate.Server.Types;
 
 public class EngiMutations : ObjectGraphType
 {
-    public EngiMutations()
+    private readonly IServiceProvider serviceProvider;
+
+    public EngiMutations(IServiceProvider serviceProvider)
     {
+        this.serviceProvider = serviceProvider;
         Field<UserType>(
             "createUser",
             arguments: new QueryArguments(
@@ -21,7 +24,16 @@ public class EngiMutations : ObjectGraphType
                 return CreateUser(input);
             });
 
+        Field<StringGraphType>(
+            "balanceTransfer",
+            arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<BalanceTransferInputType>> { Name = "transfer" }
+            ),
+            resolve: context =>
+            {
+                var input = (BalanceTransferInput)context.Arguments!["transfer"].Value!;
 
+                return BalanceTransferAsync(input);
             });
     }
 
@@ -76,6 +88,22 @@ public class EngiMutations : ObjectGraphType
                 Version = 3
             }
         };
+    }
+
+    private async Task<string> BalanceTransferAsync(BalanceTransferInput input)
+    {
+        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
+        var dest = Address.From(input.RecipientAddress);
+
+        var client = serviceProvider.GetRequiredService<SubstrateClient>();
+
+        var snapshot = await client.GetChainSnapshotAsync();
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        var era = Era.CreateMortal(snapshot.LatestHeader, 55);
+
+        return await client.BalanceTransferAsync(
+            snapshot, sender, account, dest, input.Amount, era, input.Tip);
     }
 }
 

@@ -14,7 +14,7 @@ public class EngiRootSchema : Schema
         RegisterTypeMapping(typeof(AccountMetadata), typeof(AccountMetadataType));
 
         Query = new EngiQuery(serviceProvider);
-        Mutation = new EngiMutations();
+        Mutation = new EngiMutations(serviceProvider);
         Subscription = new EngiSubscriptions(serviceProvider.GetRequiredService<IObservable<Header>>());
     }
 }

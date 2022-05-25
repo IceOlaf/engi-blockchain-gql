@@ -2,15 +2,13 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateUserInputType : InputObjectGraphType
+public class CreateUserInputType : InputObjectGraphType<CreateUserInput>
 {
     public CreateUserInputType()
     {
-        Name = "UserInput";
-
-        Field<NonNullGraphType<StringGraphType>>("name");
-        Field<NonNullGraphType<StringGraphType>>("mnemonic");
-        Field<StringGraphType>("mnemonicSalt");
-        Field<StringGraphType>("password");
+        Field(x => x.Name);
+        Field(x => x.Mnemonic);
+        Field(x => x.MnemonicSalt);
+        Field(x => x.Password);
     }
 }

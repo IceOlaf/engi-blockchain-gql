@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Engi.Substrate.Metadata.V14;

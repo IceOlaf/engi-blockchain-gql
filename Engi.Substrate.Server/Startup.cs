@@ -51,7 +51,11 @@ namespace Engi.Substrate.Server
                 http.BaseAddress = options.HttpsUri;
             })
             .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, @try => TimeSpan.FromSeconds(@try)));
-            services.AddTransient<SubstrateClient>();
+            services.AddTransient(sp =>
+            {
+                var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+                return new SubstrateClient(httpClientFactory);
+            });
 
             services.AddSingleton(serviceProvider =>
             {

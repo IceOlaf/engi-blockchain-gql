@@ -49,7 +49,8 @@ public class EngiQuery : ObjectGraphType
                 Chain = chainTask.Result,
                 NodeName = nameTask.Result,
                 Version = versionTask.Result,
-                Status = healthTask.Result.Peers > 0 ? EngiHealthStatus.Online : EngiHealthStatus.Offline
+                Status = healthTask.Result.Peers > 0 ? EngiHealthStatus.Online : EngiHealthStatus.Offline,
+                PeerCount = healthTask.Result.Peers
             };
         }
         catch (Exception ex)

@@ -6,4 +6,5 @@ public class EngiHealth
     public string? NodeName { get; set; }
     public string? Version { get; set; }
     public EngiHealthStatus Status { get; set; }
+    public long? PeerCount { get; set; }
 }

@@ -22,9 +22,9 @@ public class ScaleStreamWriter : IDisposable
         stream.Write(result);
     }
 
-    public void WriteHex0x(string s)
+    public void WriteHex0X(string s)
     {
-        byte[] bytes = Hex.GetBytes0x(s);
+        byte[] bytes = Hex.GetBytes0X(s);
 
         stream.Write(bytes);
     }

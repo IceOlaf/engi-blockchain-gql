@@ -37,14 +37,14 @@ public class Header : IEquatable<Header>
         using var ms = new MemoryStream();
         using var writer = new ScaleStreamWriter(ms);
 
-        writer.WriteHex0x(ParentHash);
+        writer.WriteHex0X(ParentHash);
         writer.WriteCompact(Number);
-        writer.WriteHex0x(StateRoot);
-        writer.WriteHex0x(ExtrinsicsRoot);
+        writer.WriteHex0X(StateRoot);
+        writer.WriteHex0X(ExtrinsicsRoot);
         writer.WriteCompact((ulong)Digest.Logs.Length);
         foreach (var log in Digest.Logs)
         {
-            writer.WriteHex0x(log);
+            writer.WriteHex0X(log);
         }
 
         return Blake2B.ComputeHash(ms.ToArray(), new Blake2BConfig { OutputSizeInBits = 256 });

@@ -101,8 +101,8 @@ public class SubstrateClient
 
     // author_
 
-    public Task<string> AuthorSubmitExtrinsic(byte[] payload) =>
-        RpcAsync("author_submitExtrinsic", Hex.GetString0x(payload));
+    public Task<string> AuthorSubmitExtrinsicAsync(byte[] payload) =>
+        RpcAsync("author_submitExtrinsic", Hex.GetString0X(payload));
 
     // composite
 
@@ -113,7 +113,7 @@ public class SubstrateClient
             throw new ArgumentNullException(nameof(accountIdBytes));
         }
 
-        string addressHex = Hex.ConcatGetOxString(
+        string addressHex = Hex.ConcatGetOXString(
             xxSystem,
             xxAccount,
             Hashing.Blake2Concat(accountIdBytes)

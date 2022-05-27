@@ -69,7 +69,7 @@ public class ChainNewHeadSubscriber : IObservable<Header>
             var client = new SubstrateClient(httpClientFactory);
 
             var current = header;
-            string lastKnownHeaderHash = Hex.GetString0x(lastKnownHeader.ComputeHash());
+            string lastKnownHeaderHash = Hex.GetString0X(lastKnownHeader.ComputeHash());
 
             while (current.ParentHash != lastKnownHeaderHash)
             {

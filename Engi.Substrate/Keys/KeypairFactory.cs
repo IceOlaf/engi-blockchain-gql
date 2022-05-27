@@ -11,7 +11,7 @@ public class KeypairFactory
     {
         if (s.StartsWith("0x"))
         {
-            byte[] miniSecretOrPrivateKey = Hex.GetBytes0x(s);
+            byte[] miniSecretOrPrivateKey = Hex.GetBytes0X(s);
 
             if (miniSecretOrPrivateKey.Length == 32)
             {

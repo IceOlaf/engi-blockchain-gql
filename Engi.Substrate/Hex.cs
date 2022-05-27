@@ -37,7 +37,7 @@ public static class Hex
         return result;
     }
 
-    public static string GetString0x(byte[] array)
+    public static string GetString0X(byte[] array)
     {
         var sb = new StringBuilder("0x", array.Length + 2);
 
@@ -46,7 +46,7 @@ public static class Hex
         return sb.ToString();
     }
 
-    public static string ConcatGetOxString(params byte[][] arrays)
+    public static string ConcatGetOXString(params byte[][] arrays)
     {
         var sb = new StringBuilder("0x", arrays.Sum(x => x.Length) + 2);
 
@@ -60,7 +60,7 @@ public static class Hex
 
     // from https://github.com/frederik-hoeft/simd
 
-    public static byte[] GetBytes0x(ReadOnlySpan<char> hexData)
+    public static byte[] GetBytes0X(ReadOnlySpan<char> hexData)
     {
         if (!hexData.StartsWith("0x"))
         {

@@ -56,7 +56,7 @@ namespace Engi.Substrate
 
             var payloadWithLength = ms.ToArray();
 
-            return client.AuthorSubmitExtrinsic(payloadWithLength);
+            return client.AuthorSubmitExtrinsicAsync(payloadWithLength);
         }
 
         private static byte[] GetSignaturePayload(
@@ -77,8 +77,8 @@ namespace Engi.Substrate
             writer.WriteCompact(tip);
             writer.Write(snapshot.RuntimeVersion.SpecVersion);
             writer.Write(snapshot.RuntimeVersion.TransactionVersion);
-            writer.WriteHex0x(snapshot.GenesisHash);
-            writer.WriteHex0x(blockHash);
+            writer.WriteHex0X(snapshot.GenesisHash);
+            writer.WriteHex0X(blockHash);
 
             return ms.ToArray();
         }

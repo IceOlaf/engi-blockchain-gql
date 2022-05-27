@@ -104,6 +104,10 @@ public class SubstrateClient
     public Task<string> AuthorSubmitExtrinsicAsync(byte[] payload) =>
         RpcAsync("author_submitExtrinsic", Hex.GetString0X(payload));
 
+    // contracts_
+
+    public Task<ContractCallResponse> ContractCallAsync(ContractCall call) => RpcAsync<ContractCallResponse>("contracts_call", call);
+
     // composite
 
     public async Task<AccountInfo> GetSystemAccountAsync(byte[] accountIdBytes)

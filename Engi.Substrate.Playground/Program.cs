@@ -1,4 +1,5 @@
 ﻿using Engi.Substrate.Keys;
+using Engi.Substrate.Pallets;
 
 namespace Engi.Substrate.Playground;
 
@@ -7,6 +8,27 @@ public static class Program
     public static async Task Main()
     {
         
+    }
+
+    private static async Task ContractCallErc20BalanceOfExampleAsync()
+    {
+        var http = new HttpClient
+        {
+            BaseAddress = new Uri("http://localhost:9933")
+        };
+
+        var client = new SubstrateClient(http);
+
+        var response = await client.ContractCallAsync(new ContractCall
+        {
+            ContractAddress = "5HjZeHL5MPeKRurbg3HuK6PH9L5uAw822EBBNRKr5Xd6GFy2", // comes from upload
+            Origin = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            GasLimit = 4999999999999,
+            InputData0X = "0x0f755a56" // selector from metadata
+                + Hex.GetString(Address.From("5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL").Raw)
+        });
+
+        return;
     }
 
     private static async Task BalanceTransferExampleAsync()

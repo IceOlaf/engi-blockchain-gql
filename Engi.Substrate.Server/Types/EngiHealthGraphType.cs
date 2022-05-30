@@ -10,6 +10,6 @@ public class EngiHealthGraphType : ObjectGraphType<EngiHealth>
         Field(x => x.NodeName);
         Field(x => x.Version);
         Field(x => x.Status);
-        Field(x => x.PeerCount);
+        Field(x => x.PeerCount, nullable: true);
     }
 }

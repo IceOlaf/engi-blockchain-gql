@@ -8,7 +8,7 @@ public class PortableType
 
     public TypeParameter[] Params { get; set; } = null!;
 
-    public TypeDefinition? Definition { get; set; }
+    public TypeDefinition Definition { get; set; } = null!;
 
     public string[] Docs { get; set; } = null!;
 
@@ -24,7 +24,7 @@ public class PortableType
             Id = stream.ReadCompactInteger(),
             Path = stream.ReadList(s => s.ReadString()!),
             Params = stream.ReadList(TypeParameter.Parse),
-            Definition = TypeDefinition.Parse(stream),
+            Definition = TypeDefinition.Parse(stream)!,
             Docs = stream.ReadList(s => s.ReadString(false)!)
         };
     }

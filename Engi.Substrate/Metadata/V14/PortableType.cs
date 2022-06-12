@@ -12,10 +12,9 @@ public class PortableType
 
     public string[] Docs { get; set; } = null!;
 
-    public override string ToString()
-    {
-        return string.Join(":", Path);
-    }
+    public string FullPath => string.Join(":", Path);
+
+    public override string ToString() => FullPath + Environment.NewLine + Docs;
 
     public static PortableType Parse(ScaleStreamReader stream)
     {

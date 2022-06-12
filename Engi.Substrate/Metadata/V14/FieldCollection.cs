@@ -9,9 +9,9 @@ public class FieldCollection : List<Field>
         : base(fields)
     { }
 
-    public Field Find(string name)
+    public Field? Find(string name)
     {
-        return this.Single(
+        return this.SingleOrDefault(
             x => string.Equals(x.Name, name, StringComparison.InvariantCultureIgnoreCase));
     }
 }

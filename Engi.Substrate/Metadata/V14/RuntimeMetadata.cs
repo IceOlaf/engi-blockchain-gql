@@ -1,4 +1,6 @@
-﻿namespace Engi.Substrate.Metadata.V14;
+﻿using System.Linq.Expressions;
+
+namespace Engi.Substrate.Metadata.V14;
 
 public class RuntimeMetadata
 {
@@ -14,10 +16,30 @@ public class RuntimeMetadata
 
     public TType? TypeId { get; set; }
 
+    public VariantTypeDefinition MultiAddressTypeDefinition
+    {
+        get
+        {
+            // TODO: cache
+
+            var type = GetTypeByPath("sp_runtime:multiaddress:MultiAddress");
+
+            return (VariantTypeDefinition)type.Definition;
+        }
+    }
+
     public PalletMetadata FindPallet(string name)
     {
-        return Pallets.Single(
-            x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        try
+        {
+            return Pallets.Single(
+                x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
+        catch(InvalidOperationException)
+        {
+            throw new InvalidOperationException(
+                $"Pallet '{name}' was not found.");
+        }
     }
 
     public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)
@@ -25,11 +47,17 @@ public class RuntimeMetadata
         var pallet = FindPallet(palletName);
 
         var callType = TypesById[pallet.Calls.Type.Value];
-
+        
         if (callType.Definition is VariantTypeDefinition variantType)
         {
-            var variant = variantType.Variants.Single(
+            var variant = variantType.Variants.SingleOrDefault(
                 x => string.Equals(x.Name, callName, StringComparison.OrdinalIgnoreCase));
+
+            if (variant == null)
+            {
+                throw new InvalidOperationException(
+                    $"Variant '{callName}' was not found in pallet '{palletName}'.");
+            }
 
             return (pallet, variant);
         }
@@ -37,12 +65,45 @@ public class RuntimeMetadata
         throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
     }
 
-    public PortableType GetTypeByPath(params string[] path)
+    public PortableType GetTypeByPath(string path)
     {
         // TODO: cache
 
         return TypesById.Values
-            .First(x => x.Path.SequenceEqual(path));
+            .First(x => x.FullPath == path);
+    }
+
+    public void VerifySignature(
+        Variant variant,
+        params Expression<Func<Field, PortableType, bool>>[] assertions)
+    {
+        if (variant == null)
+        {
+            throw new ArgumentNullException(nameof(variant));
+        }
+
+        if (assertions is not { Length: not 0 })
+        {
+            throw new ArgumentException(
+                "No asserts were provided",
+                nameof(assertions));
+        }
+
+        for (int index = 0; index < variant.Fields.Count; ++index)
+        {
+            // TODO: cache
+
+            var expression = assertions[index];
+            var assertion = expression.Compile();
+
+            var field = variant.Fields[index];
+            var type = TypesById[field.Type.Value];
+
+            if (!assertion(field, type))
+            {
+                throw new RuntimeAssumptionFailedException(expression.ToString());
+            }
+        }
     }
 
     public static RuntimeMetadata Parse(ScaleStreamReader stream)
@@ -74,5 +135,12 @@ public class RuntimeMetadata
             Extrinsic = ExtrinsicMetadata.Parse(stream),
             TypeId = TType.Parse(stream)
         };
+    }
+
+    class RuntimeAssumptionFailedException : Exception
+    {
+        public RuntimeAssumptionFailedException(string assumption)
+            : base($"Runtime assumption failed: {assumption}")
+        { }
     }
 }

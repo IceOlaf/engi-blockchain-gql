@@ -57,16 +57,14 @@ namespace Engi.Substrate.Server
                 return new SubstrateClient(httpClientFactory);
             });
 
+            services.AddHostedService<ChainObserverBackgroundService>();
             services.AddSingleton(serviceProvider =>
             {
-                var options = serviceProvider.GetRequiredService<IOptions<SubstrateClientOptions>>();
-                var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-                var logger = serviceProvider.GetRequiredService<ILogger<ChainNewHeadSubscriber>>();
+                var chainObserver = serviceProvider.GetServices<IHostedService>()
+                    .OfType<ChainObserverBackgroundService>()
+                    .Single();
 
-                IObservable<Header> subscriber = new ChainNewHeadSubscriber(
-                    options.Value.WssUri, httpClientFactory, logger);
-
-                return subscriber;
+                return chainObserver.Updates;
             });
         }
 

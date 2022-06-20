@@ -10,13 +10,16 @@ public class ChainObserverBackgroundService : BackgroundService
 {
     private readonly Subject<JsonRpcResponse> updates = new();
 
+    private readonly IServiceProvider serviceProvider;
     private readonly ILogger logger;
     private readonly Uri uri;
 
     public ChainObserverBackgroundService(
+        IServiceProvider serviceProvider,
         ILogger<ChainObserverBackgroundService> logger,
         IOptions<SubstrateClientOptions> substrateClientOptions)
     {
+        this.serviceProvider = serviceProvider;
         this.logger = logger;
 
         uri = substrateClientOptions.Value.WssUri;
@@ -24,16 +27,13 @@ public class ChainObserverBackgroundService : BackgroundService
 
     public IObservable<JsonRpcResponse> Updates => updates;
 
-    private async Task OnReconnect(ChainWsConnection connection)
-    {
-        await connection.SendJsonAsync(new
-        {
-            method = "chain_subscribeNewHead"
-        }, default);
-    }
-
     protected override async Task ExecuteAsync(CancellationToken cancellation)
     {
+        var ownRegistrations = new SubscriptionRegistration[]
+        {
+            new RuntimeSubscriptionRegistration()
+        };
+
         while (!cancellation.IsCancellationRequested)
         {
             // connect and read
@@ -45,11 +45,55 @@ public class ChainObserverBackgroundService : BackgroundService
 
                 logger.LogInformation("Connected.");
 
-                await OnReconnect(connection);
+                // execute registrations
+
+                var registrations = ownRegistrations
+                    .Concat(serviceProvider.GetServices<SubscriptionRegistration>())
+                    .ToArray();
+
+                var unitializedRegistrations = new Dictionary<long, SubscriptionRegistration>();
+
+                foreach (var registration in registrations)
+                {
+                    long requestId = await connection.SendJsonAsync(registration.GetPayload(), cancellation);
+
+                    unitializedRegistrations.Add(requestId, registration);
+                }
+
+                // start receiving messages
 
                 while (connection.IsOpen)
                 {
                     var message = await connection.ReadResponseAsync(cancellation);
+
+                    // initialize any leftover registrations
+
+                    if (unitializedRegistrations.TryGetValue(message.Id, out var registration))
+                    {
+                        registration.CurrentId = message.Result.GetValue<string>();
+
+                        logger.LogDebug("Registration={type} received subscription id={id}",
+                            registration.GetType(), registration.CurrentId);
+
+                        continue;
+                    }
+
+                    // look for sub messages
+
+                    if (message.Parameters.SubscriptionId != null)
+                    {
+                        var match = registrations
+                            .FirstOrDefault(x => x.CurrentId == message.Parameters.SubscriptionId);
+
+                        if (match != null)
+                        {
+                            await match.PublishAsync(message);
+                        }
+
+                        continue;
+                    }
+
+                    // publish to main stream
 
                     updates.OnNext(message);
                 }

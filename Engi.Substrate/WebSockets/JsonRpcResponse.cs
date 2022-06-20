@@ -15,7 +15,7 @@ public class JsonRpcResponse
     public JsonNode Result { get; set; } = null!;
 
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     [JsonPropertyName("params")]
     public JsonRpcResponseParameters Parameters { get; set; } = null!;

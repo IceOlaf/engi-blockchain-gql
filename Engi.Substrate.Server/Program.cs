@@ -4,6 +4,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        System.Diagnostics.Debugger.Launch();
         var host = Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {

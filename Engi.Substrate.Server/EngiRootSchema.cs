@@ -1,6 +1,5 @@
 ﻿using Engi.Substrate.Pallets;
 using Engi.Substrate.Server.Types;
-using Engi.Substrate.WebSockets;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server;
@@ -16,9 +15,6 @@ public class EngiRootSchema : Schema
 
         Query = new EngiQuery(serviceProvider);
         Mutation = new EngiMutations(serviceProvider);
-        Subscription = new EngiSubscriptions(
-            serviceProvider.GetRequiredService<IObservable<JsonRpcResponse>>(),
-            serviceProvider.GetRequiredService<IHttpClientFactory>(),
-            serviceProvider.GetRequiredService<ILogger<EngiSubscriptions>>());
+        Subscription = new EngiSubscriptions(serviceProvider);
     }
 }

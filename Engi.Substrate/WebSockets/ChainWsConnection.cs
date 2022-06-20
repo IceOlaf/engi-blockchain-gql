@@ -1,7 +1,6 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Polly;
 
 namespace Engi.Substrate.WebSockets;
@@ -62,14 +61,16 @@ public class ChainWsConnection : IDisposable
     {
         string json = await ReadMessageAsync(cancellation);
 
-        return JsonSerializer.Deserialize<JsonRpcResponse>(json)!;
+        return JsonSerializer.Deserialize<JsonRpcResponse>(json, 
+            SubstrateJsonSerializerOptions.Default)!;
     }
 
-    public Task SendJsonAsync<T>(T payload, CancellationToken cancellation)
+    public async Task<long> SendJsonAsync<T>(T payload, CancellationToken cancellation)
     {
         long id = Interlocked.Increment(ref IdCounter);
 
-        var json = JsonSerializer.SerializeToNode(payload, DefaultOptions)!;
+        var json = JsonSerializer.SerializeToNode(payload, 
+            SubstrateJsonSerializerOptions.Default)!;
 
         json["id"] = id;
         json["jsonrpc"] = "2.0";
@@ -78,7 +79,9 @@ public class ChainWsConnection : IDisposable
 
         byte[] bytes = Encoding.UTF8.GetBytes(jsonString);
 
-        return ws.SendAsync(bytes, WebSocketMessageType.Text, true, cancellation);
+        await ws.SendAsync(bytes, WebSocketMessageType.Text, true, cancellation);
+
+        return id;
     }
 
     public void Dispose()
@@ -117,10 +120,4 @@ public class ChainWsConnection : IDisposable
 
         return TimeSpan.FromSeconds(Math.Min(delay, 30));
     }
-
-    private static readonly JsonSerializerOptions DefaultOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DictionaryKeyPolicy = JsonNamingPolicy.CamelCase
-    };
 }

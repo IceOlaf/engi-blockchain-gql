@@ -9,5 +9,5 @@ public class JsonRpcResponseParameters
     public JsonNode Result { get; set; } = null!;
 
     [JsonPropertyName("subscription")]
-    public string SubscriptionId { get; set; } = null!;
+    public string? SubscriptionId { get; set; } = null!;
 }

@@ -57,15 +57,8 @@ namespace Engi.Substrate.Server
                 return new SubstrateClient(httpClientFactory);
             });
 
+            services.AddSingleton<SubscriptionRegistration, NewHeadSubscriptionRegistration>();
             services.AddHostedService<ChainObserverBackgroundService>();
-            services.AddSingleton(serviceProvider =>
-            {
-                var chainObserver = serviceProvider.GetServices<IHostedService>()
-                    .OfType<ChainObserverBackgroundService>()
-                    .Single();
-
-                return chainObserver.Updates;
-            });
         }
 
         public void Configure(IApplicationBuilder app)

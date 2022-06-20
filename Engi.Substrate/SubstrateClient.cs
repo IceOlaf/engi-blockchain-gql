@@ -1,6 +1,5 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Pallets;
 
@@ -48,12 +47,7 @@ public class SubstrateClient
                 $"Substrate error {error.GetProperty("code")}; {error.GetProperty("message")}: {data}");
         }
 
-        T? result = json.GetProperty("result").Deserialize<T>(new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            DictionaryKeyPolicy = JsonNamingPolicy.CamelCase,
-            Converters = {new JsonStringEnumConverter()}
-        });
+        T? result = json.GetProperty("result").Deserialize<T>(SubstrateJsonSerializerOptions.Default);
 
         return result!;
     }

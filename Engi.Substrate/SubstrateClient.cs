@@ -21,7 +21,7 @@ public class SubstrateClient
         http = httpClientFactory.CreateClient(nameof(SubstrateClient));
     }
 
-    public async Task<T> RpcAsync<T>(string method, params object[] @params)
+    public async Task<T?> RpcAsync<T>(string method, params object[] @params)
     {
         long id = Interlocked.Increment(ref IdCounter);
 
@@ -49,7 +49,7 @@ public class SubstrateClient
 
         T? result = json.GetProperty("result").Deserialize<T>(SubstrateJsonSerializerOptions.Default);
 
-        return result!;
+        return result;
     }
 
     public async Task<string> RpcAsync(string method, params object[] @params)
@@ -70,28 +70,28 @@ public class SubstrateClient
 
     // system_
 
-    public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain");
-    public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name");
-    public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version");
-    public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>("system_health");
+    public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain")!;
+    public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name")!;
+    public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version")!;
+    public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>("system_health")!;
 
     // state_
 
-    public Task<RuntimeVersion> GetRuntimeVersionAsync(string hash) => RpcAsync<RuntimeVersion>("state_getRuntimeVersion", hash);
+    public Task<RuntimeVersion> GetRuntimeVersionAsync(string hash) => RpcAsync<RuntimeVersion>("state_getRuntimeVersion", hash)!;
 
     public Task<RuntimeMetadata> GetStateMetadataAsync()
     {
         return RpcScaleAsync(RuntimeMetadata.Parse, "state_getMetadata");
     }
 
-    public Task<T> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
+    public Task<T?> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
 
     // chain_
 
     public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync("chain_getBlockHash", number);
     public Task<string> GetChainFinalizedHeadAsync() => RpcAsync("chain_getFinalizedHead");
-    public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>("chain_getHeader");
-    public Task<Header> GetChainHeaderAsync(string hash) => RpcAsync<Header>("chain_getHeader", hash);
+    public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>("chain_getHeader")!;
+    public Task<Header> GetChainHeaderAsync(string hash) => RpcAsync<Header>("chain_getHeader", hash)!;
 
     // author_
 
@@ -100,7 +100,7 @@ public class SubstrateClient
 
     // contracts_
 
-    public Task<ContractCallResponse> ContractCallAsync(ContractCall call) => RpcAsync<ContractCallResponse>("contracts_call", call);
+    public Task<ContractCallResponse> ContractCallAsync(ContractCall call) => RpcAsync<ContractCallResponse>("contracts_call", call)!;
 
     // composite
 
@@ -117,7 +117,12 @@ public class SubstrateClient
             Hashing.Blake2Concat(accountIdBytes)
         );
 
-        string result = await GetStateStorageAsync<string>(addressHex);
+        string? result = await GetStateStorageAsync<string>(addressHex);
+
+        if (result == null)
+        {
+            throw new KeyNotFoundException(addressHex);
+        }
 
         var scale = new ScaleStreamReader(result);
 

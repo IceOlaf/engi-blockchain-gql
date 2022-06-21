@@ -19,6 +19,11 @@ public class ScaleStreamReader : IDisposable
 
     public ScaleStreamReader(string hexString)
     {
+        if (hexString == null)
+        {
+            throw new ArgumentNullException(nameof(hexString));
+        }
+
         if (!hexString.StartsWith("0x"))
         {
             throw new ArgumentException("Hex string is assumed to start with 0x", nameof(hexString));

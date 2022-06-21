@@ -22,7 +22,7 @@ public class RuntimeMetadata
         {
             // TODO: cache
 
-            var type = GetTypeByPath("sp_runtime:multiaddress:MultiAddress");
+            var type = GetTypeByFullName("sp_runtime:multiaddress:MultiAddress");
 
             return (VariantTypeDefinition)type.Definition;
         }
@@ -65,12 +65,12 @@ public class RuntimeMetadata
         throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
     }
 
-    public PortableType GetTypeByPath(string path)
+    public PortableType GetTypeByFullName(string path)
     {
         // TODO: cache
 
         return TypesById.Values
-            .First(x => x.FullPath == path);
+            .First(x => x.FullName == path);
     }
 
     public void VerifySignature(

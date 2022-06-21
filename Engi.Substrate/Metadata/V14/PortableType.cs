@@ -12,9 +12,20 @@ public class PortableType
 
     public string[] Docs { get; set; } = null!;
 
-    public string FullPath => string.Join(":", Path);
+    public string FullName
+    {
+        get
+        {
+            if (Definition is PrimitiveTypeDefinition primitive)
+            {
+                return CachedEnum<PrimitiveType>.GetEnumMemberValue(primitive.PrimitiveType);
+            }
 
-    public override string ToString() => FullPath + Environment.NewLine + Docs;
+            return string.Join(":", Path);
+        }
+    }
+
+    public override string ToString() => FullName + Environment.NewLine + Docs;
 
     public static PortableType Parse(ScaleStreamReader stream)
     {

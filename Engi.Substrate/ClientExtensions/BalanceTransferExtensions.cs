@@ -89,7 +89,7 @@ public static class BalanceTransferExtensions
             .FindPalletCallVariant("balances", "transfer");
 
         meta.VerifySignature(transfer,
-            (field, type) => field.Name == "dest" && type.FullPath == "sp_runtime:multiaddress:MultiAddress",
+            (field, type) => field.Name == "dest" && type.FullName == "sp_runtime:multiaddress:MultiAddress",
             (field, type) => field.Name == "value" && type.Definition is CompactTypeDefinition);
 
         var addressType = meta.MultiAddressTypeDefinition.Variants.IndexOf("Id");

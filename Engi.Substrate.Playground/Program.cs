@@ -7,7 +7,37 @@ public static class Program
 {
     public static async Task Main()
     {
-        
+        var http = new HttpClient
+        {
+            BaseAddress = new Uri("http://localhost:9933")
+        };
+
+        var client = new SubstrateClient(http);
+
+        var snapshot = await client.GetChainSnapshotAsync();
+
+        var (template, do_something) = snapshot.Metadata
+            .FindPalletCallVariant("TemplateModule", "do_something");
+
+        snapshot.Metadata.VerifySignature(do_something,
+            (field, type) => type.FullName == "u32");
+
+        using var ms = new MemoryStream();
+        using var writer = new ScaleStreamWriter(ms);
+
+        writer.Write(template.Index);
+        writer.Write(do_something.Index);
+        writer.Write((uint)5);
+
+        var sender = KeypairFactory.CreateFromMnemonic(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);
+
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        string result = await client.SignAndAuthorSubmitExtrinsicAsync(
+            snapshot, sender, account, ms.ToArray(), Era.Immortal);
+
+        return;
     }
 
     private static async Task ContractCallErc20BalanceOfExampleAsync()

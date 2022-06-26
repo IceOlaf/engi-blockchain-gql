@@ -2,9 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class DigestType : ObjectGraphType<Digest>
+public class DigestGraphType : ObjectGraphType<Digest>
 {
-    public DigestType()
+    public DigestGraphType()
     {
         Field(x => x.Logs);
     }

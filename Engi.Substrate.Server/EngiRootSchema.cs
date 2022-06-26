@@ -10,8 +10,10 @@ public class EngiRootSchema : Schema
         IServiceProvider serviceProvider)
     {
         RegisterTypeMapping(typeof(AccountData), typeof(AccountDataGraphType));
-        RegisterTypeMapping(typeof(Digest), typeof(DigestType));
-        RegisterTypeMapping(typeof(AccountMetadata), typeof(AccountMetadataType));
+        RegisterTypeMapping(typeof(AccountMetadata), typeof(AccountMetadataGraphType));
+        RegisterTypeMapping(typeof(Digest), typeof(DigestGraphType));
+        RegisterTypeMapping(typeof(GenericEvent), typeof(GenericEventGraphType));
+        RegisterTypeMapping(typeof(Phase), typeof(PhaseGraphType));
 
         Query = new EngiQuery(serviceProvider);
         Mutation = new EngiMutations(serviceProvider);

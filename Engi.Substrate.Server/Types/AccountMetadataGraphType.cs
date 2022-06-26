@@ -2,9 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class AccountMetadataType : ObjectGraphType<AccountMetadata>
+public class AccountMetadataGraphType : ObjectGraphType<AccountMetadata>
 {
-    public AccountMetadataType()
+    public AccountMetadataGraphType()
     {
         Field(x => x.Content);
         Field(x => x.Type);

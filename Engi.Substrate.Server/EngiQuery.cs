@@ -21,6 +21,11 @@ public class EngiQuery : ObjectGraphType
                 new QueryArgument<IdGraphType> { Name = "id" }
             ),
             resolve: async context => await GetAccountAsync(context));
+
+        FieldAsync<ListGraphType<EventRecordGraphType>>("events",
+            arguments: new QueryArguments(
+                new QueryArgument<IdGraphType> { Name = "blockHash" }),
+            resolve: async context => await GetEventsAsync(context));
     }
 
     private async Task<EngiHealth> GetHealthAsync()
@@ -64,7 +69,7 @@ public class EngiQuery : ObjectGraphType
         }
     }
 
-    private async Task<AccountInfo> GetAccountAsync(IResolveFieldContext<object> context)
+    private Task<AccountInfo> GetAccountAsync(IResolveFieldContext<object> context)
     {
         using var scope = serviceProvider.CreateScope();
 
@@ -72,6 +77,20 @@ public class EngiQuery : ObjectGraphType
 
         string accountId = context.GetArgument<string>("id")!;
 
-        return await substrate.GetSystemAccountAsync(Address.From(accountId));
+        return substrate.GetSystemAccountAsync(Address.From(accountId));
+    }
+
+    private async Task<EventRecord[]> GetEventsAsync(IResolveFieldContext<object> context)
+    {
+        using var scope = serviceProvider.CreateScope();
+
+        var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
+
+        // TODO: get from cache
+        var snapshot = await substrate.GetChainSnapshotAsync();
+
+        string blockHash = context.GetArgument<string>("blockHash")!;
+
+        return await substrate.GetSystemEventsAsync(blockHash, snapshot.Metadata);
     }
 }

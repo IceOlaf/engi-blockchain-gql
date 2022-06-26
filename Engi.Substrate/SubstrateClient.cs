@@ -112,8 +112,8 @@ public class SubstrateClient
         }
 
         string addressHex = Hex.ConcatGetOXString(
-            xxSystem,
-            xxAccount,
+            StorageKeys.System, 
+            StorageKeys.Account,
             Hashing.Blake2Concat(accountIdBytes)
         );
 
@@ -163,7 +163,4 @@ public class SubstrateClient
             RuntimeVersion = runtimeVersionTask.Result
         };
     }
-
-    private static readonly byte[] xxAccount = Hashing.Twox128("Account");
-    private static readonly byte[] xxSystem = Hashing.Twox128("System");
 }

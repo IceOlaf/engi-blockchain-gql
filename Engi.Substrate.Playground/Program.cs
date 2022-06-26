@@ -7,6 +7,29 @@ public static class Program
 {
     public static async Task Main()
     {
+        
+    }
+
+    private static async Task GetSystemEventsForBlockAsync()
+    {
+        var http = new HttpClient
+        {
+            BaseAddress = new Uri("http://localhost:9933")
+        };
+
+        var client = new SubstrateClient(http);
+
+        var snapshot = await client.GetChainSnapshotAsync();
+
+        var events =
+            await client.GetSystemEventsAsync("0x2f4ad438bc18b7f1ca11f80aee7af7fc446288b71eedd860528f70ea98992374",
+                snapshot.Metadata);
+
+        return;
+    }
+
+    private static async Task InvokeTemplateModuleDoSomethingAsync()
+    {
         var http = new HttpClient
         {
             BaseAddress = new Uri("http://localhost:9933")

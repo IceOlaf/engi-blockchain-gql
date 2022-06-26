@@ -1,11 +1,12 @@
 using System.Numerics;
 using System.Text;
+using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate;
 
 public class ScaleStreamReader : IDisposable
 {
-    private readonly Stream inner;
+    private readonly MemoryStream inner;
 
     public ScaleStreamReader(byte[] data)
     {
@@ -34,12 +35,11 @@ public class ScaleStreamReader : IDisposable
         inner = new MemoryStream(data, false);
     }
 
+    public long Position => inner.Position;
+
     public bool HasNext => inner.Position < inner.Length;
 
-    public long Seek(long offset, SeekOrigin origin)
-    {
-        return inner.Seek(offset, origin);
-    }
+    public byte[] Remainder => inner.ToArray().Skip((int)inner.Position).ToArray();
 
     public void Dispose() => inner.Dispose();
 
@@ -336,6 +336,25 @@ public class ScaleStreamReader : IDisposable
 
         throw new NotSupportedException(
             $"Reading of {t.FullName} is not supported");
+    }
+
+    public object ReadPrimitive(PrimitiveType type)
+    {
+        return type switch
+        {
+            PrimitiveType.Bool => ReadBool(),
+            PrimitiveType.Char => (char)ReadByte(),
+            PrimitiveType.Int32 => ReadInt32(),
+            PrimitiveType.Int8 => (sbyte)ReadByte(),
+            PrimitiveType.String => ReadString(returnNullIfEmpty: false)!,
+            PrimitiveType.UInt8 => (byte)ReadByte(),
+            PrimitiveType.UInt16 => ReadUInt16(),
+            PrimitiveType.UInt32 => ReadUInt32(),
+            PrimitiveType.UInt64 => ReadUInt64(),
+            PrimitiveType.UInt128 => ReadUInt128(),
+            _ => throw new NotImplementedException(
+                $"Reading of primitive type '{type}' is not implemented.")
+        };
     }
 
     public T? Read<T>()

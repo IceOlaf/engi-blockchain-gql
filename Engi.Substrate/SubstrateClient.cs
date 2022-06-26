@@ -139,6 +139,22 @@ public class SubstrateClient
         return GetSystemAccountAsync(address.Raw);
     }
 
+    public async Task<EventRecord[]> GetSystemEventsAsync(string blockHash, RuntimeMetadata meta)
+    {
+        var @params = new[]
+        {
+            Hex.ConcatGetOXString(StorageKeys.System, StorageKeys.Events),
+            blockHash
+        };
+
+        string result = (await GetStateStorageAsync<string>(@params))!;
+
+        using var reader = new ScaleStreamReader(result);
+
+        return reader.ReadList(
+            s => EventRecord.Parse(s, meta));
+    }
+
     public async Task<ChainSnapshot> GetChainSnapshotAsync()
     {
         var metadataTask = GetStateMetadataAsync();

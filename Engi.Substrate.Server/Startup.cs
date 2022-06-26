@@ -48,7 +48,7 @@ namespace Engi.Substrate.Server
                     .GetRequiredSection("Substrate")
                     .Get<SubstrateClientOptions>();
 
-                http.BaseAddress = options.HttpsUri;
+                http.BaseAddress = new Uri(options.HttpUrl);
             })
             .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, @try => TimeSpan.FromSeconds(@try)));
             services.AddTransient(sp =>

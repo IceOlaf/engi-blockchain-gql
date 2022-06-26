@@ -22,7 +22,7 @@ public class ChainObserverBackgroundService : BackgroundService
         this.serviceProvider = serviceProvider;
         this.logger = logger;
 
-        uri = substrateClientOptions.Value.WssUri;
+        uri = new Uri(substrateClientOptions.Value.WsUrl);
     }
 
     public IObservable<JsonRpcResponse> Updates => updates;

@@ -6,7 +6,7 @@ public class ArrayTypeDefinition : TypeDefinition
 
     public uint Len { get; set; }
         
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
 
     internal new static ArrayTypeDefinition Parse(ScaleStreamReader stream)
     {

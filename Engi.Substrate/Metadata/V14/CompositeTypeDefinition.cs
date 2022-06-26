@@ -4,13 +4,13 @@ public class CompositeTypeDefinition : TypeDefinition
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Composite;
 
-    public Field[]? Fields { get; set; }
+    public FieldCollection Fields { get; set; } = null!;
 
     internal new static CompositeTypeDefinition Parse(ScaleStreamReader stream)
     {
         return new()
         {
-            Fields = stream.ReadList(Field.Parse)
+            Fields = new FieldCollection(stream.ReadList(Field.Parse))
         };
     }
 }

@@ -28,6 +28,19 @@ public class RuntimeMetadata
         }
     }
 
+    public PalletMetadata FindPallet(byte index)
+    {
+        try
+        {
+            return Pallets.Single(x => x.Index == index);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new InvalidOperationException(
+                $"Pallet with index '{index}' was not found.");
+        }
+    }
+
     public PalletMetadata FindPallet(string name)
     {
         try
@@ -42,11 +55,50 @@ public class RuntimeMetadata
         }
     }
 
+    public (PalletMetadata pallet, Variant @event) FindEvent(byte moduleIndex, byte eventIndex)
+    {
+        var pallet = FindPallet(moduleIndex);
+
+        if (pallet.Events?.Type == null)
+        {
+            throw new InvalidOperationException(
+                $"Event with index '{eventIndex}' was not found in pallet '{pallet.Name}' (index={moduleIndex}).");
+        }
+
+        var eventsTypeIndex = pallet.Events!.Type!.Value;
+        var events = (VariantTypeDefinition) TypesById[eventsTypeIndex].Definition;
+
+        Variant eventVariant;
+
+        try
+        {
+            eventVariant = events.Variants.Find(eventIndex);
+        }
+        catch (InvalidOperationException)
+        {
+            throw new InvalidOperationException(
+                $"Event with index '{eventIndex}' was not found in pallet '{pallet.Name}' (index={moduleIndex}).");
+        }
+
+        return (pallet, eventVariant);
+    }
+
+    public (PalletMetadata pallet, Variant @event) FindEvent(byte[] index)
+    {
+        if (index is not { Length: 2 })
+        {
+            throw new ArgumentException(
+                "Index must be an array of length 2.");
+        }
+
+        return FindEvent(index[0], index[1]);
+    }
+
     public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)
     {
         var pallet = FindPallet(palletName);
 
-        var callType = TypesById[pallet.Calls.Type.Value];
+        var callType = TypesById[pallet.Calls.Type];
         
         if (callType.Definition is VariantTypeDefinition variantType)
         {
@@ -97,7 +149,7 @@ public class RuntimeMetadata
             var assertion = expression.Compile();
 
             var field = variant.Fields[index];
-            var type = TypesById[field.Type.Value];
+            var type = TypesById[field.Type];
 
             if (!assertion(field, type))
             {

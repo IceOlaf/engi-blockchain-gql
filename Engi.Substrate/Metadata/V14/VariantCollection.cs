@@ -9,10 +9,14 @@ public class VariantCollection : List<Variant>
         : base(variants)
     { }
 
+    public Variant Find(byte index)
+    {
+        return this.Single(x => x.Index == index);
+    }
+
     public Variant Find(string name)
     {
-        return this.Single(
-            x => x.Name == name);
+        return this.Single(x => x.Name == name);
     }
 
     public byte IndexOf(string name)

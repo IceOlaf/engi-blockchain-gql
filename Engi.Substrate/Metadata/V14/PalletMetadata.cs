@@ -2,7 +2,7 @@
 
 public class PalletMetadata
 {
-    public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
     public PalletStorageMetadata? Storage { get; set; }
 
@@ -20,7 +20,7 @@ public class PalletMetadata
     {
         return new PalletMetadata
         {
-            Name = stream.ReadString(),
+            Name = stream.ReadString()!,
             Storage = stream.ReadOptional(PalletStorageMetadata.Parse),
             Calls = stream.ReadOptional(PalletCallMetadata.Parse)!,
             Events = stream.ReadOptional(PalletEventMetadata.Parse),

@@ -31,7 +31,7 @@ public class ChainObserverBackgroundService : BackgroundService
     {
         var ownRegistrations = new SubscriptionRegistration[]
         {
-            new RuntimeSubscriptionRegistration()
+            new RuntimeVersionSubscriptionRegistration()
         };
 
         while (!cancellation.IsCancellationRequested)

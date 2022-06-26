@@ -4,9 +4,9 @@ using Engi.Substrate.WebSockets;
 
 namespace Engi.Substrate.Server;
 
-public class RuntimeSubscriptionRegistration : SubscriptionRegistration
+public class RuntimeVersionSubscriptionRegistration : SubscriptionRegistration
 {
-    public RuntimeSubscriptionRegistration()
+    public RuntimeVersionSubscriptionRegistration()
         : base("state_subscribeRuntimeVersion")
     { }
 

@@ -43,7 +43,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "U8"
+        "primitive": "u8"
       },
       "docs": []
     }
@@ -110,7 +110,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "U32"
+        "primitive": "u32"
       },
       "docs": []
     }
@@ -167,7 +167,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "U128"
+        "primitive": "u128"
       },
       "docs": []
     }
@@ -219,7 +219,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "U64"
+        "primitive": "u64"
       },
       "docs": []
     }
@@ -3652,7 +3652,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "Bool"
+        "primitive": "bool"
       },
       "docs": []
     }
@@ -4954,7 +4954,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "U16"
+        "primitive": "u16"
       },
       "docs": []
     }
@@ -11080,7 +11080,7 @@
       "path": [],
       "params": [],
       "def": {
-        "primitive": "Str"
+        "primitive": "str"
       },
       "docs": []
     }

@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
 
     <RootNamespace>Engi.Substrate</RootNamespace>
+    <AssemblyName>Engi.Substrate.Tests</AssemblyName>
     <RazorCompileOnPublish>false</RazorCompileOnPublish>
   </PropertyGroup>
 
@@ -24,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Engi.Substrate\Engi.Substrate.csproj" />
+    <ProjectReference Include="..\engi-substrate\Engi.Substrate.csproj" />
   </ItemGroup>
 
   <ItemGroup>

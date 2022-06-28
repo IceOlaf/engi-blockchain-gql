@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  substrate:
+    container_name: substrate-node
+    image: paritytech/substrate-playground-template-node-template:sha-8bb8eac6
+    ports:
+      - "9933:9933"
+      - "9944:9944"
+    command: bash -c "/home/playground/workspace/target/debug/node-template --dev --rpc-external --ws-external"
+  api:
+    build: 
+      context: .
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://*:5000
+      - Substrate__HttpUrl=http://substrate:9933
+      - Substrate__WsUrl=ws://substrate:9944
+      - WAIT_HOSTS=substrate:9933
+  tests:
+    build:
+      context: .
+      target: test
+    environment:
+      - WAIT_HOSTS=api:5000
+    volumes:
+      - ./integration-test-results/:/source/engi-tests/TestResults/
+
+volumes:
+  integration-test-results:

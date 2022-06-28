@@ -1,6 +1,7 @@
 obj/
 bin/
 .vs/
+integration-test-results/
 *.user
 node_modules/
 package-lock.json

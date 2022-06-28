@@ -43,7 +43,7 @@ public class ChainObserverBackgroundService : BackgroundService
                 using var connection = await ChainWsConnection.CreateWithRetryAsync(uri, cancellation,
                     (ex, retryInTimeSpan) => logger.LogDebug(ex, "Unable to connect. Retry in: {0}", retryInTimeSpan));
 
-                logger.LogInformation("Connected.");
+                logger.LogInformation("Connected to {url}.", uri);
 
                 // execute registrations
 

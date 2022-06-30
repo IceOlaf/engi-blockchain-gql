@@ -57,7 +57,8 @@ namespace Engi.Substrate.Server
                 return new SubstrateClient(httpClientFactory);
             });
 
-            services.AddSingleton<SubscriptionRegistration, NewHeadSubscriptionRegistration>();
+            services.AddSingleton<IChainObserver, NewHeadChainObserver>();
+            services.AddSingleton<IChainObserver, ChainSnapshotObserver>();
             services.AddHostedService<ChainObserverBackgroundService>();
         }
 

@@ -15,10 +15,10 @@ public class JsonRpcResponse
     public JsonNode Result { get; set; } = null!;
 
     [JsonPropertyName("id")]
-    public long Id { get; set; }
+    public long? Id { get; set; }
 
     [JsonPropertyName("params")]
-    public JsonRpcResponseParameters Parameters { get; set; } = null!;
+    public JsonRpcResponseParameters? Parameters { get; set; } = null!;
 
     public override string ToString()
     {

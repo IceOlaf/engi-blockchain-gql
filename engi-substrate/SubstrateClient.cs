@@ -70,10 +70,10 @@ public class SubstrateClient
 
     // system_
 
-    public Task<string> GetSystemChainAsync() => RpcAsync<string>("system_chain")!;
-    public Task<string> GetSystemNameAsync() => RpcAsync<string>("system_name")!;
-    public Task<string> GetSystemVersionAsync() => RpcAsync<string>("system_version")!;
-    public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>("system_health")!;
+    public Task<string> GetSystemChainAsync() => RpcAsync<string>(ChainKeys.SystemChain)!;
+    public Task<string> GetSystemNameAsync() => RpcAsync<string>(ChainKeys.SystemName)!;
+    public Task<string> GetSystemVersionAsync() => RpcAsync<string>(ChainKeys.SystemVersion)!;
+    public Task<SystemHealth> GetSystemHealthAsync() => RpcAsync<SystemHealth>(ChainKeys.SystemHealth)!;
 
     // state_
 
@@ -81,22 +81,22 @@ public class SubstrateClient
 
     public Task<RuntimeMetadata> GetStateMetadataAsync()
     {
-        return RpcScaleAsync(RuntimeMetadata.Parse, "state_getMetadata");
+        return RpcScaleAsync(RuntimeMetadata.Parse, ChainKeys.StateGetMetadata);
     }
 
-    public Task<T?> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>("state_getStorage", @params);
+    public Task<T?> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>(ChainKeys.StateGetStorage, @params);
 
     // chain_
 
-    public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync("chain_getBlockHash", number);
-    public Task<string> GetChainFinalizedHeadAsync() => RpcAsync("chain_getFinalizedHead");
-    public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>("chain_getHeader")!;
-    public Task<Header> GetChainHeaderAsync(string hash) => RpcAsync<Header>("chain_getHeader", hash)!;
+    public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync(ChainKeys.ChainGetBlockHash, number);
+    public Task<string> GetChainFinalizedHeadAsync() => RpcAsync(ChainKeys.ChainGetFinalizedHead);
+    public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>(ChainKeys.ChainGetHeader)!;
+    public Task<Header> GetChainHeaderAsync(string hash) => RpcAsync<Header>(ChainKeys.ChainGetHeader, hash)!;
 
     // author_
 
     public Task<string> AuthorSubmitExtrinsicAsync(byte[] payload) =>
-        RpcAsync("author_submitExtrinsic", Hex.GetString0X(payload));
+        RpcAsync(ChainKeys.AuthorSubmitExtrinsic, Hex.GetString0X(payload));
 
     // contracts_
 
@@ -155,7 +155,7 @@ public class SubstrateClient
             s => EventRecord.Parse(s, meta));
     }
 
-    public async Task<ChainSnapshot> GetChainSnapshotAsync()
+    public async Task<ChainState> GetChainStateAsync()
     {
         var metadataTask = GetStateMetadataAsync();
         var genesisTask = GetChainBlockHashAsync(0);
@@ -174,9 +174,8 @@ public class SubstrateClient
         {
             Metadata = metadataTask.Result,
             GenesisHash = genesisTask.Result,
-            FinalizedBlockHash = finalizedBlockTask.Result,
+            Version = runtimeVersionTask.Result,
             LatestHeader = latestHeaderTask.Result,
-            RuntimeVersion = runtimeVersionTask.Result
         };
     }
 }

@@ -19,7 +19,7 @@ public static class Program
 
         var client = new SubstrateClient(http);
 
-        var snapshot = await client.GetChainSnapshotAsync();
+        var snapshot = await client.GetChainStateAsync();
 
         var events =
             await client.GetSystemEventsAsync("0x2f4ad438bc18b7f1ca11f80aee7af7fc446288b71eedd860528f70ea98992374",
@@ -37,7 +37,7 @@ public static class Program
 
         var client = new SubstrateClient(http);
 
-        var snapshot = await client.GetChainSnapshotAsync();
+        var snapshot = await client.GetChainStateAsync();
 
         var (template, do_something) = snapshot.Metadata
             .FindPalletCallVariant("TemplateModule", "do_something");
@@ -99,7 +99,7 @@ public static class Program
         ulong amount = 1;
         byte tip = 0;
 
-        var snapshot = await client.GetChainSnapshotAsync();
+        var snapshot = await client.GetChainStateAsync();
         var account = await client.GetSystemAccountAsync(sender.Address);
 
         var era = Era.CreateMortal(snapshot.LatestHeader, 55);

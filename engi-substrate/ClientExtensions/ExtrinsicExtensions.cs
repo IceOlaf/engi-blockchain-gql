@@ -9,17 +9,17 @@ public static class ExtrinsicExtensions
 
     public static Task<string> SignAndAuthorSubmitExtrinsicAsync(
         this SubstrateClient client,
-        ChainSnapshot snapshot,
+        ChainState chainState,
         Keypair sender,
         AccountInfo senderAccount,
         byte[] method,
         byte[] era,
         byte tip = 0)
     {
-        var multiAddressTypeDef = snapshot.Metadata.MultiAddressTypeDefinition;
+        var multiAddressTypeDef = chainState.Metadata.MultiAddressTypeDefinition;
         var addressType = multiAddressTypeDef.Variants.IndexOf("Id");
 
-        var unsigned = GetSignaturePayload(method, era, senderAccount, tip, snapshot);
+        var unsigned = GetSignaturePayload(method, era, senderAccount, tip, chainState);
 
         byte[] signature = sender.Sign(unsigned);
 
@@ -37,7 +37,7 @@ public static class ExtrinsicExtensions
         using var writer = new ScaleStreamWriter(ms);
 
         writer.WriteCompact((ulong)payloadLength);
-        writer.Write((byte)(snapshot.Metadata.Extrinsic.Version + SIGNED_EXTRINSIC));
+        writer.Write((byte)(chainState.Metadata.Extrinsic.Version + SIGNED_EXTRINSIC));
         writer.Write(addressType);
         writer.Write(sender.Address.Raw);
         writer.Write((byte)1); // signature type
@@ -57,20 +57,20 @@ public static class ExtrinsicExtensions
         byte[] era,
         AccountInfo account,
         byte tip,
-        ChainSnapshot snapshot)
+        ChainState chainState)
     {
         using var ms = new MemoryStream();
         using var writer = new ScaleStreamWriter(ms);
 
-        var blockHash = Era.IsImmortal(era) ? snapshot.GenesisHash : snapshot.LatestHeader.ParentHash;
+        var blockHash = Era.IsImmortal(era) ? chainState.GenesisHash : chainState.LatestHeader.ParentHash;
 
         writer.Write(method);
         writer.Write(era);
         writer.WriteCompact(account.Nonce);
         writer.WriteCompact(tip);
-        writer.Write(snapshot.RuntimeVersion.SpecVersion);
-        writer.Write(snapshot.RuntimeVersion.TransactionVersion);
-        writer.WriteHex0X(snapshot.GenesisHash);
+        writer.Write(chainState.Version.SpecVersion);
+        writer.Write(chainState.Version.TransactionVersion);
+        writer.WriteHex0X(chainState.GenesisHash);
         writer.WriteHex0X(blockHash);
 
         return ms.ToArray();

@@ -8,7 +8,7 @@ public static class BalanceTransferExtensions
 {
     public static Task<string> BalanceTransferAsync(
         this SubstrateClient client,
-        ChainSnapshot snapshot,
+        ChainState chainState,
         Keypair sender,
         AccountInfo senderAccount,
         Address recipient,
@@ -16,26 +16,10 @@ public static class BalanceTransferExtensions
         byte[] era,
         byte tip = 0)
     {
-        var (balances, transfer) = snapshot.Metadata
-            .FindPalletCallVariant("balances", "transfer");
-
-        snapshot.Metadata.VerifySignature(transfer,
-            (field, type) => field.Name == "dest" && type.FullName == "sp_runtime:multiaddress:MultiAddress",
-            (field, type) => field.Name == "value" && type.Definition is CompactTypeDefinition);
-
-        var addressType = snapshot.Metadata.MultiAddressTypeDefinition.Variants.IndexOf("Id");
-
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
-
-        writer.Write(balances.Index);
-        writer.Write(transfer.Index);
-        writer.Write(addressType);
-        writer.Write(recipient.Raw);
-        writer.WriteCompact(amount);
+        byte[] method = GetBalanceTransferMethodPayload(chainState.Metadata, recipient, amount);
 
         return client.SignAndAuthorSubmitExtrinsicAsync(
-            snapshot, sender, senderAccount, ms.ToArray(), era, tip);
+            chainState, sender, senderAccount, method, era, tip);
     }
     
     private static byte[] GetBalanceTransferMethodPayload(

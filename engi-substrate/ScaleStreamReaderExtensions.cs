@@ -26,7 +26,7 @@ public static class ScaleStreamReaderExtensions
         RuntimeMetadata meta)
     {
         var expando = new ExpandoObject();
-        var dictionary = (IDictionary<string, object>)expando;
+        var dictionary = (IDictionary<string, object>)expando!;
 
         for (int index = 0; index < fields.Count; index++)
         {

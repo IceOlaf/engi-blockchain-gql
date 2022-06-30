@@ -86,11 +86,13 @@ public class EngiQuery : ObjectGraphType
 
         var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
-        // TODO: get from cache
-        var snapshot = await substrate.GetChainSnapshotAsync();
+        var chainSnapshotObserver = scope.ServiceProvider
+            .GetServices<IChainObserver>()
+            .OfType<ChainSnapshotObserver>()
+            .Single();
 
         string blockHash = context.GetArgument<string>("blockHash")!;
 
-        return await substrate.GetSystemEventsAsync(blockHash, snapshot.Metadata);
+        return await substrate.GetSystemEventsAsync(blockHash, chainSnapshotObserver.Metadata);
     }
 }

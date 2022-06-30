@@ -12,6 +12,7 @@ public class EngiMutations : ObjectGraphType
     public EngiMutations(IServiceProvider serviceProvider)
     {
         this.serviceProvider = serviceProvider;
+
         Field<UserType>(
             "createUser",
             arguments: new QueryArguments(
@@ -32,8 +33,9 @@ public class EngiMutations : ObjectGraphType
             resolve: context =>
             {
                 var input = (BalanceTransferInput)context.Arguments!["transfer"].Value!;
+                var chainState = GetChainState();
 
-                return BalanceTransferAsync(input);
+                return BalanceTransferAsync(chainState, input);
             });
     }
 
@@ -90,20 +92,40 @@ public class EngiMutations : ObjectGraphType
         };
     }
 
-    private async Task<string> BalanceTransferAsync(BalanceTransferInput input)
+    private async Task<string> BalanceTransferAsync(
+        ChainState chainState, 
+        BalanceTransferInput input)
     {
         var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
         var dest = Address.From(input.RecipientAddress);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
-        var snapshot = await client.GetChainSnapshotAsync();
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        var era = Era.CreateMortal(snapshot.LatestHeader, 55);
-
         return await client.BalanceTransferAsync(
-            snapshot, sender, account, dest, input.Amount, era, input.Tip);
+            chainState, sender, account, dest, input.Amount, Era.Immortal, input.Tip);
+    }
+
+    private ChainState GetChainState()
+    {
+        using var scope = serviceProvider.CreateScope();
+
+        var observers = scope.ServiceProvider
+            .GetServices<IChainObserver>()
+            .ToArray();
+
+        var chainSnapshotObserver = observers.OfType<ChainSnapshotObserver>().Single();
+        var headObserver = observers.OfType<NewHeadChainObserver>().Single();
+
+        return new()
+        {
+            Metadata = chainSnapshotObserver.Metadata,
+            Version = chainSnapshotObserver.Version,
+            GenesisHash = chainSnapshotObserver.GenesisHash,
+            LatestHeader = headObserver.LastHeader!,
+            LatestFinalizedHeader = headObserver.LastFinalizedHeader!
+        };
     }
 }
 

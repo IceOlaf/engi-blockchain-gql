@@ -1,6 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using Polly;
 
 namespace Engi.Substrate.WebSockets;
@@ -10,12 +11,17 @@ public class ChainWsConnection : IDisposable
     private static long IdCounter = 0;
 
     private readonly Uri uri;
+    private readonly ILogger logger;
+
     private readonly ClientWebSocket ws = new();
     private readonly byte[] buffer = new byte[128 * 1024];
 
-    public ChainWsConnection(Uri uri)
+    public ChainWsConnection(
+        Uri uri,
+        ILogger<ChainWsConnection> logger)
     {
         this.uri = uri;
+        this.logger = logger;
     }
 
     public bool IsOpen => ws.State == WebSocketState.Open;
@@ -48,7 +54,11 @@ public class ChainWsConnection : IDisposable
 
             if (result.EndOfMessage)
             {
-                return Encoding.UTF8.GetString(buffer, 0, segment.Offset + result.Count);
+                string payload = Encoding.UTF8.GetString(buffer, 0, segment.Offset + result.Count);
+
+                logger.LogTrace("recv: {payload}", payload);
+
+                return payload;
             }
 
             // move the segment along
@@ -81,6 +91,8 @@ public class ChainWsConnection : IDisposable
 
         await ws.SendAsync(bytes, WebSocketMessageType.Text, true, cancellation);
 
+        logger.LogTrace("sent: {payload}", jsonString);
+
         return id;
     }
 
@@ -89,9 +101,12 @@ public class ChainWsConnection : IDisposable
         ws.Dispose();
     }
 
-    public static async Task<ChainWsConnection> CreateAsync(Uri uri, CancellationToken cancellation)
+    public static async Task<ChainWsConnection> CreateAsync(
+        Uri uri, 
+        ILoggerFactory loggerFactory,
+        CancellationToken cancellation)
     {
-        var connection = new ChainWsConnection(uri);
+        var connection = new ChainWsConnection(uri, loggerFactory.CreateLogger<ChainWsConnection>());
 
         await connection.ConnectAsync(cancellation);
 
@@ -99,7 +114,8 @@ public class ChainWsConnection : IDisposable
     }
 
     public static Task<ChainWsConnection> CreateWithRetryAsync(
-        Uri uri, 
+        Uri uri,
+        ILoggerFactory loggerFactory,
         CancellationToken cancellation,
         Action<Exception, TimeSpan>? onRetry = null)
     {
@@ -111,7 +127,7 @@ public class ChainWsConnection : IDisposable
             .WaitAndRetryForeverAsync(CalculateRetryDelay, (ex, retryTimeSpan) => onRetry?.Invoke(ex, retryTimeSpan));
 
         return connectPolicy.ExecuteAsync(
-            () => CreateAsync(uri, cancellation));
+            () => CreateAsync(uri, loggerFactory, cancellation));
     }
 
     private static TimeSpan CalculateRetryDelay(int @try)

@@ -77,7 +77,18 @@ public class EngiQuery : ObjectGraphType
 
         string accountId = context.GetArgument<string>("id")!;
 
-        return substrate.GetSystemAccountAsync(Address.From(accountId));
+        Address address;
+
+        try
+        {
+            address = Address.From(accountId);
+        }
+        catch (ArgumentException)
+        {
+            throw new InvalidOperationException("Address is not valid base58.");
+        }
+
+        return substrate.GetSystemAccountAsync(address);
     }
 
     private async Task<EventRecord[]> GetEventsAsync(IResolveFieldContext<object> context)

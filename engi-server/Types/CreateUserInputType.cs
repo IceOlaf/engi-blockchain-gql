@@ -8,7 +8,7 @@ public class CreateUserInputType : InputObjectGraphType<CreateUserInput>
     {
         Field(x => x.Name);
         Field(x => x.Mnemonic);
-        Field(x => x.MnemonicSalt);
-        Field(x => x.Password);
+        Field(x => x.MnemonicSalt, nullable: true);
+        Field(x => x.Password, nullable: true);
     }
 }

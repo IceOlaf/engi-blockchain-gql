@@ -32,9 +32,11 @@ namespace Engi.Substrate.Server
                 .AddSchema<EngiRootSchema>()
                 .ConfigureExecution(options =>
                 {
-                    options.EnableMetrics = Environment.IsDevelopment();
                     var logger = options.RequestServices!.GetRequiredService<ILogger<Startup>>();
-                    options.UnhandledExceptionDelegate = ctx => logger.LogError("{Error} occurred", ctx.OriginalException.Message);
+
+                    options.EnableMetrics = Environment.IsDevelopment();
+                    options.UnhandledExceptionDelegate =
+                        ctx => logger.LogError(ctx.OriginalException, "Error occurred: {error}", ctx.OriginalException.Message);
                 })
                 .AddSystemTextJson()
                 .Configure<ErrorInfoProviderOptions>(opt => opt.ExposeExceptionStackTrace = Environment.IsDevelopment())

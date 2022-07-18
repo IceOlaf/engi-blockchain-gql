@@ -66,7 +66,7 @@ public class NewHeadChainObserver : IChainObserver
 
         LastHeader ??= header;
 
-        logger.LogTrace($"{DateTime.Now:o} current={header.Number} last={LastHeader.Number} diff={header.Number - LastHeader.Number}");
+        logger.LogDebug($"{DateTime.Now:o} current={header.Number} last={LastHeader.Number} diff={header.Number - LastHeader.Number}");
 
         if (header.Number - LastHeader.Number > 1)
         {

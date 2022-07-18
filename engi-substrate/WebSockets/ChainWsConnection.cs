@@ -56,7 +56,7 @@ public class ChainWsConnection : IDisposable
             {
                 string payload = Encoding.UTF8.GetString(buffer, 0, segment.Offset + result.Count);
 
-                logger.LogTrace("recv: {payload}", payload);
+                logger.LogDebug("recv: {payload}", payload);
 
                 return payload;
             }
@@ -91,7 +91,7 @@ public class ChainWsConnection : IDisposable
 
         await ws.SendAsync(bytes, WebSocketMessageType.Text, true, cancellation);
 
-        logger.LogTrace("sent: {payload}", jsonString);
+        logger.LogDebug("sent: {payload}", jsonString);
 
         return id;
     }

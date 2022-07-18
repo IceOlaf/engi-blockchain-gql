@@ -136,8 +136,20 @@ public class ChainObserverBackgroundService : BackgroundService
             {
                 bool isNetworkError = ex is IOException or WebSocketException or SocketException;
 
-                logger.Log(isNetworkError ? LogLevel.Debug : LogLevel.Error,
-                    ex, "Reconnecting after exception");
+                if (isNetworkError)
+                {
+                    logger.Log(LogLevel.Warning,
+                        ex, "Reconnecting after network exception");
+                    
+                    continue;
+                }
+
+                logger.Log(LogLevel.Critical,
+                    ex, "Aborting after unknown exception");
+
+                updates.OnError(ex);
+
+                throw;
             }
         }
     }

@@ -10,11 +10,25 @@ public static class Program
         
     }
 
-    private static async Task GetSystemEventsForBlockAsync()
+    private static async Task CreateJobAsync()
     {
         var client = new SubstrateClient("http://localhost:9933");
 
-        var client = new SubstrateClient(http);
+        var chainState = await client.GetChainStateAsync();
+
+        var sender = KeypairFactory.CreateFromMnemonic(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);
+
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        await client.CreateJobAsync(chainState, sender, account, 100, Era.Immortal);
+
+        return; // set breakpoint here
+    }
+
+    private static async Task GetSystemEventsForBlockAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
 
         var snapshot = await client.GetChainStateAsync();
 
@@ -86,5 +100,14 @@ public static class Program
         var era = Era.CreateMortal(snapshot.LatestHeader, 55);
 
         await client.BalanceTransferAsync(snapshot, sender, account, dest, amount, era, tip);
+    }
+
+    private static async Task InspectMetadataAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
+
+        var metadata = await client.GetStateMetadataAsync();
+
+        return; // set breakpoint here
     }
 }

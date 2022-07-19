@@ -23,7 +23,8 @@ public class EngiMutations : ObjectGraphType
                 var input = (CreateUserInput)context.Arguments!["user"].Value!;
 
                 return CreateUser(input);
-            });
+            }
+        );
 
         Field<StringGraphType>(
             "balanceTransfer",
@@ -33,10 +34,25 @@ public class EngiMutations : ObjectGraphType
             resolve: context =>
             {
                 var input = (BalanceTransferInput)context.Arguments!["transfer"].Value!;
-                var chainState = GetChainState();
+                var chainState = GetLatestChainState();
 
                 return BalanceTransferAsync(chainState, input);
-            });
+            }
+        );
+
+        Field<StringGraphType>(
+            "createJob",
+            arguments: new QueryArguments(
+                new QueryArgument<NonNullGraphType<CreateJobInputType>> {Name = "job"}
+            ),
+            resolve: context =>
+            {
+                var input = (CreateJobInput) context.Arguments!["job"].Value!;
+                var chainState = GetLatestChainState();
+
+                return CreateJobAsync(chainState, input);
+            }
+        );
     }
 
     private User CreateUser(CreateUserInput input)
@@ -107,7 +123,21 @@ public class EngiMutations : ObjectGraphType
             chainState, sender, account, dest, input.Amount, Era.Immortal, input.Tip);
     }
 
-    private ChainState GetChainState()
+    private async Task<string> CreateJobAsync(
+        ChainState chainState,
+        CreateJobInput input)
+    {
+        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
+
+        var client = serviceProvider.GetRequiredService<SubstrateClient>();
+
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        return await client.CreateJobAsync(
+            chainState, sender, account, input.Funding, Era.Immortal, input.Tip);
+    }
+
+    private ChainState GetLatestChainState()
     {
         using var scope = serviceProvider.CreateScope();
 

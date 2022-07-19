@@ -1,5 +1,8 @@
-﻿namespace Engi.Substrate.Metadata.V14;
+﻿using System.Diagnostics;
 
+namespace Engi.Substrate.Metadata.V14;
+
+[DebuggerDisplay("", Name = "Pallet: {Name}")]
 public class PalletMetadata
 {
     public string Name { get; set; } = null!;
@@ -15,6 +18,11 @@ public class PalletMetadata
     public PalletErrorMetadata? Errors { get; set; }
 
     public byte Index { get; set; }
+
+    public override string ToString()
+    {
+        return Name;
+    }
 
     public static PalletMetadata Parse(ScaleStreamReader stream)
     {

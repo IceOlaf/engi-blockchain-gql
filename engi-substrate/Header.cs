@@ -34,8 +34,7 @@ public class Header : IEquatable<Header>
     // TODO: Lazy it
     public byte[] ComputeHash()
     {
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
+        using var writer = new ScaleStreamWriter();
 
         writer.WriteHex0X(ParentHash);
         writer.WriteCompact(Number);
@@ -47,6 +46,6 @@ public class Header : IEquatable<Header>
             writer.WriteHex0X(log);
         }
 
-        return Blake2B.ComputeHash(ms.ToArray(), new Blake2BConfig { OutputSizeInBits = 256 });
+        return Blake2B.ComputeHash(writer.GetBytes(), new Blake2BConfig { OutputSizeInBits = 256 });
     }
 }

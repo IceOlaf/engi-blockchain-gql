@@ -3,11 +3,17 @@ namespace Engi.Substrate;
 public class ScaleStreamWriter : IDisposable
 {
     private readonly Stream stream;
+    private readonly bool keepOpen;
 
-    public ScaleStreamWriter(Stream stream)
+    public ScaleStreamWriter(Stream stream, bool keepOpen = false)
     {
         this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
+        this.keepOpen = keepOpen;
     }
+
+    public ScaleStreamWriter()
+        : this(new MemoryStream())
+    { }
 
     public void Write(byte b) => stream.WriteByte(b);
 
@@ -29,9 +35,23 @@ public class ScaleStreamWriter : IDisposable
         stream.Write(bytes);
     }
 
+    public byte[] GetBytes()
+    {
+        if (stream is MemoryStream ms)
+        {
+            return ms.ToArray();
+        }
+
+        throw new NotSupportedException(
+            $"{nameof(GetBytes)} is only supported when created with the default ctor or when passing in a MemoryStream.");
+    }
+
     public void Dispose()
     {
-        stream.Dispose();
+        if (!keepOpen)
+        {
+            stream.Dispose();
+        }
     }
 
     // statics

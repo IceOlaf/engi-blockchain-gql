@@ -12,10 +12,7 @@ public static class Program
 
     private static async Task GetSystemEventsForBlockAsync()
     {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost:9933")
-        };
+        var client = new SubstrateClient("http://localhost:9933");
 
         var client = new SubstrateClient(http);
 
@@ -30,12 +27,7 @@ public static class Program
 
     private static async Task InvokeTemplateModuleDoSomethingAsync()
     {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost:9933")
-        };
-
-        var client = new SubstrateClient(http);
+        var client = new SubstrateClient("http://localhost:9933");
 
         var snapshot = await client.GetChainStateAsync();
 
@@ -45,8 +37,7 @@ public static class Program
         snapshot.Metadata.VerifySignature(do_something,
             (field, type) => type.FullName == "u32");
 
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
+        using var writer = new ScaleStreamWriter();
 
         writer.Write(template.Index);
         writer.Write(do_something.Index);
@@ -58,19 +49,14 @@ public static class Program
         var account = await client.GetSystemAccountAsync(sender.Address);
 
         string result = await client.SignAndAuthorSubmitExtrinsicAsync(
-            snapshot, sender, account, ms.ToArray(), Era.Immortal);
+            snapshot, sender, account, writer.GetBytes(), Era.Immortal);
 
         return;
     }
 
     private static async Task ContractCallErc20BalanceOfExampleAsync()
     {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost:9933")
-        };
-
-        var client = new SubstrateClient(http);
+        var client = new SubstrateClient("http://localhost:9933");
 
         var response = await client.ContractCallAsync(new ContractCall
         {
@@ -86,12 +72,7 @@ public static class Program
 
     private static async Task BalanceTransferExampleAsync()
     {
-        var http = new HttpClient
-        {
-            BaseAddress = new Uri("https://westend-rpc.polkadot.io")
-        };
-
-        var client = new SubstrateClient(http);
+        var client = new SubstrateClient("http://localhost:9933");
 
         var sender = KeypairFactory.CreateFromMnemonic(
             "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);

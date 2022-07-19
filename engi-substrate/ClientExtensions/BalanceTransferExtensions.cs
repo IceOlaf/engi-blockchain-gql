@@ -36,8 +36,7 @@ public static class BalanceTransferExtensions
 
         var addressType = meta.MultiAddressTypeDefinition.Variants.IndexOf("Id");
 
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
+        using var writer = new ScaleStreamWriter();
 
         writer.Write(balances.Index);
         writer.Write(transfer.Index);
@@ -45,6 +44,6 @@ public static class BalanceTransferExtensions
         writer.Write(dest.Raw);
         writer.WriteCompact(amount);
 
-        return ms.ToArray();
+        return writer.GetBytes();
     }
 }

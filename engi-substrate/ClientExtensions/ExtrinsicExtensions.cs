@@ -33,8 +33,7 @@ public static class ExtrinsicExtensions
                             + ScaleStreamWriter.GetCompactLength(tip)
                             + method.Length;
 
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
+        using var writer = new ScaleStreamWriter();
 
         writer.WriteCompact((ulong)payloadLength);
         writer.Write((byte)(chainState.Metadata.Extrinsic.Version + SIGNED_EXTRINSIC));
@@ -47,7 +46,7 @@ public static class ExtrinsicExtensions
         writer.WriteCompact(tip);
         writer.Write(method);
 
-        var payloadWithLength = ms.ToArray();
+        var payloadWithLength = writer.GetBytes();
 
         return client.AuthorSubmitExtrinsicAsync(payloadWithLength);
     }
@@ -59,8 +58,7 @@ public static class ExtrinsicExtensions
         byte tip,
         ChainState chainState)
     {
-        using var ms = new MemoryStream();
-        using var writer = new ScaleStreamWriter(ms);
+        using var writer = new ScaleStreamWriter();
 
         var blockHash = Era.IsImmortal(era) ? chainState.GenesisHash : chainState.LatestHeader.ParentHash;
 
@@ -73,6 +71,6 @@ public static class ExtrinsicExtensions
         writer.WriteHex0X(chainState.GenesisHash);
         writer.WriteHex0X(blockHash);
 
-        return ms.ToArray();
+        return writer.GetBytes();
     }
 }

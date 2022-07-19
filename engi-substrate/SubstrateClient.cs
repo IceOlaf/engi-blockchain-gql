@@ -21,6 +21,14 @@ public class SubstrateClient
         http = httpClientFactory.CreateClient(nameof(SubstrateClient));
     }
 
+    public SubstrateClient(string uri)
+    {
+        http = new HttpClient
+        {
+            BaseAddress = new Uri(uri)
+        };
+    }
+
     public async Task<T?> RpcAsync<T>(string method, params object[] @params)
     {
         long id = Interlocked.Increment(ref IdCounter);

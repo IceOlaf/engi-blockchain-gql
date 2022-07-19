@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Engi.Substrate;
 
-public class ScaleStreamTests
+public class ScaleStreamReaderTests
 {
     private ScaleStreamReader FromHex(string hex)
     {

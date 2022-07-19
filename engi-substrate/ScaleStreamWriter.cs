@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace Engi.Substrate;
 
 public class ScaleStreamWriter : IDisposable
@@ -19,6 +21,8 @@ public class ScaleStreamWriter : IDisposable
 
     public void Write(ReadOnlySpan<byte> b) => stream.Write(b);
 
+    public void Write(int value) => stream.Write(BitConverter.GetBytes(value));
+
     public void Write(uint value) => stream.Write(BitConverter.GetBytes(value));
 
     public void WriteCompact(ulong value)
@@ -26,6 +30,27 @@ public class ScaleStreamWriter : IDisposable
         var result = Compact(value);
 
         stream.Write(result);
+    }
+
+    public void WriteCompact(BigInteger value)
+    {
+        int count = GetCompactLength(value);
+
+        if (count != -1)
+        {
+            WriteCompact((ulong) value);
+            return;
+        }
+
+        byte[] data = value.ToByteArray();
+        int length = data.Length - CountLastZeros(data);
+
+        Write((byte)(((length - 4) << 2) + 0b11));
+
+        for(int i = 0; i < length; ++i)
+        {
+            Write(data[i]);
+        }
     }
 
     public void WriteHex0X(string s)
@@ -61,9 +86,9 @@ public class ScaleStreamWriter : IDisposable
         return value switch
         {
             <= 0x3f => 1,
-            <= 0x3ff => 2,
+            <= 0x3fff => 2,
             <= 0x3fffffff => 4,
-            _ => throw new InvalidDataException()
+            _ => -1
         };
     }
 
@@ -89,5 +114,40 @@ public class ScaleStreamWriter : IDisposable
         }
 
         return result;
+    }
+
+    public static int GetCompactLength(BigInteger value)
+    {
+        if (value <= 0x3f)
+        {
+            return 1;
+        }
+
+        if (value <= 0x3fff)
+        {
+            return 2;
+        }
+
+        if (value <= 0x3fffffff)
+        {
+            return 4;
+        }
+
+        return -1;
+    }
+
+    // helpers
+
+    private static int CountLastZeros(byte[] b)
+    {
+        int count = 0;
+        int i = b.Length - 1;
+
+        while (b[i] == 0 && i-- != 0)
+        {
+            count++;
+        }
+
+        return count;
     }
 }

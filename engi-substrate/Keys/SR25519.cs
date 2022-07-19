@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace Engi.Substrate.Keys;
 
@@ -30,9 +29,13 @@ internal static class SR25519
                         return Load("libengi_crypto.dylib");
                     }
 
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                        && RuntimeInformation.OSArchitecture == Architecture.X64)
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {
+                        if (RuntimeInformation.OSArchitecture == Architecture.Arm64)
+                        {
+                            return Load("libengi_crypto_arm64.so");
+                        }
+
                         return Load("libengi_crypto.so");
                     }
 
@@ -43,11 +46,36 @@ internal static class SR25519
                     }
 
                     throw new NotSupportedException(
-                        "The combination of OSArchitecture and OSPlatform is not supported.");
+                        $"The combination of OSPlatform={GetOSPlatform()} OSArchitecture={RuntimeInformation.OSArchitecture} and  is not supported.");
                 }
 
                 return IntPtr.Zero;
             });
+    }
+
+    private static OSPlatform GetOSPlatform()
+    {
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) 
+        {
+            return OSPlatform.Windows;
+        }
+
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            return OSPlatform.Linux;
+        }
+
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            return OSPlatform.OSX;
+        }
+
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+        {
+            return OSPlatform.FreeBSD;
+        }
+
+        throw new NotImplementedException($"Platform: {RuntimeInformation.OSDescription}");
     }
 
     [DllImport("engi_crypto",

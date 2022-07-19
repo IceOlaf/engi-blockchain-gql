@@ -44,7 +44,7 @@ There `docker-compose-integration-tests.yml` defines a composable set of service
 To run, and abort the services when the tests exit, run:
 
 ```
-docker-compose -f .\docker-compose-integration-tests.yml up --exit-code-from tests
+docker-compose -f docker-compose-integration-tests.yml up --exit-code-from tests
 ```
 
 Once the tests complete, a `.trx` (XML) file with the results will be available inside the `integration-test-results` directory, which is mapped from the test container.

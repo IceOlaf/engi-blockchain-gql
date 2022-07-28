@@ -81,7 +81,7 @@ public class ChainObserverBackgroundService : BackgroundService
                                 {
                                     string subscriptionKey = response.Result.GetValue<string>();
 
-                                    subscriptionRoutes!.Add(subscriptionKey, new()
+                                    subscriptionRoutes.Add(subscriptionKey, new()
                                     {
                                         Request = request,
                                         Observer = observer
@@ -160,7 +160,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
         if (response.Id != null)
         {
-            bool found = requestRoutes!.Remove(response.Id.Value, out var state);
+            bool found = requestRoutes.Remove(response.Id.Value, out var state);
 
             if (!found)
             {
@@ -173,14 +173,20 @@ public class ChainObserverBackgroundService : BackgroundService
 
             if (state!.Request.IsSubscription)
             {
-
+                throw new InvalidOperationException(
+                    "Subscription response received out-of-turn.");
             }
-            else
+            
+            // check for error
+
+            if (response.Error != null)
             {
-                // pass to observer
-
-                await state.Observer.ObserveAsync(state.Request, response);
+                throw new RpcException(response.Error);
             }
+
+            // pass to observer
+
+            await state.Observer.ObserveAsync(state.Request, response);
         }
         else
         {

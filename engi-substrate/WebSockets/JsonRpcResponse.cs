@@ -20,6 +20,9 @@ public class JsonRpcResponse
     [JsonPropertyName("params")]
     public JsonRpcResponseParameters? Parameters { get; set; } = null!;
 
+    [JsonPropertyName("error")]
+    public JsonRpcError? Error { get; set; }
+
     public override string ToString()
     {
         return $"{Id}: {Result}";

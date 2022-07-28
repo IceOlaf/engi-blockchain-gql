@@ -3,11 +3,11 @@ version: "3.8"
 services:
   substrate:
     container_name: substrate-node
-    image: paritytech/substrate-playground-template-node-template:sha-8bb8eac6
+    image: ghcr.io/engi-network/engi-node:latest
     ports:
       - "9933:9933"
       - "9944:9944"
-    command: bash -c "/home/playground/workspace/target/debug/node-template --dev --rpc-external --ws-external"
+    command: --dev --rpc-external --ws-external
   api:
     build: 
       context: .

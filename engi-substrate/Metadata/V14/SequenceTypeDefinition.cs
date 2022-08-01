@@ -3,7 +3,7 @@
 public class SequenceTypeDefinition : TypeDefinition
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Sequence;
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
 
     internal new static SequenceTypeDefinition Parse(ScaleStreamReader stream)
     {

@@ -92,23 +92,32 @@ public class SubstrateClient
         return RpcScaleAsync(RuntimeMetadata.Parse, ChainKeys.StateGetMetadata);
     }
 
-    public Task<T?> GetStateStorageAsync<T>(params string[] @params) => RpcAsync<T>(ChainKeys.StateGetStorage, @params);
+    public Task<T?> GetStateStorageAsync<T>(string key, string? blockHash = null)
+    {
+        var @params = new[] { key };
+
+        if (blockHash != null)
+        {
+            Array.Resize(ref @params, 2);
+
+            @params[1] = blockHash;
+        }
+
+        return RpcAsync<T>(ChainKeys.StateGetStorage, @params);
+    }
 
     // chain_
 
+    public Task<SignedBlock?> GetChainBlockAsync(string hash) => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock, hash);
     public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync(ChainKeys.ChainGetBlockHash, number);
     public Task<string> GetChainFinalizedHeadAsync() => RpcAsync(ChainKeys.ChainGetFinalizedHead);
     public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>(ChainKeys.ChainGetHeader)!;
-    public Task<Header> GetChainHeaderAsync(string hash) => RpcAsync<Header>(ChainKeys.ChainGetHeader, hash)!;
+    public Task<Header?> GetChainHeaderAsync(string hash) => RpcAsync<Header>(ChainKeys.ChainGetHeader, hash);
 
     // author_
 
     public Task<string> AuthorSubmitExtrinsicAsync(byte[] payload) =>
         RpcAsync(ChainKeys.AuthorSubmitExtrinsic, Hex.GetString0X(payload));
-
-    // contracts_
-
-    public Task<ContractCallResponse> ContractCallAsync(ContractCall call) => RpcAsync<ContractCallResponse>("contracts_call", call)!;
 
     // composite
 
@@ -149,13 +158,16 @@ public class SubstrateClient
 
     public async Task<EventRecord[]> GetSystemEventsAsync(string blockHash, RuntimeMetadata meta)
     {
-        var @params = new[]
-        {
-            Hex.ConcatGetOXString(StorageKeys.System, StorageKeys.Events),
-            blockHash
-        };
+        string key = Hex.ConcatGetOXString(StorageKeys.System, StorageKeys.Events);
+        
+        // if hash not found, it will throw, not return null
 
-        string result = (await GetStateStorageAsync<string>(@params))!;
+        string? result = await GetStateStorageAsync<string>(key, blockHash);
+
+        if (result == null)
+        {
+            return Array.Empty<EventRecord>();
+        }
 
         using var reader = new ScaleStreamReader(result);
 

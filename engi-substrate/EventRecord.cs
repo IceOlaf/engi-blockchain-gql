@@ -23,4 +23,11 @@ public class EventRecord
             Topics = reader.ReadList(s => s.ReadString())!
         };
     }
+
+    public static EventRecord Parse(string s, RuntimeMetadata meta)
+    {
+        var reader = new ScaleStreamReader(s);
+
+        return Parse(reader, meta);
+    }
 }

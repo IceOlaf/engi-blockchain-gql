@@ -5,7 +5,7 @@ namespace Engi.Substrate;
 
 public static class ExtrinsicExtensions
 {
-    private const int SIGNED_EXTRINSIC = 128;
+    public const int SIGNED_EXTRINSIC = 128;
 
     public static Task<string> SignAndAuthorSubmitExtrinsicAsync(
         this SubstrateClient client,
@@ -13,7 +13,7 @@ public static class ExtrinsicExtensions
         Keypair sender,
         AccountInfo senderAccount,
         byte[] method,
-        byte[] era,
+        ExtrinsicEra era,
         byte tip = 0)
     {
         var multiAddressTypeDef = chainState.Metadata.MultiAddressTypeDefinition;
@@ -22,13 +22,14 @@ public static class ExtrinsicExtensions
         var unsigned = GetSignaturePayload(method, era, senderAccount, tip, chainState);
 
         byte[] signature = sender.Sign(unsigned);
+        byte[] rawEra = era.Serialize();
 
         int payloadLength = 1 // version
                             + 1 // addressType
                             + 32 // address
                             + 1 // sig type
                             + signature.Length
-                            + era.Length
+                            + rawEra.Length
                             + ScaleStreamWriter.GetCompactLength(senderAccount.Nonce)
                             + ScaleStreamWriter.GetCompactLength(tip)
                             + method.Length;
@@ -41,7 +42,7 @@ public static class ExtrinsicExtensions
         writer.Write(sender.Address.Raw);
         writer.Write((byte)1); // signature type
         writer.Write(signature);
-        writer.Write(era);
+        writer.Write(rawEra);
         writer.WriteCompact(senderAccount.Nonce);
         writer.WriteCompact(tip);
         writer.Write(method);
@@ -53,14 +54,14 @@ public static class ExtrinsicExtensions
 
     private static byte[] GetSignaturePayload(
         byte[] method,
-        byte[] era,
+        ExtrinsicEra era,
         AccountInfo account,
         byte tip,
         ChainState chainState)
     {
         using var writer = new ScaleStreamWriter();
 
-        var blockHash = Era.IsImmortal(era) ? chainState.GenesisHash : chainState.LatestHeader.ParentHash;
+        var blockHash = era.IsMortal ? chainState.LatestHeader.ParentHash : chainState.GenesisHash;
 
         writer.Write(method);
         writer.Write(era);

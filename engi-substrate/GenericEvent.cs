@@ -1,5 +1,4 @@
-﻿using System.Dynamic;
-using Engi.Substrate.Metadata.V14;
+﻿using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate;
 
@@ -11,7 +10,7 @@ public class GenericEvent
 
     public byte[] Index { get; set; } = null!;
 
-    public ExpandoObject Data { get; set; } = null!;
+    public object Data { get; set; } = null!;
 
     public static GenericEvent Parse(ScaleStreamReader reader, RuntimeMetadata meta)
     {
@@ -24,7 +23,7 @@ public class GenericEvent
             Section = module.Name,
             Method = eventVariant.Name,
             Index = index,
-            Data = reader.DeserializeDynamicType(eventVariant, meta)
+            Data = reader.Deserialize(eventVariant.Fields, meta)
         };
     }
 }

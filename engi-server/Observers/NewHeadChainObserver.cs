@@ -79,11 +79,11 @@ public class NewHeadChainObserver : IChainObserver
 
             while (current.ParentHash != lastKnownHeaderHash)
             {
-                current = await client.GetChainHeaderAsync(current.ParentHash);
+                current = (await client.GetChainHeaderAsync(current.ParentHash))!;
 
                 // we go backwards
 
-                headers.Insert(0, current);
+                headers.Insert(0, current!);
             }
         }
 

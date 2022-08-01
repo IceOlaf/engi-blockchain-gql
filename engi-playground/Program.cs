@@ -10,6 +10,20 @@ public static class Program
         
     }
 
+    private static async Task ExpandBlockAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
+
+        var meta = await client.GetStateMetadataAsync();
+        var blockHash = await client.GetChainBlockHashAsync(5);
+        var block = await client.GetChainBlockAsync(blockHash);
+        var events = await client.GetSystemEventsAsync(blockHash, meta);
+
+        var expanded = ExpandedBlock.From(block.Block, events, meta);
+
+        return; // set breakpoint here
+    }
+
     private static async Task CreateJobAsync()
     {
         var client = new SubstrateClient("http://localhost:9933");
@@ -21,7 +35,7 @@ public static class Program
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        await client.CreateJobAsync(chainState, sender, account, 100, Era.Immortal);
+        await client.CreateJobAsync(chainState, sender, account, 100, ExtrinsicEra.Immortal);
 
         return; // set breakpoint here
     }
@@ -63,7 +77,7 @@ public static class Program
         var account = await client.GetSystemAccountAsync(sender.Address);
 
         string result = await client.SignAndAuthorSubmitExtrinsicAsync(
-            snapshot, sender, account, writer.GetBytes(), Era.Immortal);
+            snapshot, sender, account, writer.GetBytes(), ExtrinsicEra.Immortal);
 
         return;
     }
@@ -72,14 +86,16 @@ public static class Program
     {
         var client = new SubstrateClient("http://localhost:9933");
 
-        var response = await client.ContractCallAsync(new ContractCall
+        ContractCall call = new ContractCall
         {
             ContractAddress = "5HjZeHL5MPeKRurbg3HuK6PH9L5uAw822EBBNRKr5Xd6GFy2", // comes from upload
             Origin = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
             GasLimit = 4999999999999,
             InputData0X = "0x0f755a56" // selector from metadata
                 + Hex.GetString(Address.From("5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL").Raw)
-        });
+        };
+
+        var response = await client.RpcAsync<ContractCallResponse>("contracts_call", call);
 
         return;
     }
@@ -97,7 +113,7 @@ public static class Program
         var snapshot = await client.GetChainStateAsync();
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        var era = Era.CreateMortal(snapshot.LatestHeader, 55);
+        var era = ExtrinsicEra.CreateMortal(snapshot.LatestHeader, 55);
 
         await client.BalanceTransferAsync(snapshot, sender, account, dest, amount, era, tip);
     }

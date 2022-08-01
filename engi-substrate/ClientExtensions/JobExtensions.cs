@@ -13,7 +13,7 @@ public static class JobExtensions
         Keypair sender,
         AccountInfo senderAccount,
         BigInteger funding,
-        byte[] era,
+        ExtrinsicEra era,
         byte tip = 0)
     {
         var (jobs, createJobVariant) = chainState.Metadata.FindPalletCallVariant("Jobs", "create_job");

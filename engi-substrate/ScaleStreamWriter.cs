@@ -60,6 +60,13 @@ public class ScaleStreamWriter : IDisposable
         stream.Write(bytes);
     }
 
+    public void Write(IScaleSerializable serializable)
+    {
+        byte[] data = serializable.Serialize();
+
+        Write(data);
+    }
+
     public byte[] GetBytes()
     {
         if (stream is MemoryStream ms)

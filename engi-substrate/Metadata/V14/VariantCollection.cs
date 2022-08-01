@@ -9,7 +9,7 @@ public class VariantCollection : List<Variant>
         : base(variants)
     { }
 
-    public Variant Find(byte index)
+    public Variant Find(int index)
     {
         return this.Single(x => x.Index == index);
     }

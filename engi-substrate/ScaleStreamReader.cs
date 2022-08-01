@@ -254,11 +254,11 @@ public class ScaleStreamReader : IDisposable
         return Encoding.UTF8.GetString(data);
     }
 
-    public byte[] ReadFixedSizeByteArray(int length)
+    public byte[] ReadFixedSizeByteArray(uint length)
     {
         byte[] data = new byte[length];
 
-        if (inner.Read(data, 0, length) < length)
+        if (inner.Read(data, 0, (int)length) < length)
         {
             throw new InvalidDataException();
         }
@@ -268,23 +268,28 @@ public class ScaleStreamReader : IDisposable
 
     public byte[] ReadByteArray()
     {
-        int length = (int)ReadCompactInteger();
+        ulong length = ReadCompactInteger();
 
-        return ReadFixedSizeByteArray(length);
+        return ReadFixedSizeByteArray((uint)length);
     }
 
     public T[] ReadList<T>(Func<ScaleStreamReader, T> func)
     {
-        int length = (int) ReadCompactInteger();
+        ulong length = ReadCompactInteger();
 
+        return ReadList(length, func);
+    }
+
+    public T[] ReadList<T>(ulong length, Func<ScaleStreamReader, T> func)
+    {
         if (length == 0)
         {
             return Array.Empty<T>();
         }
-        
+
         T[] data = new T[length];
-        
-        for (int i = 0; i < length; ++i)
+
+        for (ulong i = 0; i < length; ++i)
         {
             data[i] = func(this);
         }

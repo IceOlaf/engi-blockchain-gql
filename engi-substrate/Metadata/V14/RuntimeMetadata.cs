@@ -28,7 +28,7 @@ public class RuntimeMetadata
         }
     }
 
-    public PalletMetadata FindPallet(byte index)
+    public PalletMetadata FindPallet(int index)
     {
         try
         {
@@ -92,6 +92,28 @@ public class RuntimeMetadata
         }
 
         return FindEvent(index[0], index[1]);
+    }
+
+    public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(int palletIndex, int callIndex)
+    {
+        var pallet = FindPallet(palletIndex);
+
+        var callType = TypesById[pallet.Calls.Type];
+
+        if (callType.Definition is VariantTypeDefinition variantType)
+        {
+            var variant = variantType.Variants.Find(callIndex);
+
+            if (variant == null)
+            {
+                throw new InvalidOperationException(
+                    $"Variant '{callIndex}' was not found in pallet '{pallet.Name}'.");
+            }
+
+            return (pallet, variant);
+        }
+
+        throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
     }
 
     public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)

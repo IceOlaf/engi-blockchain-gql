@@ -1,95 +1,245 @@
-﻿using System.Dynamic;
-using Engi.Substrate.Metadata.V14;
+﻿using Engi.Substrate.Metadata.V14;
+using System.Numerics;
+using System.Text;
 
 namespace Engi.Substrate;
 
 public static class ScaleStreamReaderExtensions
 {
-    public static ExpandoObject DeserializeDynamicType(this ScaleStreamReader reader, Variant variant, RuntimeMetadata meta)
+    public static BigInteger Deserialize(
+        this ScaleStreamReader reader,
+        CompactTypeDefinition _)
     {
-        if (reader == null)
-        {
-            throw new ArgumentNullException(nameof(reader));
-        }
-
-        if (variant == null)
-        {
-            throw new ArgumentNullException(nameof(variant));
-        }
-
-        return DeserializeFields(reader, variant.Fields, meta);
+        return reader.ReadCompactBigInteger();
     }
 
-    private static ExpandoObject DeserializeFields(
-        ScaleStreamReader reader, 
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        ArrayTypeDefinition typeDef,
+        RuntimeMetadata meta,
+        Func<byte[], object> byteArrayConverter)
+    {
+        var itemType = meta.TypesById[typeDef.Type];
+
+        if (itemType.FullName == "u8")
+        {
+            var data = reader.ReadFixedSizeByteArray(typeDef.Len);
+
+            return byteArrayConverter(data);
+        }
+
+        throw new NotImplementedException($"Reading arrays of typeId='{itemType.Id}' is not implemented.");
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        ArrayTypeDefinition typeDef,
+        RuntimeMetadata meta)
+    {
+        return Deserialize(reader, typeDef, meta, Hex.GetString0X);
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        CompositeTypeDefinition typeDef,
+        RuntimeMetadata meta)
+    {
+        if (typeDef.Fields.Count == 1)
+        {
+            return Deserialize(reader, typeDef.Fields[0], meta);
+        }
+
+        return Deserialize(reader, typeDef.Fields, meta);
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        BitSequenceTypeDefinition typeDef,
+        RuntimeMetadata meta)
+    {
+        var storeType = meta.TypesById[typeDef.StoreType].Definition as PrimitiveTypeDefinition;
+        var orderType = meta.TypesById[typeDef.OrderType];
+
+        if (storeType?.PrimitiveType != PrimitiveType.UInt8)
+        {
+            throw new NotImplementedException("Bit sequence that's not u8");
+        }
+
+        if (orderType.Path.Last() != "Lsb0")
+        {
+            throw new NotImplementedException("Bit sequence with MSB order");
+        }
+
+        ulong bitLength = reader.ReadCompactInteger();
+        uint bufferLength = (uint)Math.Ceiling(bitLength / 8.0);
+
+        if (bufferLength > 1)
+        {
+            throw new NotImplementedException("Bit sequence with more than one bytes");
+        }
+
+        byte[] data = reader.ReadFixedSizeByteArray(bufferLength);
+
+        return "0b" + Convert.ToString(data[0], 2).PadRight(8, '0');
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        SequenceTypeDefinition typeDef,
+        RuntimeMetadata meta)
+    {
+        var itemType = meta.TypesById[typeDef.Type];
+
+        if (itemType.FullName == "u8")
+        {
+            var data = reader.ReadByteArray();
+
+            return Hex.GetString0X(data);
+        }
+
+        return reader.ReadList(r => Deserialize(r, itemType, meta));
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader,
+        PortableType type,
+        RuntimeMetadata meta)
+    {
+        if (type.Definition is CompactTypeDefinition c)
+        {
+            return Deserialize(reader, c);
+        }
+
+        if (type.Definition is CompositeTypeDefinition composite)
+        {
+            return Deserialize(reader, composite, meta);
+        }
+
+        if (type.Definition is ArrayTypeDefinition array)
+        {
+            return Deserialize(reader, array, meta);
+        }
+
+        if (type.Definition is SequenceTypeDefinition seq)
+        {
+            return Deserialize(reader, seq, meta);
+        }
+
+        if (type.Definition is BitSequenceTypeDefinition bitSequence)
+        {
+            return Deserialize(reader, bitSequence, meta);
+        }
+
+        if (type.Definition is PrimitiveTypeDefinition primitive)
+        {
+            return reader.ReadPrimitive(primitive.PrimitiveType);
+        }
+
+        if (type.Definition is VariantTypeDefinition variant)
+        {
+            int index = reader.ReadByte();
+
+            var variantType = variant.Variants.Find(index);
+
+            var fields = variantType.Fields
+                .Select(field => Deserialize(reader, field, meta))
+                .ToArray();
+
+            return new Dictionary<string, object>
+            {
+                [variantType.Name] = fields
+            };
+        }
+
+        throw new NotImplementedException();
+    }
+
+    public static object Deserialize(
+        this ScaleStreamReader reader, 
         FieldCollection fields,
         RuntimeMetadata meta)
     {
-        var expando = new ExpandoObject();
-        var dictionary = (IDictionary<string, object>)expando!;
-
-        for (int index = 0; index < fields.Count; index++)
+        if (fields.Count == 1)
         {
-            var x = fields[index];
-            dictionary.Add(x.Name ?? $"field[{index}]", DeserializeField(reader, x, meta));
+            return Deserialize(reader, fields.First(), meta);
         }
 
-        return expando;
+        // not sure if there is a better way to do this - can't find an indication
+        // if an event is an object or an array
+
+        bool indexByName = fields.Any(x => !string.IsNullOrEmpty(x.Name));
+
+        if (indexByName)
+        {
+            var value = new Dictionary<string, object>();
+
+            foreach (var field in fields)
+            {
+                var fieldType = meta.TypesById[field.Type];
+
+                if (string.IsNullOrEmpty(field.Name))
+                {
+                    throw new NotImplementedException(
+                        $"Field without a name in type id={fieldType.Id}");
+                }
+
+                value[field.Name] = Deserialize(reader, field, meta);
+            }
+
+            return value;
+        }
+        else
+        {
+            // index as array
+
+            var value = new object[fields.Count];
+
+            for (int index = 0; index < fields.Count; ++index)
+            {
+                var field = fields[index];
+
+                value[index] = Deserialize(reader, field, meta);
+            }
+
+            return value;
+        }
     }
 
-    private static object DeserializeField(ScaleStreamReader reader, Field field, RuntimeMetadata meta)
+    public static object Deserialize(
+        this ScaleStreamReader reader, 
+        Field field, 
+        RuntimeMetadata meta)
     {
         var fieldType = meta.TypesById[field.Type];
 
         if (field.TypeName == "T::AccountId")
         {
             byte[] address = reader.ReadFixedSizeByteArray(32);
-            
+
             return Address.From(address).Id;
         }
 
-        return fieldType.Definition switch
+        if (field.TypeName == "ConsensusEngineId")
         {
-            ArrayTypeDefinition arrayType => DeserializeArray(reader, arrayType, meta),
-            CompositeTypeDefinition compositeType => DeserializeComposite(reader, compositeType, meta),
-            PrimitiveTypeDefinition primitiveType => reader.ReadPrimitive(primitiveType.PrimitiveType),
-            VariantTypeDefinition variantType => DeserializeVariantAsEnum(reader, variantType),
-            _ => throw new NotSupportedException()
-        };
-    }
-
-    private static object DeserializeArray(
-        ScaleStreamReader reader, 
-        ArrayTypeDefinition typeDef, 
-        RuntimeMetadata meta)
-    {
-        var type = (PrimitiveTypeDefinition)meta.TypesById[typeDef.Type].Definition;
-
-        return type.PrimitiveType switch
-        {
-            PrimitiveType.UInt8 => reader.ReadFixedSizeByteArray((int)typeDef.Len),
-            _ => throw new NotImplementedException($"Reading arrays of type '{type.PrimitiveType}' is not implemented.")
-        };
-    }
-
-    private static object DeserializeComposite(
-        ScaleStreamReader reader,
-        CompositeTypeDefinition typeDef,
-        RuntimeMetadata meta)
-    {
-        if (typeDef.Fields.Count == 1)
-        {
-            return DeserializeField(reader, typeDef.Fields[0], meta);
+            return Deserialize(
+                reader,
+                (ArrayTypeDefinition)fieldType.Definition,
+                meta,
+                Encoding.UTF8.GetString);
         }
 
-        return DeserializeFields(reader, typeDef.Fields, meta);
-    }
+        if (field.TypeName == "T::Moment")
+        {
+            long value = (long) reader.ReadCompactBigInteger();
 
-    private static string DeserializeVariantAsEnum(ScaleStreamReader reader, VariantTypeDefinition typeDef)
-    {
-        byte index = (byte) reader.ReadByte();
+            return DateTimeOffset.FromUnixTimeMilliseconds(value).UtcDateTime;
+        }
 
-        return typeDef.Variants.Find(index).Name;
+        if (fieldType.FullName == "sp_runtime:multiaddress:MultiAddress")
+        {
+            return MultiAddress.Parse(reader, meta);
+        }
+
+        return Deserialize(reader, fieldType, meta);
     }
-    
 }

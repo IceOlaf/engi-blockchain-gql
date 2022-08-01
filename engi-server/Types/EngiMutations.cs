@@ -120,7 +120,7 @@ public class EngiMutations : ObjectGraphType
         var account = await client.GetSystemAccountAsync(sender.Address);
 
         return await client.BalanceTransferAsync(
-            chainState, sender, account, dest, input.Amount, Era.Immortal, input.Tip);
+            chainState, sender, account, dest, input.Amount, ExtrinsicEra.Immortal, input.Tip);
     }
 
     private async Task<string> CreateJobAsync(
@@ -134,7 +134,7 @@ public class EngiMutations : ObjectGraphType
         var account = await client.GetSystemAccountAsync(sender.Address);
 
         return await client.CreateJobAsync(
-            chainState, sender, account, input.Funding, Era.Immortal, input.Tip);
+            chainState, sender, account, input.Funding, ExtrinsicEra.Immortal, input.Tip);
     }
 
     private ChainState GetLatestChainState()

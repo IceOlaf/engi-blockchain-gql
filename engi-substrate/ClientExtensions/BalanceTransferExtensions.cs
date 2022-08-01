@@ -13,7 +13,7 @@ public static class BalanceTransferExtensions
         AccountInfo senderAccount,
         Address recipient,
         ulong amount,
-        byte[] era,
+        ExtrinsicEra era,
         byte tip = 0)
     {
         byte[] method = GetBalanceTransferMethodPayload(chainState.Metadata, recipient, amount);

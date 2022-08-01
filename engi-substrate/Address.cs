@@ -18,6 +18,15 @@ public class Address
 
     public static Address From(byte[] raw) => new(Encode(raw), raw);
 
+    public static Address Parse(ScaleStreamReader reader)
+    {
+        byte[] raw = reader.ReadFixedSizeByteArray(32);
+
+        return From(raw);
+    }
+
+    // helpers
+
     private static byte[] Decode(string address)
     {
         if (string.IsNullOrEmpty(address))

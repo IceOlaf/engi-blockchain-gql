@@ -1,25 +1,48 @@
 ﻿using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
+using Engi.Substrate.Server.Indexing;
+using Raven.Client.Documents;
 
 namespace Engi.Substrate.Playground;
+
+#pragma warning disable 1998
 
 public static class Program
 {
     public static async Task Main()
     {
-        
+
+    }
+
+    private static async Task CreateIndexingJobAsync()
+    {
+        var store = new DocumentStore
+        {
+            Urls = new[] { "http://localhost:8080" },
+            Database = "engi-local"
+        };
+
+        store.Initialize();
+
+        using var session = store.OpenAsyncSession();
+
+        await session.StoreAsync(new ExpandedBlock(1));
+
+        await session.SaveChangesAsync();
     }
 
     private static async Task ExpandBlockAsync()
     {
+        const int number = 5;
+
         var client = new SubstrateClient("http://localhost:9933");
 
         var meta = await client.GetStateMetadataAsync();
-        var blockHash = await client.GetChainBlockHashAsync(5);
+        var blockHash = await client.GetChainBlockHashAsync(number);
         var block = await client.GetChainBlockAsync(blockHash);
         var events = await client.GetSystemEventsAsync(blockHash, meta);
 
-        var expanded = ExpandedBlock.From(block.Block, events, meta);
+        new ExpandedBlock(number).Fill(block!.Block, events, meta);
 
         return; // set breakpoint here
     }
@@ -113,7 +136,7 @@ public static class Program
         var snapshot = await client.GetChainStateAsync();
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        var era = ExtrinsicEra.CreateMortal(snapshot.LatestHeader, 55);
+        var era = ExtrinsicEra.CreateMortal(snapshot.LatestFinalizedHeader, 55);
 
         await client.BalanceTransferAsync(snapshot, sender, account, dest, amount, era, tip);
     }

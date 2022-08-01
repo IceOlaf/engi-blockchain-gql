@@ -6,19 +6,27 @@ namespace Engi.Substrate;
 public class Header : IEquatable<Header>
 {
     [JsonPropertyName("parentHash")]
-    public string ParentHash { get; set; } = null!;
+    public string ParentHash { get; init; } = null!;
 
     [JsonPropertyName("number"), JsonConverter(typeof(HexUInt64JsonConverter))]
-    public ulong Number { get; set; }
+    public ulong Number { get; init; }
 
     [JsonPropertyName("extrinsicsRoot")]
-    public string ExtrinsicsRoot { get; set; } = null!;
+    public string ExtrinsicsRoot { get; init; } = null!;
 
     [JsonPropertyName("stateRoot")]
-    public string StateRoot { get; set; } = null!;
+    public string StateRoot { get; init; } = null!;
 
     [JsonPropertyName("digest")]
-    public Digest Digest { get; set; } = null!;
+    public Digest Digest { get; init; } = null!;
+
+    [JsonIgnore] 
+    public Lazy<string> Hash { get; init; }
+
+    public Header()
+    {
+        Hash = new Lazy<string>(ComputeHash);
+    }
 
     public bool Equals(Header? other)
     {
@@ -32,7 +40,7 @@ public class Header : IEquatable<Header>
     }
 
     // TODO: Lazy it
-    public byte[] ComputeHash()
+    private string ComputeHash()
     {
         using var writer = new ScaleStreamWriter();
 
@@ -41,11 +49,14 @@ public class Header : IEquatable<Header>
         writer.WriteHex0X(StateRoot);
         writer.WriteHex0X(ExtrinsicsRoot);
         writer.WriteCompact((ulong)Digest.Logs.Length);
+
         foreach (var log in Digest.Logs)
         {
             writer.WriteHex0X(log);
         }
 
-        return Blake2B.ComputeHash(writer.GetBytes(), new Blake2BConfig { OutputSizeInBits = 256 });
+        byte[] hashData = Blake2B.ComputeHash(writer.GetBytes(), new Blake2BConfig { OutputSizeInBits = 256 });
+
+        return Hex.GetString0X(hashData);
     }
 }

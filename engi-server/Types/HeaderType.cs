@@ -11,6 +11,6 @@ public class HeaderType : ObjectGraphType<Header>
         Field(x => x.ExtrinsicsRoot);
         Field(x => x.StateRoot);
         Field(x => x.Digest);
-        Field("Hash", x => Hex.GetString0X(x.ComputeHash()));
+        Field("Hash", x => x.Hash.Value);
     }
 }

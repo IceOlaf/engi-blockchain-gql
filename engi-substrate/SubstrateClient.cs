@@ -109,6 +109,7 @@ public class SubstrateClient
     // chain_
 
     public Task<SignedBlock?> GetChainBlockAsync(string hash) => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock, hash);
+    public Task<SignedBlock> GetChainBlockAsync() => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock)!;
     public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync(ChainKeys.ChainGetBlockHash, number);
     public Task<string> GetChainFinalizedHeadAsync() => RpcAsync(ChainKeys.ChainGetFinalizedHead);
     public Task<Header> GetChainLatestHeaderAsync() => RpcAsync<Header>(ChainKeys.ChainGetHeader)!;
@@ -179,23 +180,24 @@ public class SubstrateClient
     {
         var metadataTask = GetStateMetadataAsync();
         var genesisTask = GetChainBlockHashAsync(0);
-        var finalizedBlockTask = GetChainFinalizedHeadAsync();
-        var latestHeaderTask = GetChainLatestHeaderAsync();
+        var finalizedBlockHashTask = GetChainFinalizedHeadAsync();
 
         await Task.WhenAll(
             metadataTask,
             genesisTask,
-            finalizedBlockTask,
-            latestHeaderTask);
+            finalizedBlockHashTask);
 
-        var runtimeVersionTask = GetRuntimeVersionAsync(finalizedBlockTask.Result);
+        var runtimeVersionTask = GetRuntimeVersionAsync(finalizedBlockHashTask.Result);
+        var finalizedHeaderTask = GetChainHeaderAsync(finalizedBlockHashTask.Result);
+
+        await Task.WhenAll(runtimeVersionTask, finalizedHeaderTask);
 
         return new()
         {
             Metadata = metadataTask.Result,
             GenesisHash = genesisTask.Result,
             Version = runtimeVersionTask.Result,
-            LatestHeader = latestHeaderTask.Result,
+            LatestFinalizedHeader = finalizedHeaderTask.Result!
         };
     }
 }

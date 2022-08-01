@@ -13,10 +13,10 @@ public class EngiSubscriptions : ObjectGraphType
 
         AddField(new EventStreamFieldType
         {
-            Name = "newHead",
+            Name = "newFinalizedHead",
             Type = typeof(HeaderType),
             Resolver = new FuncFieldResolver<Header>(ctx => ctx.Source as Header),
-            Subscriber = new EventStreamResolver<Header>(_ => newHeadObserver.Headers)
+            Subscriber = new EventStreamResolver<Header>(_ => newHeadObserver.FinalizedHeaders)
         });
     }
 }

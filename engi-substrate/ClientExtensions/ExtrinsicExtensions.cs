@@ -61,7 +61,7 @@ public static class ExtrinsicExtensions
     {
         using var writer = new ScaleStreamWriter();
 
-        var blockHash = era.IsMortal ? chainState.LatestHeader.ParentHash : chainState.GenesisHash;
+        var blockHash = era.IsMortal ? chainState.LatestFinalizedHeader.Hash.Value : chainState.GenesisHash;
 
         writer.Write(method);
         writer.Write(era);

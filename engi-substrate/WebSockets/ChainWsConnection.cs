@@ -14,7 +14,7 @@ public class ChainWsConnection : IDisposable
     private readonly ILogger logger;
 
     private readonly ClientWebSocket ws = new();
-    private readonly byte[] buffer = new byte[128 * 1024];
+    private readonly byte[] buffer = new byte[5 * 1024 * 1024];
 
     public ChainWsConnection(
         Uri uri,
@@ -62,6 +62,11 @@ public class ChainWsConnection : IDisposable
             }
 
             // move the segment along
+
+            if (result.Count == buffer.Length)
+            {
+                throw new InternalBufferOverflowException();
+            }
 
             segment = segment.Slice(result.Count);
         }

@@ -10,7 +10,5 @@ public class ChainState
 
     public string GenesisHash { get; set; } = null!;
 
-    public Header LatestHeader { get; set; } = null!;
-
     public Header LatestFinalizedHeader { get; set; } = null!;
 }

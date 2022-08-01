@@ -1,9 +1,9 @@
-﻿using GraphQL;
+﻿using Engi.Substrate.Server.Indexing;
+using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Server;
 using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.SystemReactive;
-using Microsoft.Extensions.Options;
 using Polly;
 
 namespace Engi.Substrate.Server
@@ -59,9 +59,13 @@ namespace Engi.Substrate.Server
                 return new SubstrateClient(httpClientFactory);
             });
 
+            services.AddRaven(Configuration.GetRequiredSection("Raven"));
+
             services.AddSingleton<IChainObserver, NewHeadChainObserver>();
             services.AddSingleton<IChainObserver, ChainSnapshotObserver>();
             services.AddHostedService<ChainObserverBackgroundService>();
+
+            services.AddHostedService<IndexingBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app)

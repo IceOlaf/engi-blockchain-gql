@@ -4,6 +4,7 @@ public static class ChainKeys
 {
     public const string AuthorSubmitExtrinsic = "author_submitExtrinsic";
 
+    public const string ChainFinalizedHead = "chain_finalizedHead";
     public const string ChainGetBlock = "chain_getBlock";
     public const string ChainGetBlockHash = "chain_getBlockHash";
     public const string ChainGetFinalizedHead = "chain_getFinalizedHead";

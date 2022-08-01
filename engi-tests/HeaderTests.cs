@@ -25,7 +25,7 @@ namespace Engi.Substrate
 
             Assert.Equal(
                 "0xf9e9c09468400f4f10839a72cca394ab343b97dad5097f7326f191f48809fe5e",
-                Hex.GetString0X(header.ComputeHash()));
+                header.Hash.Value);
 		}
     }
 }

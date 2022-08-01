@@ -35,11 +35,11 @@ jobs:
         version: 1.0.0.${{ github.run_number }}
     - name: publish
       run: dotnet publish -c Release -o deploy
-    # - uses: microsoft/variable-substitution@v1 
-    #   with:
-    #     files: ${{ env.working_directory }}/deploy/appsettings.json
-    #   env:
-    #
+    - uses: microsoft/variable-substitution@v1 
+      with:
+        files: ${{ env.working_directory }}/deploy/appsettings.json
+      env:
+        Raven.Certificate: ${{ secrets.RAVEN_CERTIFICATE_DEV }}    
     - uses: zerotomvp/rolling-systemd-update@v1-beta.7
       with:
         serviceName: ${{ env.application_name }}

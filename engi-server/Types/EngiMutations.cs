@@ -153,7 +153,6 @@ public class EngiMutations : ObjectGraphType
             Metadata = chainSnapshotObserver.Metadata,
             Version = chainSnapshotObserver.Version,
             GenesisHash = chainSnapshotObserver.GenesisHash,
-            LatestHeader = headObserver.LastHeader!,
             LatestFinalizedHeader = headObserver.LastFinalizedHeader!
         };
     }

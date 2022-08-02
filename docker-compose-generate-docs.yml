@@ -13,14 +13,13 @@ services:
     extends:
       file: docker-compose-services.yml
       service: api
-  tests:
+  docs:
     build:
-      context: .
-      target: test
+      context: ./engi-docs
     environment:
       - WAIT_HOSTS=api:5000
     volumes:
-      - ./integration-test-results/:/source/engi-tests/TestResults/
+      - ./engi-server/wwwroot/docs/:/docs/public/
 
 volumes:
-  integration-test-results:
+  docs:

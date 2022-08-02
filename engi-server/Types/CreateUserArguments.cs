@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Server.Types;
 
-public class CreateUserInput
+public class CreateUserArguments
 {
     public string Name { get; set; } = null!;
 

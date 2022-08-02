@@ -7,13 +7,23 @@ public class TransactionGraphType : ObjectGraphType<TransactionIndex.Result>
 {
     public TransactionGraphType()
     {
-        Field(x => x.Number);
-        Field(x => x.Hash);
-        Field(x => x.DateTime);
-        Field(x => x.Type);
-        Field(x => x.IsSuccessful);
-        Field(x => x.OtherParticipants, nullable: true);
-        Field(x => x.Amount);
-        Field(x => x.JobId);
+        Field(x => x.Number)
+            .Description("The number of the block that contains this transaction.");
+        Field(x => x.Hash)
+            .Description("The hash of the block that contains this transaction.");
+        Field(x => x.DateTime)
+            .Description("The date time encode in the block from the Timestamp::now pallet call.");
+        Field(x => x.Type)
+            .Description("The transaction type.");
+        Field(x => x.Executor)
+            .Description("The address of the executor.");
+        Field(x => x.IsSuccessful)
+            .Description("A boolean indicating whether the transaction was successful. If the transaction required sudo privileges, it equates to the sudo success and not the extrinsic success.");
+        Field(x => x.OtherParticipants, nullable: true)
+            .Description("The addresses that participated in this transaction, other than the executor, if any.");
+        Field(x => x.Amount)
+            .Description("The amount associated with this transaction.");
+        Field(x => x.JobId, nullable: true)
+            .Description("The job ID associated with this transaction, if any.");
     }
 }

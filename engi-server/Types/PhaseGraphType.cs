@@ -4,9 +4,9 @@ namespace Engi.Substrate.Server.Types;
 
 public class PhaseGraphType : ScalarGraphType
 {
-    public override object? ParseValue(object? value) => throw new NotImplementedException();
+    public override object ParseValue(object? value) => throw new NotImplementedException();
 
-    public override object? Serialize(object? value)
+    public override object Serialize(object? value)
     {
         var phase = (Phase)value!;
 

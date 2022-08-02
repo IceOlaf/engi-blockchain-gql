@@ -7,7 +7,9 @@ public class PagedResultGraphType<TGraphType, T> : ObjectGraphType<PagedResult<T
 {
     public PagedResultGraphType()
     {
-        Field(x => x.Items, type: typeof(ListGraphType<TGraphType>));
-        Field(x => x.TotalCount);
+        Field(x => x.Items, type: typeof(ListGraphType<TGraphType>))
+            .Description("The items included in this page of the results.");
+        Field(x => x.TotalCount)
+            .Description("The total count of the results.");
     }
 }

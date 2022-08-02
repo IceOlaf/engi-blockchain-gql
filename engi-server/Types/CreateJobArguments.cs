@@ -2,7 +2,7 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateJobInput : SignedExtrinsicInputBase
+public class CreateJobArguments : SignedExtrinsicArgumentsBase
 {
     public JobDefinition Job { get; set; } = null!;
 }

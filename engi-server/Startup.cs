@@ -90,6 +90,9 @@ namespace Engi.Substrate.Server
             app.UseGraphQLGraphiQL();
             app.UseGraphQLAltair();
             app.UseGraphQLVoyager();
+
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Server.Types;
 
-public abstract class SignedExtrinsicInputBase
+public abstract class SignedExtrinsicArgumentsBase
 {
     public string SenderSecret { get; set; } = null!;
 

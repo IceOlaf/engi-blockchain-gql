@@ -16,11 +16,11 @@ public class EngiMutations : ObjectGraphType
         Field<UserType>(
             "createUser",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateUserInputType>> { Name = "user" }
+                new QueryArgument<NonNullGraphType<CreateUserArgumentsType>> { Name = "user" }
             ),
             resolve: context =>
             {
-                var input = (CreateUserInput)context.Arguments!["user"].Value!;
+                var input = (CreateUserArguments)context.Arguments!["user"].Value!;
 
                 return CreateUser(input);
             }
@@ -29,11 +29,11 @@ public class EngiMutations : ObjectGraphType
         Field<StringGraphType>(
             "balanceTransfer",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<BalanceTransferInputType>> { Name = "transfer" }
+                new QueryArgument<NonNullGraphType<BalanceTransferArgumentsType>> { Name = "transfer" }
             ),
             resolve: context =>
             {
-                var input = (BalanceTransferInput)context.Arguments!["transfer"].Value!;
+                var input = (BalanceTransferArguments)context.Arguments!["transfer"].Value!;
                 var chainState = GetLatestChainState();
 
                 return BalanceTransferAsync(chainState, input);
@@ -43,11 +43,11 @@ public class EngiMutations : ObjectGraphType
         Field<StringGraphType>(
             "createJob",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateJobInputType>> {Name = "job"}
+                new QueryArgument<NonNullGraphType<CreateJobArgumentsInputType>> {Name = "job"}
             ),
             resolve: context =>
             {
-                var input = (CreateJobInput) context.Arguments!["job"].Value!;
+                var input = (CreateJobArguments) context.Arguments!["job"].Value!;
                 var chainState = GetLatestChainState();
 
                 return CreateJobAsync(chainState, input);
@@ -55,7 +55,7 @@ public class EngiMutations : ObjectGraphType
         );
     }
 
-    private User CreateUser(CreateUserInput input)
+    private User CreateUser(CreateUserArguments input)
     {
         input.MnemonicSalt ??= string.Empty;
 
@@ -110,7 +110,7 @@ public class EngiMutations : ObjectGraphType
 
     private async Task<string> BalanceTransferAsync(
         ChainState chainState, 
-        BalanceTransferInput input)
+        BalanceTransferArguments input)
     {
         var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
         var dest = Address.From(input.RecipientAddress);
@@ -125,7 +125,7 @@ public class EngiMutations : ObjectGraphType
 
     private async Task<string> CreateJobAsync(
         ChainState chainState,
-        CreateJobInput input)
+        CreateJobArguments input)
     {
         var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
 
@@ -133,8 +133,9 @@ public class EngiMutations : ObjectGraphType
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        return await client.CreateJobAsync(
-            chainState, sender, account, input.Funding, ExtrinsicEra.Immortal, input.Tip);
+        // return await client.CreateJobAsync(
+        //     chainState, sender, account, input.Funding, ExtrinsicEra.Immortal, input.Tip);
+        return string.Empty;
     }
 
     private ChainState GetLatestChainState()

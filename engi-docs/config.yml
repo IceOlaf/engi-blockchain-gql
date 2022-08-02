@@ -1,0 +1,19 @@
+spectaql:
+  displayAllServers: true
+
+introspection:
+  url: http://api:5000/graphql
+  queryNameStrategy: capitalizeFirst
+  fieldExpansionDepth: 2
+  spectaqlDirective:
+    enable: true
+
+info:
+  title: ENGI GraphQL API Reference
+  description: This documentation is automatically generated from the development branch and can thus differ from the API available in production.
+
+servers:
+  - url: https://staging.engi.network/api/graphql
+    description: Staging
+  - url: https://engi.network/api/graphql
+    description: Production

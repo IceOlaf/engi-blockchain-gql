@@ -42,14 +42,37 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () => 
             {
-                // index all the blocks from the last known one to the current
+                try
+                {
+                    // index all the blocks from the last known one to the current
 
-                ulong lastIndexedBlockNumber = previousHeader?.Number 
-                    ?? await FindLastIndexedBlockNumberAsync(header.Number);
+                    ulong lastIndexedBlockNumber = previousHeader?.Number
+                        ?? await FindLastIndexedBlockNumberAsync(header.Number);
 
-                await TriggerIndexingForBlockNumbers(lastIndexedBlockNumber, header.Number);
+                    // check whether the last block actually exists in the db - this is an easy
+                    // way to allow re-indexes to occur by deleting all previous documents
 
-                previousHeader = header;
+                    if (lastIndexedBlockNumber != 0)
+                    {
+                        using var session = Store.OpenAsyncSession();
+
+                        var lastIndexedBlock = await session
+                            .LoadAsync<ExpandedBlock>(ExpandedBlock.KeyFrom(lastIndexedBlockNumber));
+
+                        if (lastIndexedBlock == null)
+                        {
+                            lastIndexedBlockNumber = 0;
+                        }
+                    }
+
+                    await TriggerIndexingForBlockNumbers(lastIndexedBlockNumber, header.Number);
+
+                    previousHeader = header;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to index new header={number}", header.Number);
+                }
             }))
             .Concat()
             .Subscribe();

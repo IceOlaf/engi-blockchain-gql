@@ -12,7 +12,11 @@ public class Extrinsic
 
     public string CallName { get; init; } = null!;
 
-    public Dictionary<string, object> Fields { get; init; } = null!;
+    public Dictionary<string, object> Arguments { get; init; } = null!;
+
+    public string[] ArgumentKeys => Arguments.Keys.ToArray();
+
+    public EventRecord[] Events { get; set; } = null!;
 
     public static Extrinsic Parse(string s, RuntimeMetadata meta)
     {
@@ -83,7 +87,7 @@ public class Extrinsic
             PalletName = pallet.Name,
             CallName = call.Name,
             Signature = signature,
-            Fields = fields
+            Arguments = fields
         };
     }
 }

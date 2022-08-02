@@ -1,5 +1,6 @@
 ﻿using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
+using Engi.Substrate.Server;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 
@@ -33,7 +34,7 @@ public static class Program
 
     private static async Task ExpandBlockAsync()
     {
-        const int number = 5;
+        const int number = 1086;
 
         var client = new SubstrateClient("http://localhost:9933");
 
@@ -42,7 +43,25 @@ public static class Program
         var block = await client.GetChainBlockAsync(blockHash);
         var events = await client.GetSystemEventsAsync(blockHash, meta);
 
-        new ExpandedBlock(number).Fill(block!.Block, events, meta);
+        var expanded = new ExpandedBlock(number);
+            
+        expanded.Fill(block!.Block, events, meta);
+
+        var store = new DocumentStore
+        {
+            Urls = new[] { "http://localhost:8080" },
+            Database = "engi-local"
+        };
+
+        store.Conventions.Serialization = new EngiSerializationConventions();
+
+        store.Initialize();
+
+        using var session = store.OpenAsyncSession();
+
+        await session.StoreAsync(expanded);
+
+        await session.SaveChangesAsync();
 
         return; // set breakpoint here
     }

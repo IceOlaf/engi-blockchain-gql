@@ -1,8 +1,7 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Engi.Substrate.Server.Indexing;
-using Newtonsoft.Json;
 using Raven.Client.Documents;
-using Raven.Client.Json.Serialization.NewtonsoftJson;
+using Raven.Client.Documents.Indexes;
 
 namespace Engi.Substrate.Server;
 
@@ -26,13 +25,11 @@ public static class RavenConfigurationExtensions
 
         conventions.ThrowIfQueryPageSizeIsNotSet = true;
 
-        conventions.Serialization = new NewtonsoftJsonSerializationConventions
-        {
-            CustomizeJsonSerializer = CustomizeSerializer,
-            CustomizeJsonDeserializer = CustomizeSerializer
-        };
+        conventions.Serialization = new EngiSerializationConventions();
 
         store.Initialize();
+
+        IndexCreation.CreateIndexes(typeof(IndexingBackgroundService).Assembly, store);
 
         services.AddSingleton<IDocumentStore>(store);
 
@@ -44,11 +41,5 @@ public static class RavenConfigurationExtensions
         });
 
         return services;
-    }
-
-    private static void CustomizeSerializer(JsonSerializer serializer)
-    {
-        serializer.Converters.Add(new BigIntegerJsonConverter());
-        serializer.Converters.Add(new InlineByteArrayJsonConvert());
     }
 }

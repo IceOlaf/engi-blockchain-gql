@@ -16,8 +16,6 @@ public class ExpandedBlock
 
     public Extrinsic[] Extrinsics { get; set; } = null!;
 
-    public EventRecord[] Events { get; set; } = null!;
-
     public DateTime DateTime { get; set; }
 
     private ExpandedBlock() { }
@@ -38,15 +36,22 @@ public class ExpandedBlock
             throw new ArgumentException("Block number doesn't match.", nameof(block));
         }
 
-        var extrinsics = block.Extrinsics
+        Hash = block.Header.Hash.Value;
+        ParentHash = block.Header.ParentHash;
+        Extrinsics = block.Extrinsics
             .Select(extrinsic => Extrinsic.Parse(extrinsic, meta))
             .ToArray();
 
-        Hash = block.Header.Hash.Value;
-        ParentHash = block.Header.ParentHash;
-        Extrinsics = extrinsics;
-        Events = events;
-        DateTime = CalculateDateTime(extrinsics);
+        for (var index = 0; index < Extrinsics.Length; index++)
+        {
+            var extrinsic = Extrinsics[index];
+
+            extrinsic.Events = events
+                .Where(x => x.Phase.Data == index)
+                .ToArray();
+        }
+
+        DateTime = CalculateDateTime(Extrinsics);
 
         IndexedOn = DateTime.UtcNow;
     }
@@ -68,6 +73,6 @@ public class ExpandedBlock
             throw new InvalidOperationException("Block does not contain Timestamp.set() extrinsic");
         }
 
-        return (DateTime)setTimeExtrinsic.Fields["now"];
+        return (DateTime)setTimeExtrinsic.Arguments["now"];
     }
 }

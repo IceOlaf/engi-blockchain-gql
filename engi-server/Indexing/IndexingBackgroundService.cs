@@ -104,6 +104,12 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         {
             var job = doc.Result;
 
+            Sentry.AddBreadcrumb("Processing block",
+                data: new Dictionary<string, string>
+                {
+                    ["number"] = job.Number.ToString()
+                });
+
             try
             {
                 string hash = await client.GetChainBlockHashAsync(job.Number);
@@ -119,7 +125,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 // logged as debug so it's not picked by Sentry twice - we need to sentry id
                 // so we must rely on the native call
 
-                Logger.LogDebug(ex, "Indexing failed.");
+                Logger.LogDebug(ex, "Indexing failed; block number={number}", job.Number);
 
                 // if we didn't make it to the end, store the sentry error
 
@@ -148,10 +154,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         using var session = Store.OpenAsyncSession();
 
+        session.Advanced.MaxNumberOfRequestsPerSession = int.MaxValue;
+
         // walk back from the current block number to find the last indexed block
 
         while (true)
         {
+            session.Advanced.Clear();
+            
             var indexes = Enumerable.Range(0, walkSize)
                 .Select(offset =>
                 {

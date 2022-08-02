@@ -100,6 +100,23 @@ public static class ScaleStreamReaderExtensions
         return reader.ReadList(r => Deserialize(r, itemType, meta));
     }
 
+    public static Dictionary<int, object> Deserialize(
+        this ScaleStreamReader reader,
+        TupleTypeDefinition typeDef,
+        RuntimeMetadata meta)
+    {
+        var result = new Dictionary<int, object>();
+
+        for (int i = 0; i < typeDef.Fields!.Length; ++i)
+        {
+            var type = meta.TypesById[typeDef.Fields[i].Value];
+
+            result[i] = Deserialize(reader, type, meta);
+        }
+
+        return result;
+    }
+
     public static object Deserialize(
         this ScaleStreamReader reader,
         PortableType type,
@@ -135,15 +152,35 @@ public static class ScaleStreamReaderExtensions
             return reader.ReadPrimitive(primitive.PrimitiveType);
         }
 
+        if (type.Definition is TupleTypeDefinition tuple)
+        {
+            return Deserialize(reader, tuple, meta);
+        }
+
         if (type.Definition is VariantTypeDefinition variant)
         {
             int index = reader.ReadByte();
 
             var variantType = variant.Variants.Find(index);
 
+            if (!variantType.Fields.Any())
+            {
+                // enums
+
+                return variantType.Name;
+            }
+
             var fields = variantType.Fields
                 .Select(field => Deserialize(reader, field, meta))
                 .ToArray();
+
+            if (fields.Length == 1)
+            {
+                return new Dictionary<string, object>
+                {
+                    [variantType.Name] = fields[0]
+                };
+            }
 
             return new Dictionary<string, object>
             {
@@ -192,7 +229,7 @@ public static class ScaleStreamReaderExtensions
         {
             // index as array
 
-            var value = new object[fields.Count];
+            var value = new Dictionary<int, object>();
 
             for (int index = 0; index < fields.Count; ++index)
             {

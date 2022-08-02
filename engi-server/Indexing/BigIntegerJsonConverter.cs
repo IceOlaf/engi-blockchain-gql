@@ -13,6 +13,6 @@ public class BigIntegerJsonConverter : JsonConverter<BigInteger>
     public override BigInteger ReadJson(JsonReader reader, Type objectType, BigInteger existingValue, bool hasExistingValue,
         JsonSerializer serializer)
     {
-        return BigInteger.Parse(reader.ReadAsString()!);
+        return BigInteger.Parse((string)reader.Value!);
     }
 }

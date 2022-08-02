@@ -39,10 +39,10 @@ public class InlineByteArrayJsonConvert : JsonConverter<byte[]>
 
         if (reader.TokenType == JsonToken.String)
         {
-            string s = reader.ReadAsString()!;
-
-            return Convert.FromBase64String(s);
+            return Convert.FromBase64String((string)reader.Value!);
         }
+
+        // array
 
         using var ms = new MemoryStream();
 

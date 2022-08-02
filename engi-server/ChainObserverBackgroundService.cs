@@ -1,6 +1,5 @@
 ﻿using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Reactive.Subjects;
 using System.Text.Json;
 using Engi.Substrate.WebSockets;
 using Microsoft.Extensions.Options;
@@ -9,7 +8,6 @@ namespace Engi.Substrate.Server;
 
 public class ChainObserverBackgroundService : BackgroundService
 {
-    private readonly Subject<JsonRpcResponse> updates = new();
     private readonly Dictionary<long, RoutingEntry> requestRoutes = new();
     private readonly Dictionary<string, RoutingEntry> subscriptionRoutes = new();
 
@@ -30,8 +28,6 @@ public class ChainObserverBackgroundService : BackgroundService
 
         uri = new Uri(substrateClientOptions.Value.WsUrl);
     }
-
-    public IObservable<JsonRpcResponse> Updates => updates;
 
     class RoutingEntry
     {
@@ -128,8 +124,6 @@ public class ChainObserverBackgroundService : BackgroundService
 
                 // only stop if cancelled by us
 
-                updates.OnCompleted();
-
                 return;
             }
             catch (Exception ex)
@@ -147,8 +141,6 @@ public class ChainObserverBackgroundService : BackgroundService
                 logger.Log(LogLevel.Critical,
                     ex, "Aborting after unknown exception");
 
-                updates.OnError(ex);
-
                 throw;
             }
         }
@@ -164,9 +156,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
             if (!found)
             {
-                logger.LogWarning("No match for request id={id}", response.Id);
-
-                return;
+                throw new InvalidOperationException($"No match for request id={response.Id}.");
             }
 
             // if the request was to subscribe, must add to sub routing table
@@ -196,20 +186,22 @@ public class ChainObserverBackgroundService : BackgroundService
 
             if (string.IsNullOrEmpty(subscriptionId))
             {
-                logger.LogError("Expected a subscription but subscription id is null; json={json}",
-                    JsonSerializer.Serialize(response));
-
-                return;
+                throw new InvalidOperationException(
+                    "Expected a subscription but subscription id is null.")
+                {
+                    Data =
+                    {
+                        ["json"] = JsonSerializer.Serialize(response)
+                    }
+                };
             }
 
-            bool found = subscriptionRoutes!.TryGetValue(subscriptionId, out var state);
+            bool found = subscriptionRoutes.TryGetValue(subscriptionId, out var state);
 
             if (!found)
             {
-                logger.LogWarning("Couldn't match observer for subscription id={id}",
-                    response.Parameters.SubscriptionId);
-
-                return;
+                throw new InvalidOperationException(
+                    $"Couldn't match observer for subscription id={response.Parameters.SubscriptionId}.");
             }
 
             await state!.Observer.ObserveAsync(state.Request, response);

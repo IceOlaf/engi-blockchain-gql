@@ -1,4 +1,5 @@
-﻿using System.Reactive.Subjects;
+﻿using System.Diagnostics;
+using System.Reactive.Subjects;
 using System.Text.Json;
 using Engi.Substrate.WebSockets;
 
@@ -27,6 +28,8 @@ public class NewHeadChainObserver : IChainObserver
     {
         var header = response.Parameters!.Result.Deserialize<Header>(
             SubstrateJsonSerializerOptions.Default)!;
+
+        Debug.Assert(response.Method == ChainKeys.ChainFinalizedHead);
 
         LastFinalizedHeader = header;
 

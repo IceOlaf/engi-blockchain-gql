@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Engi.Substrate;
 
@@ -8,5 +9,5 @@ public class SignedBlock
     public Block Block { get; set; } = null!;
 
     [JsonPropertyName("justifications")]
-    public string? Justifications { get; set; }
+    public JsonElement? Justifications { get; set; }
 }

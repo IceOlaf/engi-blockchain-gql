@@ -27,6 +27,8 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
     protected IHub Sentry { get; init; }
 
+    protected bool ProcessConcurrently { get; set; }
+
     protected abstract string CreateQuery();
 
     protected virtual Task InitializeAsync() => Task.CompletedTask;
@@ -37,7 +39,9 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
         var workerOptions = new SubscriptionWorkerOptions(name)
         {
-            Strategy = SubscriptionOpeningStrategy.WaitForFree,
+            Strategy = ProcessConcurrently 
+                ? SubscriptionOpeningStrategy.Concurrent 
+                : SubscriptionOpeningStrategy.WaitForFree,
             MaxErroneousPeriod = TimeSpan.FromHours(1),
             TimeToWaitBeforeConnectionRetry = TimeSpan.FromMinutes(1),
         };

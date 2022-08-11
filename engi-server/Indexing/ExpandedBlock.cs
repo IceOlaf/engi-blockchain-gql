@@ -10,7 +10,7 @@ public class ExpandedBlock
 
     public DateTime? IndexedOn { get; set; }
 
-    public string Hash { get; set; } = null!;
+    public string? Hash { get; set; }
 
     public string ParentHash { get; set; } = null!;
 
@@ -24,6 +24,12 @@ public class ExpandedBlock
     {
         Id = KeyFrom(number);
         Number = number;
+    }
+
+    public ExpandedBlock(Header header)
+        : this(header.Number)
+    {
+        Hash = header.Hash.Value;
     }
 
     public void Fill(

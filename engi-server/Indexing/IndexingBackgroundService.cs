@@ -1,4 +1,5 @@
 ﻿using System.Reactive.Linq;
+using Dasync.Collections;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Sentry;
@@ -13,9 +14,11 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         IDocumentStore store, 
         IServiceProvider serviceProvider,
         IHub sentry, 
+        IWebHostEnvironment env,
         ILoggerFactory loggerFactory) 
         : base(store, serviceProvider, sentry, loggerFactory)
     {
+        ProcessConcurrently = env.IsProduction();
     }
 
     protected override string CreateQuery()
@@ -65,7 +68,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         }
                     }
 
-                    await TriggerIndexingForBlockNumbers(lastIndexedBlockNumber, header.Number);
+                    await TriggerIndexingForBlockNumbers(lastIndexedBlockNumber, header);
 
                     previousHeader = header;
                 }
@@ -100,19 +103,20 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         var meta = snapshotObserver.Metadata;
 
-        foreach (var doc in batch.Items)
+        await batch.Items.ParallelForEachAsync(async doc =>
         {
             var job = doc.Result;
 
             Sentry.AddBreadcrumb("Processing block",
                 data: new Dictionary<string, string>
                 {
-                    ["number"] = job.Number.ToString()
+                    ["number"] = job.Number.ToString(),
+                    ["hash"] = job.Hash ?? string.Empty
                 });
 
             try
             {
-                string hash = await client.GetChainBlockHashAsync(job.Number);
+                string hash = job.Hash ?? await client.GetChainBlockHashAsync(job.Number);
 
                 var signedBlock = await client.GetChainBlockAsync(hash);
 
@@ -133,19 +137,23 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 jobMeta["SentryId"] = Sentry.CaptureException(ex).ToString();
             }
-        }
+        }, maxDegreeOfParallelism: 64);
 
         await session.SaveChangesAsync();
     }
 
-    private async Task TriggerIndexingForBlockNumbers(ulong fromExclusive, ulong toInclusive)
+    private async Task TriggerIndexingForBlockNumbers(ulong fromExclusive, Header current)
     {
         await using var bulk = Store.BulkInsert();
 
-        for (ulong number = fromExclusive + 1; number <= toInclusive; ++number)
+        ulong toExclusive = current.Number;
+
+        for (ulong number = fromExclusive + 1; number < toExclusive; ++number)
         {
             await bulk.StoreAsync(new ExpandedBlock(number));
         }
+
+        await bulk.StoreAsync(new ExpandedBlock(current));
     }
 
     private async Task<ulong> FindLastIndexedBlockNumberAsync(ulong lastBlockNumber)

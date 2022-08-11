@@ -1,4 +1,4 @@
-name: engi-graphql-dev
+name: engi-api
 
 on: 
   push:
@@ -11,8 +11,8 @@ jobs:
       run: 
         working-directory: engi-server
     env:
-      hosts: a.dev.zmvp.host,b.dev.zmvp.host,c.dev.zmvp.host
-      application_name: engi-graphql
+      hosts: a.prod.zmvp.host,b.prod.zmvp.host,c.prod.zmvp.host
+      application_name: engi-api
       working_directory: engi-server
     steps:
     - uses: actions/checkout@v2
@@ -39,7 +39,7 @@ jobs:
       with:
         files: ${{ env.working_directory }}/deploy/appsettings.json
       env:
-        Raven.Certificate: ${{ secrets.RAVEN_CERTIFICATE_DEV }}    
+        Raven.Certificate: ${{ secrets.RAVEN_CERTIFICATE }}    
     - uses: zerotomvp/rolling-systemd-update@v1-beta.7
       with:
         serviceName: ${{ env.application_name }}

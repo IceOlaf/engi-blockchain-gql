@@ -26,14 +26,15 @@ public class Extrinsic
         using var reader = new ScaleStreamReader(s);
 
         ulong length = reader.ReadCompactInteger();
-        int version = reader.ReadByte() & UNMASK_VERSION;
+        int secondByte = reader.ReadByte();
+        int version = secondByte & UNMASK_VERSION;
 
         if (version != 4)
         {
             throw new NotImplementedException("Only extrinsics V4 can be decoded.");
         }
 
-        bool isSigned = (length & BIT_SIGNED) == BIT_SIGNED;
+        bool isSigned = (secondByte & BIT_SIGNED) == BIT_SIGNED;
 
         ExtrinsicSignature? signature = null;
 

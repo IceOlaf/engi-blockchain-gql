@@ -41,8 +41,6 @@ public class TransactionIndex : AbstractIndexCreationTask
                         block.Number,
                         block.Hash,
                         block.DateTime,
-                        extrinsic.PalletName,
-                        extrinsic.CallName,
                         Type = type,
                         Executor = extrinsic.Signature.Address.Value,
                         IsSuccessful = IndexUtils.GetIsSuccessful(extrinsic.PalletName, extrinsic.Events),

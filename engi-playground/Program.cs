@@ -168,4 +168,13 @@ public static class Program
 
         return; // set breakpoint here
     }
+
+    private static async Task InspectWestendMetadataAsync()
+    {
+        var client = new SubstrateClient("https://westend-rpc.polkadot.io");
+
+        var metadata = await client.GetStateMetadataAsync();
+
+        return; // set breakpoint here
+    }
 }

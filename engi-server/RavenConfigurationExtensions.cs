@@ -2,6 +2,8 @@
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
+using Raven.Client.ServerWide;
+using Raven.Client.ServerWide.Operations;
 
 namespace Engi.Substrate.Server;
 
@@ -28,6 +30,17 @@ public static class RavenConfigurationExtensions
         conventions.Serialization = new EngiSerializationConventions();
 
         store.Initialize();
+
+        try 
+        {
+            store.Maintenance.Server.Send(
+                new CreateDatabaseOperation(
+                    new DatabaseRecord(options.Database)));
+        }
+        catch(Exception)
+        {
+            // this will fail in real environments, useful for local/CI
+        }
 
         IndexCreation.CreateIndexes(typeof(IndexingBackgroundService).Assembly, store);
 

@@ -1,8 +1,8 @@
-﻿using System.Numerics;
+﻿using Engi.Substrate.Jobs;
 
 namespace Engi.Substrate.Server.Types;
 
 public class CreateJobInput : SignedExtrinsicInputBase
 {
-    public BigInteger Funding { get; set; }
+    public JobDefinition Job { get; set; } = null!;
 }

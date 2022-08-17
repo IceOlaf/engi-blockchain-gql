@@ -16,7 +16,7 @@ public class EngiMutations : ObjectGraphType
         Field<UserType>(
             "createUser",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateUserArgumentsType>> { Name = "user" }
+                new QueryArgument<NonNullGraphType<CreateUserArgumentsInputGraphType>> { Name = "user" }
             ),
             resolve: context =>
             {
@@ -29,7 +29,7 @@ public class EngiMutations : ObjectGraphType
         Field<StringGraphType>(
             "balanceTransfer",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<BalanceTransferArgumentsType>> { Name = "transfer" }
+                new QueryArgument<NonNullGraphType<BalanceTransferArgumentsGraphType>> { Name = "transfer" }
             ),
             resolve: context =>
             {
@@ -43,7 +43,7 @@ public class EngiMutations : ObjectGraphType
         Field<StringGraphType>(
             "createJob",
             arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateJobArgumentsInputType>> {Name = "job"}
+                new QueryArgument<NonNullGraphType<CreateJobArgumentsInputGraphType>> {Name = "job"}
             ),
             resolve: context =>
             {

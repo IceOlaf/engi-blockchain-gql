@@ -6,6 +6,8 @@ public class EngiHealthGraphType : ObjectGraphType<EngiHealth>
 {
     public EngiHealthGraphType()
     {
+        Description = "A type containing information about the chain and its current health status.";
+
         Field(x => x.Chain)
             .Description("The name of the chain.");
         Field(x => x.NodeName)

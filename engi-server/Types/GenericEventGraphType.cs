@@ -14,7 +14,7 @@ public class GenericEventGraphType : ObjectGraphType<GenericEvent>
 
     public class DataType : ScalarGraphType
     {
-        public override object? ParseValue(object? value) => throw new NotImplementedException();
+        public override object ParseValue(object? value) => throw new NotImplementedException();
 
         public override object? Serialize(object? value)
         {

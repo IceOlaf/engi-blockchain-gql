@@ -7,6 +7,8 @@ public class AccountDataGraphType : ObjectGraphType<AccountData>
 {
     public AccountDataGraphType()
     {
+        Description = "All balance information for an account.";
+
         Field(x => x.Free)
             .Description("Non-reserved part of the balance. There may still be restrictions on this, but it is the total pool what may in principle be transferred, reserved and used for tipping.");
         Field(x => x.Reserved)

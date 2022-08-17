@@ -2,10 +2,12 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateUserArgumentsType : InputObjectGraphType<CreateUserArguments>
+public class CreateUserArgumentsInputGraphType : InputObjectGraphType<CreateUserArguments>
 {
-    public CreateUserArgumentsType()
+    public CreateUserArgumentsInputGraphType()
     {
+        Description = "Arguments for creating an account key pair.";
+
         Field(x => x.Name)
             .Description("The name of the account.");
         Field(x => x.Mnemonic)

@@ -7,6 +7,8 @@ public class AccountInfoGraphType : ObjectGraphType<AccountInfo>
 {
     public AccountInfoGraphType()
     {
+        Description = "Information of an account.";
+
         Field(x => x.Nonce)
             .Description("The number of transactions this account has sent.");
         Field(x => x.Consumers)

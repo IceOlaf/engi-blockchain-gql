@@ -7,6 +7,8 @@ public class TransactionGraphType : ObjectGraphType<TransactionIndex.Result>
 {
     public TransactionGraphType()
     {
+        Description = "A transaction recorded related to an ENGI user.";
+
         Field(x => x.Number)
             .Description("The number of the block that contains this transaction.");
         Field(x => x.Hash)

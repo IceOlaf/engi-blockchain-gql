@@ -2,7 +2,7 @@
 
 namespace Engi.Substrate.Jobs;
 
-public sealed class JobDefinition
+public class JobDefinition
 {
     public BigInteger Funding { get; init; }
 

@@ -2,7 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateJobArguments : SignedExtrinsicArgumentsBase
+public class CreateJobArguments : JobDefinition, ISignedExtrinsic
 {
-    public JobDefinition Job { get; set; } = null!;
+    public string SenderSecret { get; set; } = null!;
+
+    public byte Tip { get; set; }
 }

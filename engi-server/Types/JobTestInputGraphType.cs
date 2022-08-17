@@ -7,6 +7,8 @@ public class JobTestInputGraphType : InputObjectGraphType<Test>
 {
     public JobTestInputGraphType()
     {
+        Description = "An input type for the Test definition part of job creation.";
+
         Field(x => x.Id)
             .Description("The identifier of the test extracted in analysis.");
         Field(x => x.Result)

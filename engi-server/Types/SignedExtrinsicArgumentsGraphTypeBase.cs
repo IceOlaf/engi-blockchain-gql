@@ -3,7 +3,7 @@
 namespace Engi.Substrate.Server.Types;
 
 public abstract class SignedExtrinsicArgumentsGraphTypeBase<T> : InputObjectGraphType<T>
-    where T : SignedExtrinsicArgumentsBase
+    where T : ISignedExtrinsic
 {
     protected SignedExtrinsicArgumentsGraphTypeBase()
     {

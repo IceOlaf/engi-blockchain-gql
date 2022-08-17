@@ -6,6 +6,8 @@ public class HeaderType : ObjectGraphType<Header>
 {
     public HeaderType()
     {
+        Description = "The block header.";
+
         Field(x => x.Number)
             .Description("The header number.");
         Field(x => x.ParentHash)

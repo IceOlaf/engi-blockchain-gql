@@ -6,6 +6,8 @@ public class UserType : ObjectGraphType<User>
 {
     public UserType()
     {
+        Description = "An ENGI user.";
+
         Field(x => x.Name)
             .Description("The name of the account.");
         Field(x => x.Address)

@@ -1,12 +1,11 @@
-﻿using Engi.Substrate.Jobs;
-using GraphQL.Types;
+﻿namespace Engi.Substrate.Server.Types;
 
-namespace Engi.Substrate.Server.Types;
-
-public class JobDefinitionInputGraphType : InputObjectGraphType<JobDefinition>
+public class CreateJobArgumentsInputGraphType : SignedExtrinsicArgumentsGraphTypeBase<CreateJobArguments>
 {
-    public JobDefinitionInputGraphType()
+    public CreateJobArgumentsInputGraphType()
     {
+        Description = "The arguments for the create_job signed extrinsic.";
+
         Field(x => x.Funding, type: typeof(UInt128GraphType))
             .Description("The funding for the job.");
         Field(x => x.Language)

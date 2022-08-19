@@ -19,6 +19,7 @@ services:
       target: test
     environment:
       - WAIT_HOSTS=api:5000
+      - WAIT_TIMEOUT=90
     volumes:
       - ./integration-test-results/:/source/engi-tests/TestResults/
 

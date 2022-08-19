@@ -29,3 +29,4 @@ services:
       - Substrate__HttpUrl=http://substrate:9933
       - Substrate__WsUrl=ws://substrate:9944
       - WAIT_HOSTS=substrate:9933, substrate:9944, ravendb:8080, ravendb:38888
+      - WAIT_TIMEOUT=90

@@ -2,9 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class HeaderType : ObjectGraphType<Header>
+public class HeaderGraphType : ObjectGraphType<Header>
 {
-    public HeaderType()
+    public HeaderGraphType()
     {
         Description = "The block header.";
 

@@ -1,9 +1,5 @@
 ﻿using Engi.Substrate.Server.Indexing;
 using GraphQL;
-using GraphQL.Execution;
-using GraphQL.Server;
-using GraphQL.Server.Transports.AspNetCore;
-using GraphQL.SystemReactive;
 using Polly;
 
 namespace Engi.Substrate.Server
@@ -26,22 +22,27 @@ namespace Engi.Substrate.Server
 
             services.Configure<SubstrateClientOptions>(Configuration.GetRequiredSection("Substrate"));
 
-            GraphQL.MicrosoftDI.GraphQLBuilderExtensions.AddGraphQL(services)
-                .AddSubscriptionDocumentExecuter()
-                .AddServer(true)
+            services.AddGraphQL(builder => builder
                 .AddSchema<EngiRootSchema>()
-                .ConfigureExecution(options =>
+                .ConfigureExecutionOptions(options =>
                 {
                     var logger = options.RequestServices!.GetRequiredService<ILogger<Startup>>();
 
                     options.EnableMetrics = Environment.IsDevelopment();
                     options.UnhandledExceptionDelegate =
-                        ctx => logger.LogError(ctx.OriginalException, "Error occurred: {error}", ctx.OriginalException.Message);
+                        ctx =>
+                        {
+                            logger.LogError(ctx.OriginalException, "Error occurred: {error}",
+                                ctx.OriginalException.Message);
+                            return Task.CompletedTask;
+                        };
                 })
                 .AddSystemTextJson()
-                .Configure<ErrorInfoProviderOptions>(opt => opt.ExposeExceptionStackTrace = Environment.IsDevelopment())
-                .AddWebSockets()
-                .AddGraphTypes(typeof(EngiRootSchema).Assembly);
+                .AddErrorInfoProvider(options =>
+                {
+                    options.ExposeExceptionDetails = Environment.IsDevelopment();
+                })
+                .AddGraphTypes(typeof(EngiRootSchema).Assembly));
 
             services.AddHttpClient();
             services.AddHttpClient(nameof(SubstrateClient), http =>
@@ -82,14 +83,17 @@ namespace Engi.Substrate.Server
             app.UseHealthChecks("/api/health");
 
             app.UseWebSockets();
+            app.UseGraphQL<EngiRootSchema>();
 
-            app.UseGraphQLWebSockets<EngiRootSchema>();
-            app.UseGraphQL<EngiRootSchema, GraphQLHttpMiddleware<EngiRootSchema>>();
-
-            app.UseGraphQLPlayground();
-            app.UseGraphQLGraphiQL();
-            app.UseGraphQLAltair();
-            app.UseGraphQLVoyager();
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapGraphQL();
+                endpoints.MapGraphQLPlayground();
+                endpoints.MapGraphQLGraphiQL();
+                endpoints.MapGraphQLAltair();
+                endpoints.MapGraphQLVoyager();
+            });
 
             app.UseDefaultFiles();
             app.UseStaticFiles();

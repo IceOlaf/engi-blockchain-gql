@@ -17,22 +17,19 @@ public class EngiQuery : ObjectGraphType
     {
         this.serviceProvider = serviceProvider;
 
-        FieldAsync<EngiHealthGraphType>("health", resolve: async _ => await GetHealthAsync());
+        Field<EngiHealthGraphType>("health")
+            .ResolveAsync(async _ => await GetHealthAsync());
 
-        FieldAsync<AccountInfoGraphType>("account",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<IdGraphType>> { Name = "id" }
-            ),
-            resolve: async context => await GetAccountAsync(context));
+        Field<AccountInfoGraphType>("account")
+            .Argument<NonNullGraphType<IdGraphType>>("id")
+            .ResolveAsync(async context => await GetAccountAsync(context));
 
-        FieldAsync<PagedResultGraphType<TransactionGraphType, TransactionIndex.Result>>("transactions",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<IdGraphType>> { Name = "id" },
-                new QueryArgument<EnumerationGraphType<TransactionType>> { Name = "type" },
-                new QueryArgument<NonNullGraphType<UIntGraphType>> { Name = "skip", DefaultValue = 0 },
-                new QueryArgument<NonNullGraphType<UIntGraphType>> { Name = "limit", DefaultValue = 25 }
-            ),
-            resolve: async context => await GetTransactionsAsync(context));
+        Field<PagedResultGraphType<TransactionGraphType, TransactionIndex.Result>>("transactions")
+            .Argument<NonNullGraphType<IdGraphType>>("id")
+            .Argument<EnumerationGraphType<TransactionType>>("type")
+            .Argument<NonNullGraphType<UIntGraphType>>("skip", arg => arg.DefaultValue = 0)
+            .Argument<NonNullGraphType<UIntGraphType>>("limit", arg => arg.DefaultValue = 25)
+            .ResolveAsync(async context => await GetTransactionsAsync(context));
     }
 
     private async Task<EngiHealth> GetHealthAsync()
@@ -76,7 +73,7 @@ public class EngiQuery : ObjectGraphType
         }
     }
 
-    private async Task<AccountInfo> GetAccountAsync(IResolveFieldContext<object> context)
+    private async Task<AccountInfo> GetAccountAsync(IResolveFieldContext<object?> context)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
@@ -98,7 +95,7 @@ public class EngiQuery : ObjectGraphType
         return await substrate.GetSystemAccountAsync(address);
     }
 
-    private async Task<PagedResult<TransactionIndex.Result>> GetTransactionsAsync(IResolveFieldContext<object> context)
+    private async Task<PagedResult<TransactionIndex.Result>> GetTransactionsAsync(IResolveFieldContext<object?> context)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 

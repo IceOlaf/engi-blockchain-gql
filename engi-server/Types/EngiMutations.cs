@@ -14,46 +14,34 @@ public class EngiMutations : ObjectGraphType
     {
         this.serviceProvider = serviceProvider;
 
-        Field<UserType>(
-            "createUser",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateUserArgumentsInputGraphType>> { Name = "user" }
-            ),
-            resolve: context =>
+        Field<UserType>("createUser")
+            .Argument<NonNullGraphType<CreateUserArgumentsInputGraphType>>("user")
+            .Resolve(context =>
             {
                 var input = (CreateUserArguments)context.Arguments!["user"].Value!;
 
                 return CreateUser(input);
-            }
-        );
+            });
 
-        FieldAsync<StringGraphType>(
-            "balanceTransfer",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<BalanceTransferArgumentsGraphType>> { Name = "transfer" }
-            ),
-            resolve: async context =>
+        Field<StringGraphType>("balanceTransfer")
+            .Argument<NonNullGraphType<BalanceTransferArgumentsGraphType>>("transfer")
+            .ResolveAsync(async context =>
             {
                 var input = (BalanceTransferArguments)context.Arguments!["transfer"].Value!;
                 var chainState = await GetLatestChainState();
 
                 return await BalanceTransferAsync(chainState, input);
-            }
-        );
+            });
 
-        FieldAsync<StringGraphType>(
-            "createJob",
-            arguments: new QueryArguments(
-                new QueryArgument<NonNullGraphType<CreateJobArgumentsInputGraphType>> {Name = "job"}
-            ),
-            resolve: async context =>
+        Field<StringGraphType>("createJob")
+            .Argument<NonNullGraphType<CreateJobArgumentsInputGraphType>>("job")
+            .ResolveAsync(async context =>
             {
                 var input = (CreateJobArguments) context.Arguments!["job"].Value!;
                 var chainState = await GetLatestChainState();
 
                 return await CreateJobAsync(chainState, input);
-            }
-        );
+            });
     }
 
     private User CreateUser(CreateUserArguments input)

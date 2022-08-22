@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Keys;
+﻿using Engi.Substrate.Jobs;
+using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Indexing;
@@ -77,7 +78,34 @@ public static class Program
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        await client.CreateJobAsync(chainState, sender, account, 100, ExtrinsicEra.Immortal);
+        var args = new CreateJobArguments
+        {
+            Funding = 10,
+            RepositoryUrl = "https://github.com/ravendb/ravendb",
+            BranchName = "master",
+            CommitHash = "119158985933033e05de60533d353b7599b0bbab",
+            Language = Language.CSharp,
+            Name = "Test job",
+            Tests = new []
+            {
+                new Test
+                {
+                    Id = "test-1",
+                    Result = TestResult.Failed,
+                    ResultMessage = "Tests failed.",
+                    Required = TestResult.Passed,
+                    RequiredMessage = "Tests passed."
+                }
+            },
+            FilesRequirement = new []
+            {
+                "*.cs",
+                "*.txt",
+                "*.json"
+            }
+        };
+
+        await client.CreateJobAsync(chainState, sender, account, args);
 
         return; // set breakpoint here
     }

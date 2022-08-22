@@ -1,4 +1,7 @@
-﻿namespace Engi.Substrate.Server.Types;
+﻿using Engi.Substrate.Jobs;
+using GraphQL.Types;
+
+namespace Engi.Substrate.Server.Types;
 
 public class CreateJobArgumentsInputGraphType : SignedExtrinsicArgumentsGraphTypeBase<CreateJobArguments>
 {
@@ -16,11 +19,11 @@ public class CreateJobArgumentsInputGraphType : SignedExtrinsicArgumentsGraphTyp
             .Description("The relevant branch name.");
         Field(x => x.CommitHash)
             .Description("The relevant commit hash.");
-        Field(x => x.Tests, type: typeof(JobTestInputGraphType))
+        Field(x => x.Tests, type: typeof(ListGraphType<JobTestInputGraphType>))
             .Description("The tests that participate in this job.");
         Field(x => x.Name)
             .Description("The job name.");
         Field(x => x.FilesRequirement)
-            .Description("Any files that are a requirement for this job.");
+            .Description("Three regex or glob patterns files that define files as requirements for this job.");
     }
 }

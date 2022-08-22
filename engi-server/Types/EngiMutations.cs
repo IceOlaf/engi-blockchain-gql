@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
 using GraphQL;
 using GraphQL.Types;
@@ -125,17 +126,15 @@ public class EngiMutations : ObjectGraphType
 
     private async Task<string> CreateJobAsync(
         ChainState chainState,
-        CreateJobArguments input)
+        CreateJobArguments args)
     {
-        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
+        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        // return await client.CreateJobAsync(
-        //     chainState, sender, account, input.Funding, ExtrinsicEra.Immortal, input.Tip);
-        return string.Empty;
+        return await client.CreateJobAsync(chainState, sender, account, args);
     }
 
     private async Task<ChainState> GetLatestChainState()

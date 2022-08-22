@@ -2,9 +2,9 @@
 
 public class StorageEntryMap : IStorageEntry
 {
-    public StorageHasher[]? Hashers { get; set; }
-    public TType? Key { get; set; }
-    public TType? Value { get; set; }
+    public StorageHasher[] Hashers { get; set; } = null!;
+    public TType Key { get; set; } = null!;
+    public TType Value { get; set; } = null!;
 
     public static StorageEntryMap Parse(ScaleStreamReader stream)
     {

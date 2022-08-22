@@ -9,11 +9,11 @@ public class PalletMetadata
 
     public PalletStorageMetadata? Storage { get; set; }
 
-    public PalletCallMetadata Calls { get; set; } = null!;
+    public PalletCallMetadata? Calls { get; set; }
 
     public PalletEventMetadata? Events { get; set; }
 
-    public PalletConstantMetadata[]? Constants { get; set; }
+    public PalletConstantMetadata[] Constants { get; set; } = null!;
 
     public PalletErrorMetadata? Errors { get; set; }
 

@@ -4,7 +4,7 @@ public class TupleTypeDefinition : TypeDefinition
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Tuple;
 
-    public TType[]? Fields { get; set; }
+    public TType[] Fields { get; set; } = null!;
 
     internal new static TupleTypeDefinition Parse(ScaleStreamReader stream)
     {

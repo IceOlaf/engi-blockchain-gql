@@ -2,7 +2,7 @@
 
 public class ExtrinsicMetadata
 {
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
     public int Version { get; set; }
     public SignedExtensionMetadata[]? SignedExtensions { get; set; }
     

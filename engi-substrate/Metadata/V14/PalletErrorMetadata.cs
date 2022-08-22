@@ -2,7 +2,7 @@
 
 public class PalletErrorMetadata
 {
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
 
     public static PalletErrorMetadata Parse(ScaleStreamReader stream)
     {

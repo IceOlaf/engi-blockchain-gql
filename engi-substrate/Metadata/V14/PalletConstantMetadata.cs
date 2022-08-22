@@ -3,7 +3,7 @@
 public class PalletConstantMetadata
 {
     public string? Name { get; set; }
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
     public byte[]? Value { get; set; }
     public string?[]? Docs { get; set; }
 

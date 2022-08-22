@@ -4,7 +4,7 @@ public class CompactTypeDefinition : TypeDefinition
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Compact;
 
-    public TType? Type { get; set; }
+    public TType Type { get; set; } = null!;
 
     internal new static CompactTypeDefinition Parse(ScaleStreamReader stream)
     {

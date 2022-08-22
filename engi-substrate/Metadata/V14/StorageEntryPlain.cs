@@ -2,7 +2,7 @@
 
 public class StorageEntryPlain : IStorageEntry
 {
-    public TType? Value { get; set; }
+    public TType Value { get; set; } = null!;
 
     public static StorageEntryPlain Parse(ScaleStreamReader stream)
     {

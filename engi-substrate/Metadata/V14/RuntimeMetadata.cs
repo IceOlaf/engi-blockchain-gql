@@ -14,7 +14,7 @@ public class RuntimeMetadata
 
     public ExtrinsicMetadata Extrinsic { get; set; } = null!;
 
-    public TType? TypeId { get; set; }
+    public TType TypeId { get; set; } = null!;
 
     public VariantTypeDefinition MultiAddressTypeDefinition
     {
@@ -98,6 +98,11 @@ public class RuntimeMetadata
     {
         var pallet = FindPallet(palletIndex);
 
+        if (pallet.Calls == null)
+        {
+            throw new ArgumentException("Pallet does not define any calls.", nameof(palletIndex));
+        }
+
         var callType = TypesById[pallet.Calls.Type];
 
         if (callType.Definition is VariantTypeDefinition variantType)
@@ -119,6 +124,11 @@ public class RuntimeMetadata
     public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)
     {
         var pallet = FindPallet(palletName);
+
+        if (pallet.Calls == null)
+        {
+            throw new ArgumentException("Pallet does not define any calls.", nameof(palletName));
+        }
 
         var callType = TypesById[pallet.Calls.Type];
         

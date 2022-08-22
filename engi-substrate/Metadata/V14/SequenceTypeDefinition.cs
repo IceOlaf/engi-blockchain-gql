@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Metadata.V14;
 
-public class SequenceTypeDefinition : TypeDefinition
+public class SequenceTypeDefinition : TypeDefinition, IHasInnerType
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Sequence;
     public TType Type { get; set; } = null!;

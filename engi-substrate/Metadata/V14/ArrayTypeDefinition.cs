@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Metadata.V14;
 
-public class ArrayTypeDefinition : TypeDefinition
+public class ArrayTypeDefinition : TypeDefinition, IHasInnerType
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Array;
 

@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Metadata.V14;
 
-public class CompactTypeDefinition : TypeDefinition
+public class CompactTypeDefinition : TypeDefinition, IHasInnerType
 {
     public override TypeDefinitionType DefinitionType => TypeDefinitionType.Compact;
 

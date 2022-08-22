@@ -183,11 +183,93 @@ public class RuntimeMetadata
             var field = variant.Fields[index];
             var type = TypesById[field.Type];
 
-            if (!assertion(field, type))
+    private void PopulateReferences(TType type)
+    {
+        if (type.Reference != null)
+        {
+            return;
+        }
+
+        type.Reference = TypesById[type];
+
+        if (type.Reference.Definition is IHasInnerType inner)
+        {
+            PopulateReferences(inner.Type);
+        }
+        else if (type.Reference.Definition is VariantTypeDefinition variantType)
+        {
+            foreach (var variant in variantType.Variants)
+            {
+                foreach (var field in variant.Fields)
+                {
+                    PopulateReferences(field.Type);
+                }
+            }
+        } 
+        else if (type.Reference.Definition is CompositeTypeDefinition compositeType)
+        {
+            foreach (var field in compositeType.Fields)
             {
                 throw new RuntimeAssumptionFailedException(expression.ToString());
+                PopulateReferences(field.Type);
             }
         }
+    }
+
+    private RuntimeMetadata PopulateReferences()
+    {
+        foreach (var type in TypesById.Values)
+        {
+            if (type.Definition is IHasInnerType inner)
+            {
+                PopulateReferences(inner.Type);
+            }
+        }
+
+        foreach (var pallet in Pallets)
+        {
+            if (pallet.Calls != null)
+            {
+                PopulateReferences(pallet.Calls.Type);
+            }
+
+            foreach (var constant in pallet.Constants)
+            {
+                PopulateReferences(constant.Type);
+            }
+
+            if (pallet.Errors != null)
+            {
+                PopulateReferences(pallet.Errors.Type);
+            }
+
+            if (pallet.Events != null)
+            {
+                PopulateReferences(pallet.Events.Type);
+            }
+
+            if (pallet.Storage != null)
+            {
+                foreach (var storage in pallet.Storage.Items)
+                {
+                    switch (storage.Type)
+                    {
+                        case StorageEntryPlain plain:
+                            PopulateReferences(plain.Value);
+                            break;
+                        
+                        case StorageEntryMap map:
+                            PopulateReferences(map.Key);
+                            PopulateReferences(map.Value);
+                            break;
+                    }
+                }
+            }
+        }
+
+        PopulateReferences(TypeId);
+
+        return this;
     }
 
     public static RuntimeMetadata Parse(ScaleStreamReader stream)
@@ -209,7 +291,7 @@ public class RuntimeMetadata
             throw new InvalidDataException("Only know how to parse v14.");
         }
 
-        return new()
+        return new RuntimeMetadata()
         {
             MagicNumber = magicNumber,
             Version = version,
@@ -218,7 +300,7 @@ public class RuntimeMetadata
             Pallets = new PalletMetadataCollection(stream.ReadList(PalletMetadata.Parse)),
             Extrinsic = ExtrinsicMetadata.Parse(stream),
             TypeId = TType.Parse(stream)
-        };
+        }.PopulateReferences();
     }
 
     class RuntimeAssumptionFailedException : Exception

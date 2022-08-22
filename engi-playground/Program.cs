@@ -105,7 +105,7 @@ public static class Program
             .FindPalletCallVariant("TemplateModule", "do_something");
 
         snapshot.Metadata.VerifySignature(do_something,
-            (field, type) => type.FullName == "u32");
+            (field, type, _) => type.FullName == "u32");
 
         using var writer = new ScaleStreamWriter();
 
@@ -142,7 +142,7 @@ public static class Program
         return;
     }
 
-    private static async Task BalanceTransferExampleAsync()
+    private static async Task BalanceTransferAsync()
     {
         var client = new SubstrateClient("http://localhost:9933");
 

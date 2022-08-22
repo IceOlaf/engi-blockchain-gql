@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-
-namespace Engi.Substrate.Metadata.V14;
+﻿namespace Engi.Substrate.Metadata.V14;
 
 public class RuntimeMetadata
 {
@@ -159,17 +157,17 @@ public class RuntimeMetadata
 
     public void VerifySignature(
         Variant variant,
-        params Expression<Func<Field, PortableType, bool>>[] assertions)
+        params Func<Field, PortableType, PortableType?, bool>[] assertions)
     {
         if (variant == null)
         {
             throw new ArgumentNullException(nameof(variant));
         }
 
-        if (assertions is not { Length: not 0 })
+        if (assertions.Length != variant.Fields.Count)
         {
             throw new ArgumentException(
-                "No asserts were provided",
+                $"One assertion per field must be provided; expected={variant.Fields.Count} actual={assertions.Length}",
                 nameof(assertions));
         }
 
@@ -177,11 +175,18 @@ public class RuntimeMetadata
         {
             // TODO: cache
 
-            var expression = assertions[index];
-            var assertion = expression.Compile();
+            var assertion = assertions[index];
 
             var field = variant.Fields[index];
             var type = TypesById[field.Type];
+            var innerType = type.Definition is IHasInnerType inner ? TypesById[inner.Type] : null;
+
+            if (!assertion(field, type, innerType))
+            {
+                throw new RuntimeAssumptionFailedException($"Assertion for field index={index} failed.");
+            }
+        }
+    }
 
     private void PopulateReferences(TType type)
     {
@@ -210,7 +215,6 @@ public class RuntimeMetadata
         {
             foreach (var field in compositeType.Fields)
             {
-                throw new RuntimeAssumptionFailedException(expression.ToString());
                 PopulateReferences(field.Type);
             }
         }

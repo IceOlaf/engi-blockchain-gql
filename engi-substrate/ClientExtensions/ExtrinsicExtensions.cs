@@ -22,14 +22,13 @@ public static class ExtrinsicExtensions
         var unsigned = GetSignaturePayload(method, era, senderAccount, tip, chainState);
 
         byte[] signature = sender.Sign(unsigned);
-        byte[] rawEra = era.Serialize();
 
         int payloadLength = 1 // version
                             + 1 // addressType
                             + 32 // address
                             + 1 // sig type
                             + signature.Length
-                            + rawEra.Length
+                            + era.CalculateLength()
                             + ScaleStreamWriter.GetCompactLength(senderAccount.Nonce)
                             + ScaleStreamWriter.GetCompactLength(tip)
                             + method.Length;
@@ -42,7 +41,7 @@ public static class ExtrinsicExtensions
         writer.Write(sender.Address.Raw);
         writer.Write((byte)1); // signature type
         writer.Write(signature);
-        writer.Write(rawEra);
+        writer.Write(era);
         writer.WriteCompact(senderAccount.Nonce);
         writer.WriteCompact(tip);
         writer.Write(method);

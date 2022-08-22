@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text;
 
 namespace Engi.Substrate;
 
@@ -24,6 +25,34 @@ public class ScaleStreamWriter : IDisposable
     public void Write(int value) => stream.Write(BitConverter.GetBytes(value));
 
     public void Write(uint value) => stream.Write(BitConverter.GetBytes(value));
+
+    public void Write(ulong value) => stream.Write(BitConverter.GetBytes(value));
+
+    public void WriteU128(BigInteger value)
+    {
+        var bytes = value.ToByteArray(isUnsigned: true);
+
+        if (bytes.Length < 16)
+        {
+            int diffCount = 16 - bytes.Length;
+
+            Write(new byte[diffCount]);
+        }
+
+        Write(bytes);
+    }
+
+    public void Write(string s)
+    {
+        WriteCompact(s.Length);
+        Write(Encoding.UTF8.GetBytes(s));
+    }
+
+    public void Write<T>(T e)
+        where T : Enum
+    {
+        Write(Convert.ToByte(e));
+    }
 
     public void WriteCompact(ulong value)
     {
@@ -62,9 +91,37 @@ public class ScaleStreamWriter : IDisposable
 
     public void Write(IScaleSerializable serializable)
     {
-        byte[] data = serializable.Serialize();
+        serializable.Serialize(this);
+    }
 
-        Write(data);
+    public void Write<T>(IList<T> items, Action<ScaleStreamWriter, T> writeItemFunc)
+    {
+        WriteCompact(items.Count);
+
+        foreach (var item in items)
+        {
+            writeItemFunc(this, item);
+        }
+    }
+
+    public void Write(string[] items)
+    {
+        WriteCompact(items.Length);
+
+        foreach (var item in items)
+        {
+            Write(item);
+        }
+    }
+
+    public void Write(IScaleSerializable[] items)
+    {
+        WriteCompact(items.Length);
+
+        foreach (var item in items)
+        {
+            Write(item);
+        }
     }
 
     public byte[] GetBytes()

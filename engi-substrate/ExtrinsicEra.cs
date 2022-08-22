@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate;
 
-public class ExtrinsicEra : IScaleSerializable
+public class ExtrinsicEra : IScaleSerializable, IScaleCalculateLength
 {
     public bool IsMortal { get; init; }
 
@@ -56,19 +56,28 @@ public class ExtrinsicEra : IScaleSerializable
         return new ExtrinsicEra(period, phase);
     }
 
-    public byte[] Serialize()
+    public void Serialize(ScaleStreamWriter writer)
     {
         if (IsMortal == false)
         {
-            return SerializedImmortalEra;
+            writer.Write(SerializedImmortalEra);
+            return;
         }
 
         var quantizeFactor = Math.Max(Period!.Value >> 12, 1);
         int trailingZeros = GetTrailingZeros(Period.Value);
         var encoded = Math.Min(15, Math.Max(1, trailingZeros - 1)) + ((Phase!.Value / quantizeFactor) << 4);
+        
         byte first = (byte)(encoded >> 8);
         byte second = (byte)(encoded & 0xff);
-        return new[] { second, first };
+        
+        writer.Write(second);
+        writer.Write(first);
+    }
+
+    public int CalculateLength()
+    {
+        return IsMortal ? 2 : 1;
     }
 
     private static int GetTrailingZeros(int period)

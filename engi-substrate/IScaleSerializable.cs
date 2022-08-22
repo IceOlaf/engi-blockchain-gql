@@ -2,5 +2,5 @@
 
 public interface IScaleSerializable
 {
-    byte[] Serialize();
+    void Serialize(ScaleStreamWriter writer);
 }

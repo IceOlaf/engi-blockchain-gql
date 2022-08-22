@@ -7,36 +7,78 @@ namespace Engi.Substrate.Keys;
 
 public class KeypairFactory
 {
-    public static Keypair CreateFromAny(string s)
-    {
-        if (s.StartsWith("0x"))
-        {
-            byte[] miniSecretOrPrivateKey = Hex.GetBytes0X(s);
+    private static string[] GetMnemonicWords(string mnemonic) => mnemonic
+        .Normalize(NormalizationForm.FormKD)
+        .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if (miniSecretOrPrivateKey.Length == 32)
+    public static void ValidateMnemonic(string mnemonic, string[] wordlist, out int[]? validatedMnemonicIndices)
+    {
+        validatedMnemonicIndices = null;
+
+        bool isRaw = mnemonic.StartsWith("0x");
+
+        if (isRaw)
+        {
+            string raw = mnemonic.Substring(2);
+
+            if (raw.Contains(' '))
             {
-                return CreateFromSeed(miniSecretOrPrivateKey);
+                throw new ArgumentException(
+                    "The mnemonic was treated as raw seed but contains in invalid hex value.");
             }
 
-            var keypairBytes = new byte[96];
+            if (mnemonic.Length > 64)
+            {
+                throw new ArgumentException(
+                    "The mnemonic was treated as raw seed but exceeds 32 bytes in length.",
+                    nameof(mnemonic));
+            }
+        }
+        else
+        {
+            var mnemonicWords = GetMnemonicWords(mnemonic);
 
-            SR25519.KeypairFromSecretKey(miniSecretOrPrivateKey, keypairBytes);
+            if (mnemonicWords.Length is not 12 or 15 or 18 or 21 or 24)
+            {
+                throw new ArgumentException(
+                    "Invalid mnemonic; must be 12, 15, 18, 21 or 24 words long.",
+                    nameof(mnemonic));
+            }
 
-            return Keypair.Create(keypairBytes);
+            var tempMnemonicIndices = mnemonicWords
+                .Select(word => Array.IndexOf(wordlist, word))
+                .ToArray();
+
+            if (tempMnemonicIndices.Any(idx => idx == -1))
+            {
+                throw new ArgumentException(
+                    "Invalid mnemonic; some words were not contained in the wordlist.");
+            }
+
+            validatedMnemonicIndices = tempMnemonicIndices;
+        }
+    }
+
+    public static Keypair CreateFromAny(string mnemonic, string? mnemonicSalt = null)
+    {
+        ValidateMnemonic(mnemonic, Wordlists.English, out int[]? validatedMnemonicIndices);
+
+        if (validatedMnemonicIndices == null)
+        {
+            // hex strings contain double the length
+
+            byte[] miniSecretOrPrivateKey = Hex.GetBytes(mnemonic.PadLeft(32 * 2));
+
+            return CreateFromSeed(miniSecretOrPrivateKey);
         }
 
-        return CreateFromMnemonic(s, string.Empty, Wordlists.English);
+        return CreateFromMnemonic(validatedMnemonicIndices, mnemonicSalt ?? string.Empty);
     }
 
-    public static Keypair CreateFromMnemonic(string mnemonic, string password, string[] wordlist)
+    private static Keypair CreateFromSeed(byte[] seed)
     {
-        var seed = CreateSeedFromWordlistMnemonic(mnemonic, password, wordlist);
+        ThrowIfEntropyIsInvalid(seed);
 
-        return CreateFromSeed(seed);
-    }
-
-    public static Keypair CreateFromSeed(byte[] seed)
-    {
         var keypairBytes = new byte[96];
 
         SR25519.KeypairFromSeed(seed, keypairBytes);
@@ -44,11 +86,16 @@ public class KeypairFactory
         return Keypair.Create(keypairBytes);
     }
 
-    public static byte[] CreateSeedFromWordlistMnemonic(string mnemonic, string password, string[] wordlist)
+    private static Keypair CreateFromMnemonic(int[] mnemonicIndices, string password)
     {
-        var entropy = MnemonicToEntropy(mnemonic, wordlist);
+        var seed = CreateSeedFromWordlistMnemonic(mnemonicIndices, password);
 
-        ThrowIfEntropyIsInvalid(entropy);
+        return CreateFromSeed(seed);
+    }
+
+    private static byte[] CreateSeedFromWordlistMnemonic(int[] mnemonicIndices, string password)
+    {
+        var entropy = MnemonicToEntropy(mnemonicIndices);
 
         var saltBytes = Encoding.UTF8.GetBytes("mnemonic" + password);
 
@@ -57,28 +104,12 @@ public class KeypairFactory
         return seed.AsSpan(0, 32).ToArray();
     }
 
-    private static byte[] MnemonicToEntropy(string mnemonic, string[] wordlist)
+    private static byte[] MnemonicToEntropy(int[] mnemonicIndices)
     {
-        var words = mnemonic
-            .Normalize(NormalizationForm.FormKD)
-            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-        if (words.Length is not 12 or 15 or 18 or 21 or 24)
-        {
-            throw new ArgumentException("Invalid mnemonic; must have length 12, 15, 18, 21 or 24.", nameof(mnemonic));
-        }
-
         var bitBuilder = new StringBuilder();
 
-        foreach (var word in words)
+        foreach (var index in mnemonicIndices)
         {
-            int index = Array.IndexOf(wordlist, word);
-
-            if (index == -1)
-            {
-                throw new FormatException("InvalidMnemonic");
-            }
-
             bitBuilder.Append(Convert.ToString(index, 2)
                 .PadLeft(11, '0'));
         }

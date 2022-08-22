@@ -1,5 +1,7 @@
 ﻿using Engi.Substrate.Server.Indexing;
+using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
+using GraphQL.Instrumentation;
 using Polly;
 
 namespace Engi.Substrate.Server
@@ -29,6 +31,7 @@ namespace Engi.Substrate.Server
                     var logger = options.RequestServices!.GetRequiredService<ILogger<Startup>>();
 
                     options.EnableMetrics = Environment.IsDevelopment();
+
                     options.UnhandledExceptionDelegate =
                         ctx =>
                         {
@@ -36,10 +39,13 @@ namespace Engi.Substrate.Server
                                 ctx.OriginalException.Message);
                             return Task.CompletedTask;
                         };
+
+                    options.Schema!.FieldMiddleware.Use(new ValidationMiddleware());
                 })
                 .AddSystemTextJson()
                 .AddErrorInfoProvider(options =>
                 {
+                    options.ExposeData = true;
                     options.ExposeExceptionDetails = Environment.IsDevelopment();
                 })
                 .AddGraphTypes(typeof(EngiRootSchema).Assembly));

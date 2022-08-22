@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Engi.Substrate.Jobs;
+﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
 using GraphQL;
 using GraphQL.Types;
@@ -18,7 +17,7 @@ public class EngiMutations : ObjectGraphType
             .Argument<NonNullGraphType<CreateUserArgumentsInputGraphType>>("user")
             .Resolve(context =>
             {
-                var input = (CreateUserArguments)context.Arguments!["user"].Value!;
+                var input = context.GetValidatedArgument<CreateUserArguments>("user");
 
                 return CreateUser(input);
             });
@@ -27,7 +26,7 @@ public class EngiMutations : ObjectGraphType
             .Argument<NonNullGraphType<BalanceTransferArgumentsGraphType>>("transfer")
             .ResolveAsync(async context =>
             {
-                var input = (BalanceTransferArguments)context.Arguments!["transfer"].Value!;
+                var input = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
                 var chainState = await GetLatestChainState();
 
                 return await BalanceTransferAsync(chainState, input);
@@ -37,7 +36,7 @@ public class EngiMutations : ObjectGraphType
             .Argument<NonNullGraphType<CreateJobArgumentsInputGraphType>>("job")
             .ResolveAsync(async context =>
             {
-                var input = (CreateJobArguments) context.Arguments!["job"].Value!;
+                var input = context.GetValidatedArgument<CreateJobArguments>("job");
                 var chainState = await GetLatestChainState();
 
                 return await CreateJobAsync(chainState, input);
@@ -46,35 +45,8 @@ public class EngiMutations : ObjectGraphType
 
     private User CreateUser(CreateUserArguments input)
     {
-        input.MnemonicSalt ??= string.Empty;
-
-        byte[] seed;
-
-        var mnemonicWords = input.Mnemonic.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-        if (mnemonicWords.Length is 12 or 15 or 18 or 21 or 24)
-        {
-            seed = KeypairFactory.CreateSeedFromWordlistMnemonic(input.Mnemonic, input.MnemonicSalt, Wordlists.English);
-        }
-        else
-        {
-            if (!string.IsNullOrEmpty(input.MnemonicSalt))
-            {
-                throw new ExecutionError(
-                    "A raw seed cannot be used in conjuction with a mnemonic salt.");
-            }
-
-            if (mnemonicWords.Length > 32)
-            {
-                throw new ExecutionError(
-                    "Specified phrase is not a valid mnemonic and is invalid as a raw seed at > 32 bytes");
-            }
-
-            seed = Encoding.UTF8.GetBytes(input.Mnemonic.PadRight(32));
-        }
+        var sr25519Pair = KeypairFactory.CreateFromAny(input.Mnemonic, input.MnemonicSalt);
         
-        var sr25519Pair = KeypairFactory.CreateFromSeed(seed);
-
         bool isEncrypted = input.Password != null;
 
         var pkcs8 = !isEncrypted

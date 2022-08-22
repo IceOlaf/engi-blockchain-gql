@@ -73,8 +73,8 @@ public static class Program
 
         var chainState = await client.GetChainStateAsync();
 
-        var sender = KeypairFactory.CreateFromMnemonic(
-            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);
+        var sender = KeypairFactory.CreateFromAny(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long");
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
@@ -141,8 +141,8 @@ public static class Program
         writer.Write(do_something.Index);
         writer.Write((uint)5);
 
-        var sender = KeypairFactory.CreateFromMnemonic(
-            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);
+        var sender = KeypairFactory.CreateFromAny(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long");
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
@@ -174,8 +174,8 @@ public static class Program
     {
         var client = new SubstrateClient("http://localhost:9933");
 
-        var sender = KeypairFactory.CreateFromMnemonic(
-            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long", "", Wordlists.English);
+        var sender = KeypairFactory.CreateFromAny(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long");
         var dest = Address.From("5FZDBCeK9FuUvnny3WhXr62Ah6pneeSaxBWL6osFoUXSszxD");
         ulong amount = 1;
         byte tip = 0;

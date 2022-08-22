@@ -25,10 +25,7 @@ public class EngiQuery : ObjectGraphType
             .ResolveAsync(async context => await GetAccountAsync(context));
 
         Field<PagedResultGraphType<TransactionGraphType, TransactionIndex.Result>>("transactions")
-            .Argument<NonNullGraphType<IdGraphType>>("id")
-            .Argument<EnumerationGraphType<TransactionType>>("type")
-            .Argument<NonNullGraphType<UIntGraphType>>("skip", arg => arg.DefaultValue = 0)
-            .Argument<NonNullGraphType<UIntGraphType>>("limit", arg => arg.DefaultValue = 25)
+            .Argument<TransactionsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(async context => await GetTransactionsAsync(context));
     }
 
@@ -99,14 +96,11 @@ public class EngiQuery : ObjectGraphType
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
-        string accountId = context.GetArgument<string>("id")!;
-        var type = context.GetArgument<TransactionType?>("type");
-        int skip = checked((int)context.GetArgument<uint>("skip"));
-        int limit = checked((int)context.GetArgument<uint>("limit"));
+        var args = context.GetValidatedArgument<TransactionsPagedQueryArguments>("query");
 
         try
         {
-            Address.From(accountId);
+            Address.From(args.AccountId);
         }
         catch (ArgumentException)
         {
@@ -117,18 +111,18 @@ public class EngiQuery : ObjectGraphType
 
         var query = session
             .Query<TransactionIndex.Result, TransactionIndex>()
-            .Where(x => x.Executor == accountId || x.OtherParticipants!.Contains(accountId));
+            .Where(x => x.Executor == args.AccountId || x.OtherParticipants!.Contains(args.AccountId));
 
-        if (type != null)
+        if (args.Type != null)
         {
-            query = query.Where(x => x.Type == type);
+            query = query.Where(x => x.Type == args.Type);
         }
 
         var results = await query
             .ProjectInto<TransactionIndex.Result>()
             .Statistics(out var stats)
-            .Skip(skip)
-            .Take(limit)
+            .Skip(args.Skip)
+            .Take(args.Limit)
             .ToArrayAsync();
         
         return new(results, stats.LongTotalResults);

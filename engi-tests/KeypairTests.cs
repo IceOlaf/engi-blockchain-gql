@@ -11,7 +11,7 @@ public class KeypairTests
     [Fact]
     public void Keyring_CreateFromMnemonic_NoPassword()
     {
-        var keyPair = KeypairFactory.CreateFromMnemonic(mnemonic, "", Wordlists.English);
+        var keyPair = KeypairFactory.CreateFromAny(mnemonic);
         
         Assert.Equal("5CSFNKvSFchQd7TjuuvPca1RheLAqZfFKiqAM6Fv6us9QhvR", Address.From(keyPair.PublicKey).Id);
         Assert.Equal(64, keyPair.SecretKey.Length);
@@ -22,7 +22,7 @@ public class KeypairTests
     [Fact]
     public void Keyring_CreateFromMnemonic_WithKeyPassword()
     {
-        var keyPair = KeypairFactory.CreateFromMnemonic(mnemonic, "Substrate", Wordlists.English);
+        var keyPair = KeypairFactory.CreateFromAny(mnemonic, "Substrate");
 
         Assert.Equal(
             "5FRbTVsuNAXFDq19gSnwihXUDMeEQKfhDnUWgYuUq6jFknVq", 
@@ -35,7 +35,7 @@ public class KeypairTests
     [Fact]
     public void Export()
     {
-        var keyPair = KeypairFactory.CreateFromMnemonic(mnemonic, "", Wordlists.English);
+        var keyPair = KeypairFactory.CreateFromAny(mnemonic);
         var pkcs8 = keyPair.ExportToPkcs8();
 
         Assert.Equal(
@@ -47,7 +47,7 @@ public class KeypairTests
     [Fact]
     public void Export_WithPassword()
     {
-        var keyPair = KeypairFactory.CreateFromMnemonic(mnemonic, "", Wordlists.English);
+        var keyPair = KeypairFactory.CreateFromAny(mnemonic);
 
         var salt = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31  };
         var xsalsaNonce = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };

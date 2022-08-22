@@ -4,9 +4,6 @@ services:
   ravendb:
     container_name: ravendb
     image: ravendb/ravendb:5.4-ubuntu-latest
-    ports: 
-      - "8080:8080"
-      - "38888:38888"
     environment:
       - RAVEN_ARGS=--Setup.Mode=None
       - RAVEN_Security_UnsecuredAccessAllowed=PrivateNetwork
@@ -14,15 +11,10 @@ services:
   substrate:
     container_name: substrate-node
     image: ghcr.io/engi-network/engi-node:latest
-    ports:
-      - "9933:9933"
-      - "9944:9944"
     command: --dev --rpc-external --ws-external
   api:
     build: 
       context: .
-    ports:
-      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=CI
       - ASPNETCORE_URLS=http://*:5000

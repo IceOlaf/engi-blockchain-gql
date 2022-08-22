@@ -6,11 +6,15 @@ namespace Engi.Substrate.Server;
 
 public class ChainSnapshotObserver : IChainObserver
 {
-    public RuntimeMetadata Metadata { get; private set; } = null!;
+    private TaskCompletionSource<RuntimeMetadata> metadataCompletion = new();
+    private TaskCompletionSource<RuntimeVersion> versionCompletion = new();
+    private TaskCompletionSource<string> genesisHashCompletion = new();
+    
+    public Task<RuntimeMetadata> Metadata => metadataCompletion.Task;
 
-    public RuntimeVersion Version { get; private set; } = null!;
+    public Task<RuntimeVersion> Version => versionCompletion.Task;
 
-    public string GenesisHash { get; private set; } = null!;
+    public Task<string> GenesisHash => genesisHashCompletion.Task;
 
     public JsonRpcRequest[] CreateRequests()
     {
@@ -38,16 +42,18 @@ public class ChainSnapshotObserver : IChainObserver
         {
             using var stream = new ScaleStreamReader(response.Result.GetValue<string>());
 
-            Metadata = RuntimeMetadata.Parse(stream);
+            SetResultOrRecreate(ref metadataCompletion, RuntimeMetadata.Parse(stream));
         }
         else if (response.Method == ChainKeys.StateRuntimeVersion)
         {
-            Version = response.Parameters!.Result.Deserialize<RuntimeVersion>(
+            var version = response.Parameters!.Result.Deserialize<RuntimeVersion>(
                 SubstrateJsonSerializerOptions.Default)!;
+
+            SetResultOrRecreate(ref versionCompletion, version);
         }
         else if (request.Method == ChainKeys.ChainGetBlockHash && request.Params![0] == "0")
         {
-            GenesisHash = response.Result.GetValue<string>();
+            SetResultOrRecreate(ref genesisHashCompletion, response.Result.GetValue<string>());
         }
         else
         {
@@ -56,5 +62,15 @@ public class ChainSnapshotObserver : IChainObserver
         }
 
         return Task.CompletedTask;
+    }
+
+    private static void SetResultOrRecreate<T>(ref TaskCompletionSource<T> completion, T value)
+    {
+        if (completion.Task.IsCompleted)
+        {
+            completion = new TaskCompletionSource<T>();
+        }
+
+        completion.SetResult(value);
     }
 }

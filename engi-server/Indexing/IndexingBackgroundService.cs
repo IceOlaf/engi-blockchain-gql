@@ -101,7 +101,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             .OfType<ChainSnapshotObserver>()
             .Single();
 
-        var meta = snapshotObserver.Metadata;
+        var meta = await snapshotObserver.Metadata;
 
         await batch.Items.ParallelForEachAsync(async doc =>
         {

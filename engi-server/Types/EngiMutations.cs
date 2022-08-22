@@ -26,31 +26,31 @@ public class EngiMutations : ObjectGraphType
             }
         );
 
-        Field<StringGraphType>(
+        FieldAsync<StringGraphType>(
             "balanceTransfer",
             arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<BalanceTransferArgumentsGraphType>> { Name = "transfer" }
             ),
-            resolve: context =>
+            resolve: async context =>
             {
                 var input = (BalanceTransferArguments)context.Arguments!["transfer"].Value!;
-                var chainState = GetLatestChainState();
+                var chainState = await GetLatestChainState();
 
-                return BalanceTransferAsync(chainState, input);
+                return await BalanceTransferAsync(chainState, input);
             }
         );
 
-        Field<StringGraphType>(
+        FieldAsync<StringGraphType>(
             "createJob",
             arguments: new QueryArguments(
                 new QueryArgument<NonNullGraphType<CreateJobArgumentsInputGraphType>> {Name = "job"}
             ),
-            resolve: context =>
+            resolve: async context =>
             {
                 var input = (CreateJobArguments) context.Arguments!["job"].Value!;
-                var chainState = GetLatestChainState();
+                var chainState = await GetLatestChainState();
 
-                return CreateJobAsync(chainState, input);
+                return await CreateJobAsync(chainState, input);
             }
         );
     }
@@ -138,7 +138,7 @@ public class EngiMutations : ObjectGraphType
         return string.Empty;
     }
 
-    private ChainState GetLatestChainState()
+    private async Task<ChainState> GetLatestChainState()
     {
         using var scope = serviceProvider.CreateScope();
 
@@ -151,9 +151,9 @@ public class EngiMutations : ObjectGraphType
 
         return new()
         {
-            Metadata = chainSnapshotObserver.Metadata,
-            Version = chainSnapshotObserver.Version,
-            GenesisHash = chainSnapshotObserver.GenesisHash,
+            Metadata = await chainSnapshotObserver.Metadata,
+            Version = await chainSnapshotObserver.Version,
+            GenesisHash = await chainSnapshotObserver.GenesisHash,
             LatestFinalizedHeader = headObserver.LastFinalizedHeader!
         };
     }

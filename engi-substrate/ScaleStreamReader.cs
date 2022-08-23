@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate;
 
+[DebuggerDisplay("{Remainder}")]
 public class ScaleStreamReader : IDisposable
 {
     private readonly MemoryStream inner;
@@ -39,7 +41,18 @@ public class ScaleStreamReader : IDisposable
 
     public bool HasNext => inner.Position < inner.Length;
 
-    public byte[] Remainder => inner.ToArray().Skip((int)inner.Position).ToArray();
+    internal string Remainder
+    {
+        get
+        {
+            if (!HasNext)
+            {
+                return "EOF";
+            }
+
+            return Hex.GetString0X(inner.ToArray().Skip((int) inner.Position).ToArray());
+        }
+    }
 
     public void Dispose() => inner.Dispose();
 

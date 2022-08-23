@@ -16,6 +16,28 @@ public static class Program
 
     }
 
+    private static async Task AttemptJobAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
+
+        var chainState = await client.GetChainStateAsync();
+
+        var sender = KeypairFactory.CreateFromAny(
+            "time treat merit corn crystal fiscal banner zoo jacket pulse frog long");
+
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        var args = new AttemptJobArguments
+        {
+            JobId = 2301417399463059613,
+            SubmissionPatchFileUrl = "https://wetransfer.com/patch"
+        };
+
+        string result = await client.AttemptJobAsync(chainState, sender, account, args);
+        
+        return;
+    }
+
     private static async Task GetJobAsync()
     {
         var client = new SubstrateClient("http://localhost:9933");

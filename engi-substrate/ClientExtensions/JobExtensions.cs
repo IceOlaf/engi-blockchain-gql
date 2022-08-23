@@ -50,4 +50,26 @@ public static class JobExtensions
         return client.GetStateStorageAsync(key, Job.Parse, blockHash);
     }
 
+    public static Task<string> AttemptJobAsync(
+        this SubstrateClient client,
+        ChainState chainState,
+        Keypair sender,
+        AccountInfo senderAccount,
+        AttemptJobArguments args)
+    {
+        var (jobs, attemptJobVariant) = chainState.Metadata.FindPalletCallVariant("Jobs", "attempt_job");
+
+        chainState.Metadata.VerifySignature(attemptJobVariant,
+            (field, type, _) => field.Name == "job_id" && type.FullName == "u64",
+            (field, _, _) => field.Name == "submission_patch_file_url");
+
+        using var writer = new ScaleStreamWriter();
+
+        writer.Write(jobs.Index);
+        writer.Write(attemptJobVariant.Index);
+        writer.Write(args);
+
+        return client.SignAndAuthorSubmitExtrinsicAsync(
+            chainState, sender, senderAccount, writer.GetBytes(), ExtrinsicEra.Immortal, args.Tip);
+    }
 }

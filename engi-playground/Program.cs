@@ -16,6 +16,18 @@ public static class Program
 
     }
 
+    private static async Task GetJobAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
+
+        ulong jobId = 2301417399463059613;
+
+        var job = await client.GetJobAsync(jobId
+            /*, "0xe2ba80d95ec4028bcefe0479599ae8efe905fddef8d90013e38e5479d5c3eb99"*/);
+
+        return;
+    }
+
     private static async Task CreateIndexingJobAsync()
     {
         var store = new DocumentStore

@@ -38,7 +38,7 @@ public class SubstrateClient
             id,
             jsonrpc = "2.0",
             method,
-            @params 
+            @params
         };
 
         var response = await http.PostAsJsonAsync(string.Empty, payload);
@@ -92,7 +92,7 @@ public class SubstrateClient
         return RpcScaleAsync(RuntimeMetadata.Parse, ChainKeys.StateGetMetadata);
     }
 
-    public Task<T?> GetStateStorageAsync<T>(string key, string? blockHash = null)
+    public Task<string?> GetStateStorageAsync(string key, string? blockHash = null)
     {
         var @params = new[] { key };
 
@@ -103,7 +103,21 @@ public class SubstrateClient
             @params[1] = blockHash;
         }
 
-        return RpcAsync<T>(ChainKeys.StateGetStorage, @params);
+        return RpcAsync<string>(ChainKeys.StateGetStorage, @params);
+    }
+
+    public async Task<T?> GetStateStorageAsync<T>(string key, Func<ScaleStreamReader, T> parse, string? blockHash = null)
+    {
+        string? result = await GetStateStorageAsync(key, blockHash);
+
+        if (result == null)
+        {
+            return default;
+        }
+
+        using var reader = new ScaleStreamReader(result);
+
+        return parse(reader);
     }
 
     // chain_
@@ -130,12 +144,12 @@ public class SubstrateClient
         }
 
         string addressHex = Hex.ConcatGetOXString(
-            StorageKeys.System, 
+            StorageKeys.System,
             StorageKeys.Account,
             Hashing.Blake2Concat(accountIdBytes)
         );
 
-        string? result = await GetStateStorageAsync<string>(addressHex);
+        string? result = await GetStateStorageAsync(addressHex);
 
         if (result == null)
         {
@@ -160,10 +174,10 @@ public class SubstrateClient
     public async Task<EventRecord[]> GetSystemEventsAsync(string blockHash, RuntimeMetadata meta)
     {
         string key = Hex.ConcatGetOXString(StorageKeys.System, StorageKeys.Events);
-        
+
         // if hash not found, it will throw, not return null
 
-        string? result = await GetStateStorageAsync<string>(key, blockHash);
+        string? result = await GetStateStorageAsync(key, blockHash);
 
         if (result == null)
         {

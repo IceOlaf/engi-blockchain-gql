@@ -25,4 +25,16 @@ public class Test : IScaleSerializable
         writer.Write(Required);
         writer.Write(RequiredMessage);
     }
+
+    public static Test Parse(ScaleStreamReader reader)
+    {
+        return new()
+        {
+            Id = reader.ReadString()!,
+            Result = reader.ReadEnum<TestResult>(),
+            ResultMessage = reader.ReadString()!,
+            Required = reader.ReadEnum<TestResult>(),
+            RequiredMessage = reader.ReadString()!
+        };
+    }
 }

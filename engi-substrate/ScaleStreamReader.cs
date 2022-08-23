@@ -401,6 +401,15 @@ public class ScaleStreamReader : IDisposable
         return (result, index);
     }
 
+    public string ReadAddressAsId()
+    {
+        var bytes = ReadFixedSizeByteArray(32);
+
+        var address = Address.From(bytes);
+
+        return address.Id;
+    }
+
     // helpers
 
     private object? ReadPrimitive(TypeCode typeCode)

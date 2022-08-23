@@ -1,6 +1,8 @@
 ﻿using System.Reactive.Linq;
 using Dasync.Collections;
+using Engi.Substrate.Jobs;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
 using Sentry;
 
@@ -95,7 +97,10 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     {
         using var session = batch.OpenAsyncSession();
 
+        session.Advanced.MaxNumberOfRequestsPerSession = 10000;
+
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
+
         var snapshotObserver = serviceProvider
             .GetServices<IChainObserver>()
             .OfType<ChainSnapshotObserver>()
@@ -105,41 +110,125 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         await batch.Items.ParallelForEachAsync(async doc =>
         {
-            var job = doc.Result;
+            var block = doc.Result;
 
             Sentry.AddBreadcrumb("Processing block",
                 data: new Dictionary<string, string>
                 {
-                    ["number"] = job.Number.ToString(),
-                    ["hash"] = job.Hash ?? string.Empty
+                    ["number"] = block.Number.ToString(),
+                    ["hash"] = block.Hash ?? string.Empty
                 });
 
             try
             {
-                string hash = job.Hash ?? await client.GetChainBlockHashAsync(job.Number);
+                string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);
 
                 var signedBlock = await client.GetChainBlockAsync(hash);
 
                 var events = await client.GetSystemEventsAsync(hash, meta);
 
-                job.Fill(signedBlock!.Block, events, meta);
+                block.Fill(signedBlock!.Block, events, meta);
+
+                await ProcessExpandedBlockForJobUpdatesAsync(block, client, session);
             }
             catch (Exception ex)
             {
                 // logged as debug so it's not picked by Sentry twice - we need to sentry id
                 // so we must rely on the native call
 
-                Logger.LogDebug(ex, "Indexing failed; block number={number}", job.Number);
+                Logger.LogDebug(ex, "Indexing failed; block number={number}", block.Number);
 
                 // if we didn't make it to the end, store the sentry error
 
-                var jobMeta = session.Advanced.GetMetadataFor(job);
+                var jobMeta = session.Advanced.GetMetadataFor(block);
 
-                jobMeta["SentryId"] = Sentry.CaptureException(ex).ToString();
+                jobMeta[Job.MetadataKeys.SentryId] = Sentry.CaptureException(ex).ToString();
             }
         }, maxDegreeOfParallelism: 64);
 
         await session.SaveChangesAsync();
+    }
+
+    private async Task ProcessExpandedBlockForJobUpdatesAsync(
+        ExpandedBlock block, 
+        SubstrateClient client,
+        IAsyncDocumentSession session)
+    {
+        async Task UpsertJobAsync(ulong jobId)
+        {
+            string jobDocumentId = Job.KeyFrom(jobId);
+
+            Job retrievedJob = (await client.GetJobAsync(jobId, block.Hash))!;
+
+            // store the details to avoid duplicating it - it gets thrown out
+            // if the job doesnt make it to the db
+
+            retrievedJob.UpdatedOn = block.DateTime;
+            retrievedJob.UpdatedOnBlockNumber = block.Number;
+
+            // if we don't have a record of this job, store it
+            // otherwise, make sure the chain copy we're retrieving is newer than the stored copy
+
+            var loadedJob = await session.LoadAsync<Job>(jobDocumentId);
+
+            IMetadataDictionary metadata;
+
+            if (loadedJob == null)
+            {
+                await session.StoreAsync(retrievedJob, null, jobDocumentId);
+
+                metadata = session.Advanced.GetMetadataFor(retrievedJob);
+            }
+            else
+            {
+                metadata = session.Advanced.GetMetadataFor(loadedJob);
+
+                ulong sourceBlockNumber = ulong.Parse((string)metadata[Job.MetadataKeys.SourceBlockNumber]);
+
+                if (sourceBlockNumber < block.Number)
+                {
+                    session.Advanced.Evict(loadedJob);
+
+                    await session.StoreAsync(retrievedJob, null, loadedJob.Id);
+
+                    metadata = session.Advanced.GetMetadataFor(retrievedJob);
+                }
+            }
+
+            metadata[Job.MetadataKeys.SourceBlockNumber] = block.Number.ToString();
+        }
+
+        foreach (var extrinsic in block.Extrinsics)
+        {
+            if (extrinsic.PalletName == "Jobs" && extrinsic.CallName == "create_job")
+            {
+                var jobIdGeneratedEvent = extrinsic.Events
+                    .Single(x => x.Event.Section == "Jobs" && x.Event.Method == "JobIdGenerated")
+                    .Event;
+
+                ulong jobId = (ulong)jobIdGeneratedEvent.Data;
+
+                await UpsertJobAsync(jobId);
+            }
+            else if (extrinsic.PalletName == "Sudo" && extrinsic.ArgumentKeys.Contains("call"))
+            {
+                var call = extrinsic.Arguments["call"] as Dictionary<string, object>;
+
+                if (call?.ContainsKey("Jobs") == true)
+                {
+                    var jobs = (Dictionary<string, object>)call["Jobs"];
+
+                    if (jobs.ContainsKey("solve_job"))
+                    {
+                        var solveJob = (Dictionary<string, object>)jobs["solve_job"];
+
+                        ulong jobId = (ulong) solveJob["job"];
+
+                        await UpsertJobAsync(jobId);
+                    }
+                }
+            }
+        }
     }
 
     private async Task TriggerIndexingForBlockNumbers(ulong fromExclusive, Header current)

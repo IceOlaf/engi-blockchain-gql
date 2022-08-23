@@ -97,11 +97,11 @@ public static class Program
                     RequiredMessage = "Tests passed."
                 }
             },
-            FilesRequirement = new []
+            FilesRequirement = new FilesRequirement
             {
-                "*.cs",
-                "*.txt",
-                "*.json"
+                IsEditable = "*.cs",
+                IsAddable = "*.cs",
+                IsDeletable = "*.cs"
             }
         };
 

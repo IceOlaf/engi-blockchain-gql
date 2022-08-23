@@ -25,7 +25,7 @@ public static class JobExtensions
             (field, _, innerType) => field.Name == "tests" && innerType!.Definition is CompositeTypeDefinition c && c.Fields.Count == 3,
             (field, _, _) => field.Name == "name",
             (field, type, _) => field.Name == "files_requirement" && type.Definition is TupleTypeDefinition t && t.Fields.Length == 3
-            );
+        );
 
         using var writer = new ScaleStreamWriter();
 

@@ -25,8 +25,8 @@ public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializab
     [Required, StringLength(50, MinimumLength = 4)]
     public string Name { get; init; } = null!;
 
-    [NotNullOrEmptyCollection, MinLength(3), MaxLength(3)]
-    public string[] FilesRequirement { get; init; } = null!;
+    [Required]
+    public FilesRequirement FilesRequirement { get; init; } = null!;
     
     public void Serialize(ScaleStreamWriter writer)
     {
@@ -37,11 +37,6 @@ public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializab
         writer.Write(CommitHash);
         writer.Write(Tests);
         writer.Write(Name);
-        
-        // this is a tuple so can't use the array overload directly
-        foreach (var requirement in FilesRequirement)
-        {
-            writer.Write(requirement);
-        }
+        writer.Write(FilesRequirement);
     }
 }

@@ -3,9 +3,9 @@ using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateJobArgumentsInputGraphType : SignedExtrinsicArgumentsGraphTypeBase<CreateJobArguments>
+public class CreateJobArgumentsGraphType : SignedExtrinsicArgumentsGraphTypeBase<CreateJobArguments>
 {
-    public CreateJobArgumentsInputGraphType()
+    public CreateJobArgumentsGraphType()
     {
         Description = "The arguments for the create_job signed extrinsic.";
 
@@ -23,7 +23,7 @@ public class CreateJobArgumentsInputGraphType : SignedExtrinsicArgumentsGraphTyp
             .Description("The tests that participate in this job.");
         Field(x => x.Name)
             .Description("The job name.");
-        Field(x => x.FilesRequirement)
-            .Description("Three regex or glob patterns files that define files as requirements for this job.");
+        Field(x => x.FilesRequirement, type: typeof(FilesRequirementArgumentsGraphType))
+            .Description("Regex or glob patterns files that define files as requirements for this job.");
     }
 }

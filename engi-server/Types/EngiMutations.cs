@@ -14,7 +14,7 @@ public class EngiMutations : ObjectGraphType
         this.serviceProvider = serviceProvider;
 
         Field<UserType>("createUser")
-            .Argument<NonNullGraphType<CreateUserArgumentsInputGraphType>>("user")
+            .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
             .Resolve(context =>
             {
                 var input = context.GetValidatedArgument<CreateUserArguments>("user");
@@ -33,7 +33,7 @@ public class EngiMutations : ObjectGraphType
             });
 
         Field<StringGraphType>("createJob")
-            .Argument<NonNullGraphType<CreateJobArgumentsInputGraphType>>("job")
+            .Argument<NonNullGraphType<CreateJobArgumentsGraphType>>("job")
             .ResolveAsync(async context =>
             {
                 var input = context.GetValidatedArgument<CreateJobArguments>("job");

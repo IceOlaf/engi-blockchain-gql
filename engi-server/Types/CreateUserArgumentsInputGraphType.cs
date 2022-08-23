@@ -2,9 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateUserArgumentsInputGraphType : InputObjectGraphType<CreateUserArguments>
+public class CreateUserArgumentsGraphType : InputObjectGraphType<CreateUserArguments>
 {
-    public CreateUserArgumentsInputGraphType()
+    public CreateUserArgumentsGraphType()
     {
         Description = "Arguments for creating an account key pair.";
 

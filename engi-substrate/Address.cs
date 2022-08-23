@@ -1,4 +1,5 @@
-﻿using SimpleBase;
+﻿using Blake2Core;
+using SimpleBase;
 
 namespace Engi.Substrate;
 
@@ -83,7 +84,7 @@ public class Address
         ssPrefixed1.CopyTo(ssPrefixed, 0);
         plainAddr.AsSpan(0, SR25519_PUBLIC_SIZE + 1).CopyTo(ssPrefixed.AsSpan(7));
 
-        var blake2bHashed = Hashing.Blake2(ssPrefixed, 0, SR25519_PUBLIC_SIZE + 8);
+        var blake2bHashed = Blake2B.ComputeHash(ssPrefixed, 0, SR25519_PUBLIC_SIZE + 8);
         plainAddr[1 + PUBLIC_KEY_LENGTH] = blake2bHashed[0];
         plainAddr[2 + PUBLIC_KEY_LENGTH] = blake2bHashed[1];
 

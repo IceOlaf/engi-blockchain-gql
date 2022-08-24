@@ -1,5 +1,8 @@
-﻿namespace Engi.Substrate.Metadata.V14;
+﻿using System.Diagnostics;
 
+namespace Engi.Substrate.Metadata.V14;
+
+[DebuggerDisplay("{Name}")]
 public class Field
 {
     public string? Name { get; set; }

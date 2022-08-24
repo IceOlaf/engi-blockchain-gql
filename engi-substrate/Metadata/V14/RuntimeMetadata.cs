@@ -197,6 +197,14 @@ public class RuntimeMetadata
 
         type.Reference = TypesById[type];
 
+        foreach (var param in type.Reference.Params)
+        {
+            if (param.Type != null)
+            {
+                PopulateReferences(param.Type);
+            }
+        }
+
         if (type.Reference.Definition is IHasInnerType inner)
         {
             PopulateReferences(inner.Type);

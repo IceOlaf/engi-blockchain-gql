@@ -5,13 +5,14 @@ namespace GraphQL;
 
 public static class ValidationExtensions
 {
-    public static T GetValidatedArgument<T>(this IResolveFieldContext context, string name)
+    public static T? GetOptionalValidatedArgument<T>(this IResolveFieldContext context, string name)
+        where T : class
     {
-        var arg = context.GetArgument<T>(name);
+        var arg = context.GetArgument<T?>(name);
 
         if (arg == null)
         {
-            throw new ArgumentNullException(name);
+            return null;
         }
 
         var results = new List<ValidationResult>();
@@ -22,6 +23,19 @@ public static class ValidationExtensions
         if (!isValid)
         {
             throw new ArgumentValidationException(name, results.ToArray());
+        }
+
+        return arg;
+    }
+
+    public static T GetValidatedArgument<T>(this IResolveFieldContext context, string name) 
+        where T : class
+    {
+        var arg = GetOptionalValidatedArgument<T>(context, name);
+
+        if (arg == null)
+        {
+            throw new ArgumentNullException(name);
         }
 
         return arg;

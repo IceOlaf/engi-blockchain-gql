@@ -13,66 +13,42 @@ public class EngiMutations : ObjectGraphType
     {
         this.serviceProvider = serviceProvider;
 
-        Field<UserType>("createUser")
-            .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
-            .Resolve(context =>
-            {
-                var input = context.GetValidatedArgument<CreateUserArguments>("user");
-
-                return CreateUser(input);
-            });
+        Field<StringGraphType>("attemptJob")
+            .Argument<NonNullGraphType<AttemptJobArgumentsGraphType>>("args")
+            .ResolveAsync(AttemptJobAsync);
 
         Field<StringGraphType>("balanceTransfer")
             .Argument<NonNullGraphType<BalanceTransferArgumentsGraphType>>("transfer")
-            .ResolveAsync(async context =>
-            {
-                var input = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
-                var chainState = await GetLatestChainState();
-
-                return await BalanceTransferAsync(chainState, input);
-            });
+            .ResolveAsync(BalanceTransferAsync);
 
         Field<StringGraphType>("createJob")
             .Argument<NonNullGraphType<CreateJobArgumentsGraphType>>("job")
-            .ResolveAsync(async context =>
-            {
-                var input = context.GetValidatedArgument<CreateJobArguments>("job");
-                var chainState = await GetLatestChainState();
+            .ResolveAsync(CreateJobAsync);
 
-                return await CreateJobAsync(chainState, input);
-            });
+        Field<UserType>("createUser")
+            .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
+            .Resolve(CreateUser);
     }
 
-    private User CreateUser(CreateUserArguments input)
+    private async Task<object?> AttemptJobAsync(IResolveFieldContext context)
     {
-        var sr25519Pair = KeypairFactory.CreateFromAny(input.Mnemonic, input.MnemonicSalt);
-        
-        bool isEncrypted = input.Password != null;
+        var args = context.GetValidatedArgument<AttemptJobArguments>("args");
+        var chainState = await GetLatestChainState();
 
-        var pkcs8 = !isEncrypted
-            ? sr25519Pair.ExportToPkcs8() 
-            : sr25519Pair.ExportToPkcs8(input.Password!);
+        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
 
-        var address = Address.From(sr25519Pair.PublicKey);
+        var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
-        return new User
-        {
-            Encoded = Convert.ToBase64String(pkcs8),
-            Name = input.Name,
-            Address = address.Id,
-            Metadata = new AccountMetadata
-            {
-                Content = new[] { "pkcs8", "sr25519" },
-                Type = isEncrypted ? new[] { "scrypt", "xsalsa20-poly1305" } : new[] { "none" },
-                Version = 3
-            }
-        };
+        var account = await client.GetSystemAccountAsync(sender.Address);
+
+        return await client.AttemptJobAsync(chainState, sender, account, args);
     }
 
-    private async Task<string> BalanceTransferAsync(
-        ChainState chainState, 
-        BalanceTransferArguments input)
+    private async Task<object?> BalanceTransferAsync(IResolveFieldContext context)
     {
+        var input = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
+        var chainState = await GetLatestChainState();
+
         var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
         var dest = Address.From(input.RecipientAddress);
 
@@ -84,17 +60,18 @@ public class EngiMutations : ObjectGraphType
             chainState, sender, account, dest, input.Amount, ExtrinsicEra.Immortal, input.Tip);
     }
 
-    private async Task<string> CreateJobAsync(
-        ChainState chainState,
-        CreateJobArguments args)
+    private async Task<object?> CreateJobAsync(IResolveFieldContext context)
     {
-        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
+        var input = context.GetValidatedArgument<CreateJobArguments>("job");
+        var chainState = await GetLatestChainState();
+
+        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
         var account = await client.GetSystemAccountAsync(sender.Address);
 
-        return await client.CreateJobAsync(chainState, sender, account, args);
+        return await client.CreateJobAsync(chainState, sender, account, input);
     }
 
     private async Task<ChainState> GetLatestChainState()
@@ -114,6 +91,34 @@ public class EngiMutations : ObjectGraphType
             Version = await chainSnapshotObserver.Version,
             GenesisHash = await chainSnapshotObserver.GenesisHash,
             LatestFinalizedHeader = headObserver.LastFinalizedHeader!
+        };
+    }
+
+    private User CreateUser(IResolveFieldContext context)
+    {
+        var input = context.GetValidatedArgument<CreateUserArguments>("user");
+
+        var sr25519Pair = KeypairFactory.CreateFromAny(input.Mnemonic, input.MnemonicSalt);
+
+        bool isEncrypted = input.Password != null;
+
+        var pkcs8 = !isEncrypted
+            ? sr25519Pair.ExportToPkcs8()
+            : sr25519Pair.ExportToPkcs8(input.Password!);
+
+        var address = Address.From(sr25519Pair.PublicKey);
+
+        return new User
+        {
+            Encoded = Convert.ToBase64String(pkcs8),
+            Name = input.Name,
+            Address = address.Id,
+            Metadata = new AccountMetadata
+            {
+                Content = new[] { "pkcs8", "sr25519" },
+                Type = isEncrypted ? new[] { "scrypt", "xsalsa20-poly1305" } : new[] { "none" },
+                Version = 3
+            }
         };
     }
 }

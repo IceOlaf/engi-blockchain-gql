@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Pallets;
+﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
 using GraphQL;
@@ -17,19 +17,49 @@ public class EngiQuery : ObjectGraphType
     {
         this.serviceProvider = serviceProvider;
 
-        Field<EngiHealthGraphType>("health")
-            .ResolveAsync(async _ => await GetHealthAsync());
-
         Field<AccountInfoGraphType>("account")
-            .Argument<NonNullGraphType<IdGraphType>>("id")
-            .ResolveAsync(async context => await GetAccountAsync(context));
+            .Argument<NonNullGraphType<StringGraphType>>("id")
+            .ResolveAsync(GetAccountAsync);
 
-        Field<PagedResultGraphType<TransactionGraphType, TransactionIndex.Result>>("transactions")
+        Field<EngiHealthGraphType>("health")
+            .ResolveAsync(GetHealthAsync);
+
+        Field<JobGraphType>("job")
+            .Argument<NonNullGraphType<ULongGraphType>>("id")
+            .ResolveAsync(GetJobAsync);
+
+        Field<JobsPagedResult>("jobs")
+            .Argument<JobsPagedQueryArgumentsGraphType>("query")
+            .ResolveAsync(GetJobsAsync);
+
+        Field<TransactionsPagedResult>("transactions")
             .Argument<TransactionsPagedQueryArgumentsGraphType>("query")
-            .ResolveAsync(async context => await GetTransactionsAsync(context));
+            .ResolveAsync(GetTransactionsAsync);
     }
 
-    private async Task<EngiHealth> GetHealthAsync()
+    private async Task<object?> GetAccountAsync(IResolveFieldContext context)
+    {
+        await using var scope = serviceProvider.CreateAsyncScope();
+
+        var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
+
+        string accountId = context.GetArgument<string>("id")!;
+
+        Address address;
+
+        try
+        {
+            address = Address.From(accountId);
+        }
+        catch (ArgumentException)
+        {
+            throw new InvalidOperationException("Address is not valid base58.");
+        }
+
+        return await substrate.GetSystemAccountAsync(address);
+    }
+
+    private async Task<object?> GetHealthAsync(IResolveFieldContext _)
     {
         using var scope = serviceProvider.CreateScope();
 
@@ -70,29 +100,42 @@ public class EngiQuery : ObjectGraphType
         }
     }
 
-    private async Task<AccountInfo> GetAccountAsync(IResolveFieldContext<object?> context)
+    private async Task<object?> GetJobAsync(IResolveFieldContext context)
+    {
+        ulong jobId = context.GetArgument<ulong>("id");
+
+        await using var scope = serviceProvider.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var job = await session.LoadAsync<Job>(Job.KeyFrom(jobId));
+
+        return job;
+    }
+
+    private async Task<object?> GetJobsAsync(IResolveFieldContext context)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
-        var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
+        var args = context.GetOptionalValidatedArgument<JobsPagedQueryArguments>("query")
+            ?? new JobsPagedQueryArguments();
 
-        string accountId = context.GetArgument<string>("id")!;
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        Address address;
+        var query = session
+            .Query<JobIndex.Result, JobIndex>();
 
-        try
-        {
-            address = Address.From(accountId);
-        }
-        catch (ArgumentException)
-        {
-            throw new InvalidOperationException("Address is not valid base58.");
-        }
+        var results = await query
+            .Statistics(out var stats)
+            .Skip(args.Skip)
+            .Take(args.Limit)
+            .As<Job>()
+            .ToArrayAsync();
 
-        return await substrate.GetSystemAccountAsync(address);
+        return new PagedResult<Job>(results, stats.LongTotalResults);
     }
 
-    private async Task<PagedResult<TransactionIndex.Result>> GetTransactionsAsync(IResolveFieldContext<object?> context)
+    private async Task<object?> GetTransactionsAsync(IResolveFieldContext context)
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
@@ -100,6 +143,7 @@ public class EngiQuery : ObjectGraphType
 
         try
         {
+            // TODO: make with validation attribute
             Address.From(args.AccountId);
         }
         catch (ArgumentException)
@@ -125,6 +169,6 @@ public class EngiQuery : ObjectGraphType
             .Take(args.Limit)
             .ToArrayAsync();
         
-        return new(results, stats.LongTotalResults);
+        return new PagedResult<TransactionIndex.Result>(results, stats.LongTotalResults);
     }
 }

@@ -4,6 +4,8 @@ public class TransactionsPagedQueryArgumentsGraphType : PagedQueryArgumentsGraph
 {
     public TransactionsPagedQueryArgumentsGraphType()
     {
+        Description = "The paged query arguments for the transactions query.";
+
         Field(x => x.AccountId)
             .Description("The account id to query for.");
         Field(x => x.Type, nullable: true)

@@ -7,7 +7,7 @@ public class CreateJobArgumentsGraphType : SignedExtrinsicArgumentsGraphTypeBase
 {
     public CreateJobArgumentsGraphType()
     {
-        Description = "The arguments for the create_job signed extrinsic.";
+        Description = "Arguments for the create_job signed extrinsic.";
 
         Field(x => x.Funding, type: typeof(UInt128GraphType))
             .Description("The funding for the job.");

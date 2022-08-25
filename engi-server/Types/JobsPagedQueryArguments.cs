@@ -2,5 +2,7 @@
 
 public class JobsPagedQueryArguments : PagedQueryArguments
 {
+    public string? Search { get; set; }
+
 
 }

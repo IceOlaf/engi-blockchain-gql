@@ -17,8 +17,12 @@ public class JobIndex : AbstractIndexCreationTask<Job, JobIndex.Result>
             {
                 Query = new []
                 {
-                    job.Name
+                    job.JobId.ToString(),
+                    job.Name,
+                    job.Repository.Url.Replace("https://github.com/", "")
                 }
             };
+
+        Index(x => x.Query, FieldIndexing.Search);
     }
 }

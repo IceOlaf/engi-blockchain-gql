@@ -125,6 +125,12 @@ public class EngiQuery : ObjectGraphType
         var query = session
             .Query<JobIndex.Result, JobIndex>();
 
+        if (!string.IsNullOrEmpty(args.Search))
+        {
+            query = query
+                .Search(x => x.Query, $"{args.Search}*");
+        }
+
         var results = await query
             .Statistics(out var stats)
             .Skip(args.Skip)

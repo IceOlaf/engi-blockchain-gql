@@ -4,6 +4,7 @@ using Engi.Substrate.Server.Types;
 using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Linq;
 using Raven.Client.Documents.Session;
 using Sentry;
 
@@ -125,10 +126,40 @@ public class EngiQuery : ObjectGraphType
         var query = session
             .Query<JobIndex.Result, JobIndex>();
 
-        if (!string.IsNullOrEmpty(args.Search))
+        if (args.Creator != null)
+        {
+            query = query
+                .Where(x => x.Creator == args.Creator);
+        }
+
+        if (args.Status.HasValue)
+        {
+            query = query
+                .Where(x => x.Status == args.Status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(args.Search))
         {
             query = query
                 .Search(x => x.Query, $"{args.Search}*");
+        }
+
+        if (args.Language.HasValue)
+        {
+            query = query
+                .Where(x => x.Language == args.Language.Value);
+        }
+
+        if (args.MinFunding != null)
+        {
+            query = query
+                .Where(x => x.Funding >= args.MinFunding);
+        }
+
+        if (args.MaxFunding != null)
+        {
+            query = query
+                .Where(x => x.Funding <= args.MaxFunding);
         }
 
         var results = await query

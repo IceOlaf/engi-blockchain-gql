@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Numerics;
 
 namespace Engi.Substrate.Jobs;
 
 public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializable
 {
+    // TODO: create validation for U128
     [Range(1, ulong.MaxValue)]
-    public BigInteger Funding { get; init; }
+    public ulong Funding { get; init; }
 
     public Language Language { get; init; }
 

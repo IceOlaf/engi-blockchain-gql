@@ -1,6 +1,7 @@
 ﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
+using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents;
@@ -45,20 +46,18 @@ public class EngiQuery : ObjectGraphType
 
         var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
-        string accountId = context.GetArgument<string>("id")!;
+        string id = context.GetValidatedArgument<string>("id", new AccountIdAttribute());
 
-        Address address;
+        var address = Address.Parse(id);
 
         try
         {
-            address = Address.From(accountId);
+            return await substrate.GetSystemAccountAsync(address);
         }
-        catch (ArgumentException)
+        catch (KeyNotFoundException)
         {
-            throw new InvalidOperationException("Address is not valid base58.");
+            return null;
         }
-
-        return await substrate.GetSystemAccountAsync(address);
     }
 
     private async Task<object?> GetHealthAsync(IResolveFieldContext _)
@@ -200,16 +199,6 @@ public class EngiQuery : ObjectGraphType
         await using var scope = serviceProvider.CreateAsyncScope();
 
         var args = context.GetValidatedArgument<TransactionsPagedQueryArguments>("query");
-
-        try
-        {
-            // TODO: make with validation attribute
-            Address.From(args.AccountId);
-        }
-        catch (ArgumentException)
-        {
-            throw new InvalidOperationException("Address is not valid base58.");
-        }
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 

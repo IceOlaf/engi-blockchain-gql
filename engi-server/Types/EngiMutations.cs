@@ -1,5 +1,7 @@
 ﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
+using Engi.Substrate.Pallets;
+using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
 
@@ -39,39 +41,69 @@ public class EngiMutations : ObjectGraphType
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
-        var account = await client.GetSystemAccountAsync(sender.Address);
+        AccountInfo account;
+
+        try
+        {
+            account = await client.GetSystemAccountAsync(sender.Address);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new ArgumentValidationException(
+                nameof(args), nameof(args.SenderSecret), "Account not found.");
+        }
 
         return await client.AttemptJobAsync(chainState, sender, account, args);
     }
 
     private async Task<object?> BalanceTransferAsync(IResolveFieldContext context)
     {
-        var input = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
+        var args = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
         var chainState = await GetLatestChainState();
 
-        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
-        var dest = Address.From(input.RecipientAddress);
+        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
+        var dest = Address.Parse(args.RecipientAddress);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
-        var account = await client.GetSystemAccountAsync(sender.Address);
+        AccountInfo account;
+
+        try
+        {
+            account = await client.GetSystemAccountAsync(sender.Address);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new ArgumentValidationException(
+                nameof(args), nameof(args.SenderSecret), "Account not found.");
+        }
 
         return await client.BalanceTransferAsync(
-            chainState, sender, account, dest, input.Amount, ExtrinsicEra.Immortal, input.Tip);
+            chainState, sender, account, dest, args.Amount, ExtrinsicEra.Immortal, args.Tip);
     }
 
     private async Task<object?> CreateJobAsync(IResolveFieldContext context)
     {
-        var input = context.GetValidatedArgument<CreateJobArguments>("job");
+        var args = context.GetValidatedArgument<CreateJobArguments>("job");
         var chainState = await GetLatestChainState();
 
-        var sender = KeypairFactory.CreateFromAny(input.SenderSecret);
+        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
-        var account = await client.GetSystemAccountAsync(sender.Address);
+        AccountInfo account;
 
-        return await client.CreateJobAsync(chainState, sender, account, input);
+        try
+        {
+            account = await client.GetSystemAccountAsync(sender.Address);
+        }
+        catch (KeyNotFoundException)
+        {
+            throw new ArgumentValidationException(
+                nameof(args), nameof(args.SenderSecret), "Account not found.");
+        }
+
+        return await client.CreateJobAsync(chainState, sender, account, args);
     }
 
     private async Task<ChainState> GetLatestChainState()

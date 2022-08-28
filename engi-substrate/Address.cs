@@ -15,9 +15,23 @@ public class Address
         Raw = raw;
     }
 
-    public static Address From(string id) => new(id, Decode(id));
-
     public static Address From(byte[] raw) => new(Encode(raw), raw);
+
+    public static Address Parse(string id) => new(id, Decode(id));
+
+    public static bool TryParse(string id, out Address? address)
+    {
+        try
+        {
+            address = Parse(id);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            address = null;
+            return false;
+        }
+    }
 
     public static Address Parse(ScaleStreamReader reader)
     {
@@ -25,7 +39,7 @@ public class Address
 
         return From(raw);
     }
-
+    
     // helpers
 
     private static byte[] Decode(string address)
@@ -56,8 +70,8 @@ public class Address
 
         if (result.Length != 32)
         {
-            throw new InvalidOperationException(
-                "Decoded address is not 32 bytes long");
+            throw new ArgumentException(
+                "Decoded address is not 32 bytes long", nameof(address));
         }
 
         return result;

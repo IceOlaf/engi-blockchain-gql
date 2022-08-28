@@ -14,9 +14,18 @@ internal class ArgumentValidationException : Exception
         ArgumentName = argumentName ?? throw new ArgumentNullException(nameof(argumentName));
         Errors = errors ?? throw new ArgumentNullException(nameof(errors));
 
-        if (Errors.Length == 0)
+        if (!Errors.Any())
         {
-            throw new ArgumentException("Errors cannot be an empty array.");
+            Errors = new[]
+            {
+                new ValidationResult(
+                    "Model validation failed, please check the data types of your arguments.", 
+                    new [] { argumentName })
+            };
         }
     }
+
+    public ArgumentValidationException(string argumentName, string propertyName, string message)
+        : this(argumentName, new[] { new ValidationResult(message, new[] { propertyName }) })
+    { }
 }

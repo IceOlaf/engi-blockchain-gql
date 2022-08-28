@@ -5,6 +5,7 @@ using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
+using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Session;
 using Sentry;
 
@@ -148,7 +149,7 @@ public class EngiQuery : ObjectGraphType
         if (!string.IsNullOrWhiteSpace(args.Search))
         {
             query = query
-                .Search(x => x.Query, $"{args.Search}*");
+                .Search(x => x.Query, $"{args.Search}*", @operator: SearchOperator.And);
         }
 
         if (args.Language.HasValue)

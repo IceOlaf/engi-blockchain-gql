@@ -30,11 +30,11 @@ public class JobGraphType : ObjectGraphType<Job>
             .Description("The solution to this job, if any.");
         Field(x => x.AttemptCount)
             .Description("The number of attempts for this job.");
-        Field(x => x.UpdatedOn)
-            .Description("The timestamp of the block from which this job was last updated.");
-        Field(x => x.UpdatedOnBlockNumber)
-            .Description("The block number from which this job was last updated.");
+        Field(x => x.CreatedOn, type: typeof(BlockReferenceGraphType))
+            .Description("Information about the block that created this job.");
+        Field(x => x.UpdatedOn, type: typeof(BlockReferenceGraphType))
+            .Description("Information about the last block that updated this job.");
         Field(x => x.Status)
-            .Description("The current job status; Funded, Attempted, or Solved.");
+            .Description("The current job status; Open, Active, or Complete.");
     }
 }

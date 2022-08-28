@@ -37,19 +37,6 @@ public static class JobExtensions
             chainState, sender, senderAccount, writer.GetBytes(), ExtrinsicEra.Immortal, args.Tip);
     }
 
-    public static Task<Job?> GetJobAsync(
-        this SubstrateClient client,
-        ulong jobId,
-        string? blockHash = null)
-    {
-        byte[] jobIdBytes = BitConverter.GetBytes(jobId);
-
-        string key = Hex.ConcatGetOXString(
-            StorageKeys.Jobs, StorageKeys.Jobs, Hashing.Blake2Concat(jobIdBytes));
-
-        return client.GetStateStorageAsync(key, Job.Parse, blockHash);
-    }
-
     public static Task<string> AttemptJobAsync(
         this SubstrateClient client,
         ChainState chainState,

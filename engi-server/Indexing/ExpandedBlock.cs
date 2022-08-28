@@ -64,7 +64,16 @@ public class ExpandedBlock
 
     public static string KeyFrom(ulong number)
     {
-        return $"blocks/{number:00000000000000000000}";
+        return $"Blocks/{number:D20}";
+    }
+
+    public static implicit operator BlockReference(ExpandedBlock block)
+    {
+        return new()
+        {
+            Number = block.Number,
+            DateTime = block.DateTime
+        };
     }
 
     // helpers
@@ -80,5 +89,10 @@ public class ExpandedBlock
         }
 
         return (DateTime)setTimeExtrinsic.Arguments["now"];
+    }
+
+    public static class MetadataKeys
+    {
+        public const string SentryId = "SentryId";
     }
 }

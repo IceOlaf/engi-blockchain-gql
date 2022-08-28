@@ -140,9 +140,9 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 // if we didn't make it to the end, store the sentry error
 
-                var jobMeta = session.Advanced.GetMetadataFor(block);
+                var blockMeta = session.Advanced.GetMetadataFor(block);
 
-                jobMeta[Job.MetadataKeys.SentryId] = Sentry.CaptureException(ex).ToString();
+                blockMeta[ExpandedBlock.MetadataKeys.SentryId] = Sentry.CaptureException(ex).ToString();
             }
         }, maxDegreeOfParallelism: 64);
 
@@ -154,48 +154,26 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         SubstrateClient client,
         IAsyncDocumentSession session)
     {
-        async Task UpsertJobAsync(ulong jobId)
+        async Task<JobSnapshot> RetrieveSnapshotAsync(ulong jobId)
         {
-            string jobDocumentId = Job.KeyFrom(jobId);
+            string snapshotStorageKey = StorageKeys
+                .Blake2Concat(StorageKeys.Jobs, StorageKeys.Jobs, jobId);
+            string snapshotData = (await client.GetStateStorageAsync(snapshotStorageKey, block.Hash!))!;
 
-            Job retrievedJob = (await client.GetJobAsync(jobId, block.Hash))!;
+            using var reader = new ScaleStreamReader(snapshotData);
 
-            // store the details to avoid duplicating it - it gets thrown out
-            // if the job doesnt make it to the db
+            return JobSnapshot.Parse(reader, block);
+        }
 
-            retrievedJob.UpdatedOn = block.DateTime;
-            retrievedJob.UpdatedOnBlockNumber = block.Number;
+        async Task UpsertJobAsync(ulong jobId, bool wasCreated = false)
+        {
+            var retrievedSnapshot = await RetrieveSnapshotAsync(jobId);
 
-            // if we don't have a record of this job, store it
-            // otherwise, make sure the chain copy we're retrieving is newer than the stored copy
+            string snapshotDocumentId = JobSnapshot.KeyFrom(jobId, block.Number);
 
-            var loadedJob = await session.LoadAsync<Job>(jobDocumentId);
+            retrievedSnapshot.IsCreation = wasCreated;
 
-            IMetadataDictionary metadata;
-
-            if (loadedJob == null)
-            {
-                await session.StoreAsync(retrievedJob, null, jobDocumentId);
-
-                metadata = session.Advanced.GetMetadataFor(retrievedJob);
-            }
-            else
-            {
-                metadata = session.Advanced.GetMetadataFor(loadedJob);
-
-                ulong sourceBlockNumber = ulong.Parse((string)metadata[Job.MetadataKeys.SourceBlockNumber]);
-
-                if (sourceBlockNumber < block.Number)
-                {
-                    session.Advanced.Evict(loadedJob);
-
-                    await session.StoreAsync(retrievedJob, null, loadedJob.Id);
-
-                    metadata = session.Advanced.GetMetadataFor(retrievedJob);
-                }
-            }
-
-            metadata[Job.MetadataKeys.SourceBlockNumber] = block.Number.ToString();
+            await session.StoreAsync(retrievedSnapshot, null, snapshotDocumentId);
         }
 
         foreach (var extrinsic in block.Extrinsics)
@@ -208,7 +186,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 ulong jobId = (ulong)jobIdGeneratedEvent.Data;
 
-                await UpsertJobAsync(jobId);
+                await UpsertJobAsync(jobId, true);
             }
             else if (extrinsic.PalletName == "Sudo" && extrinsic.ArgumentKeys.Contains("call"))
             {

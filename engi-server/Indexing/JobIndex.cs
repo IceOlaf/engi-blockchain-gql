@@ -3,38 +3,75 @@ using Raven.Client.Documents.Indexes;
 
 namespace Engi.Substrate.Server.Indexing;
 
-public class JobIndex : AbstractIndexCreationTask<Job, JobIndex.Result>
+public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
 {
-    public class Result
+    public class Result : Job
     {
-        public string Creator { get; set; } = null!;
+        public IEnumerable<string> Query { get; set; } = null!;
 
-        public JobStatus Status { get; set; }
-
-        public string[] Query { get; set; } = null!;
-
-        public Language Language { get; set; }
-
-        public uint Funding { get; set; }
+        public DateTime? CreatedOn_DateTime { get; set; }
     }
 
     public JobIndex()
     {
-        Map = jobs => from job in jobs
+        Map = snapshots => from snapshot in snapshots
             select new Result
             {
-                Creator = job.Creator,
-                Status = job.Status,
+                JobId = snapshot.JobId,
+                Creator = snapshot.Creator,
+                Funding = snapshot.Funding,
+                Repository = snapshot.Repository,
+                Language = snapshot.Language,
+                Name = snapshot.Name,
+                Tests = snapshot.Tests,
+                Requirements = snapshot.Requirements,
+                Solution = snapshot.Solution,
+                AttemptCount = snapshot.AttemptCount,
+                CreatedOn = snapshot.IsCreation ? snapshot.SnapshotOn : null!,
+                UpdatedOn = snapshot.SnapshotOn,
                 Query = new []
                 {
-                    job.JobId.ToString(),
-                    job.Name,
-                    job.Repository.Url.Replace("https://github.com/", "")
+                    snapshot.JobId.ToString(),
+                    snapshot.Name,
+                    snapshot.Repository.Url.Replace("https://github.com/", "")
                 },
-                Language = job.Language,
-                Funding = uint.Parse((string)(object)job.Funding)
+                CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null
+            };
+
+        Reduce = results => from result in results
+            group result by result.JobId
+            into g
+            let latest = g.OrderByDescending(x => x.UpdatedOn.DateTime).First()
+            let createdOn = g.First(x => x.CreatedOn != null).CreatedOn
+                            select new Result
+            {
+                JobId = g.Key,
+                Creator = latest.Creator,
+                Funding = latest.Funding,
+                Repository = latest.Repository,
+                Language = latest.Language,
+                Name = latest.Name,
+                Tests = latest.Tests,
+                Requirements = latest.Requirements,
+                Solution = latest.Solution,
+                AttemptCount = latest.AttemptCount,
+                CreatedOn = createdOn,
+                UpdatedOn = latest.UpdatedOn,
+                Query = g.SelectMany(x => x.Query).Distinct(),
+                CreatedOn_DateTime = createdOn.DateTime
             };
 
         Index(x => x.Query, FieldIndexing.Search);
+
+        StoreAllFields(FieldStorage.Yes);
+        Store(x => x.CreatedOn_DateTime, FieldStorage.No);
+
+        OutputReduceToCollection = "Jobs";
+        PatternForOutputReduceToCollectionReferences = result => $"JobReferences/{result.JobId}";
+    }
+
+    public static string ReferenceKeyFrom(ulong jobId)
+    {
+        return $"JobReferences/{jobId}";
     }
 }

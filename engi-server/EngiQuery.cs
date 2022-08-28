@@ -109,9 +109,16 @@ public class EngiQuery : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        var job = await session.LoadAsync<Job>(Job.KeyFrom(jobId));
+        var reference = await session
+            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
+                include => include.IncludeDocuments<ReduceOutputReference>(x => x.ReduceOutputs));
 
-        return job;
+        if (reference == null)
+        {
+            return null;
+        }
+
+        return session.LoadAsync<Job>(reference.ReduceOutputs.First()).Result;
     }
 
     private async Task<object?> GetJobsAsync(IResolveFieldContext context)

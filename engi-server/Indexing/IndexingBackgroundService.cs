@@ -99,7 +99,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         session.Advanced.MaxNumberOfRequestsPerSession = 10000;
 
-        var client = serviceProvider.GetRequiredService<SubstrateClient>();
+        var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
         var snapshotObserver = serviceProvider
             .GetServices<IChainObserver>()
@@ -110,6 +110,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         await batch.Items.ParallelForEachAsync(async doc =>
         {
+            var client = new SubstrateClient(httpClientFactory);
+
             var block = doc.Result;
 
             Sentry.AddBreadcrumb("Processing block",

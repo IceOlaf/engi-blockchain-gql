@@ -2,10 +2,10 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class PagedQueryArgumentsGraphType<T> : InputObjectGraphType<T>
-    where T : PagedQueryArguments
+public abstract class PagedQueryArgumentsGraphType<TArguments> : InputObjectGraphType<TArguments>
+    where TArguments : PagedQueryArguments
 {
-    public PagedQueryArgumentsGraphType()
+    protected PagedQueryArgumentsGraphType()
     {
         Field(x => x.Skip)
             .DefaultValue(0)

@@ -1,8 +1,8 @@
 ﻿namespace Engi.Substrate.Server.Types;
 
-public class JobsPagedQueryArgumentsGraphType : PagedQueryArgumentsGraphType<JobsPagedQueryArguments>
+public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQueryArguments, JobsOrderByProperty>
 {
-    public JobsPagedQueryArgumentsGraphType()
+    public JobsQueryArgumentsGraphType()
     {
         Description = "The paged query arguments for the jobs query.";
 

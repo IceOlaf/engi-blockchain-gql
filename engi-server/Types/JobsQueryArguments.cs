@@ -2,7 +2,7 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class JobsPagedQueryArguments : PagedQueryArguments
+public class JobsQueryArguments : OrderedQueryArguments<JobsOrderByProperty>
 {
     public string? Creator { get; set; }
 

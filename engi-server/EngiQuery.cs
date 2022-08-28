@@ -30,7 +30,7 @@ public class EngiQuery : ObjectGraphType
             .ResolveAsync(GetJobAsync);
 
         Field<JobsPagedResult>("jobs")
-            .Argument<JobsPagedQueryArgumentsGraphType>("query")
+            .Argument<JobsQueryArgumentsGraphType>("query")
             .ResolveAsync(GetJobsAsync);
 
         Field<TransactionsPagedResult>("transactions")
@@ -125,8 +125,8 @@ public class EngiQuery : ObjectGraphType
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
-        var args = context.GetOptionalValidatedArgument<JobsPagedQueryArguments>("query")
-            ?? new JobsPagedQueryArguments();
+        var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query")
+            ?? new JobsQueryArguments();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
@@ -167,6 +167,21 @@ public class EngiQuery : ObjectGraphType
         {
             query = query
                 .Where(x => x.Funding <= args.MaxFunding);
+        }
+
+        switch (args.OrderByProperty)
+        {
+            case JobsOrderByProperty.CreatedOn:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.CreatedOn.DateTime)
+                    : query.OrderByDescending(x => x.CreatedOn.DateTime);
+                break;
+
+            case JobsOrderByProperty.Funding:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.Funding)
+                    : query.OrderByDescending(x => x.Funding);
+                break;
         }
 
         var results = await query

@@ -16,7 +16,7 @@ public class Extrinsic
 
     public string[] ArgumentKeys => Arguments.Keys.ToArray();
 
-    public EventRecord[] Events { get; set; } = null!;
+    public EventRecordCollection Events { get; set; } = null!;
 
     public bool IsSuccessful
     {

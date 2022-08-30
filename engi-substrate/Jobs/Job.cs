@@ -20,7 +20,7 @@ public class Job
 
     public Solution? Solution { get; init; }
 
-    public ulong AttemptCount { get; init; }
+    public int AttemptCount { get; init; }
 
     public BlockReference CreatedOn { get; set; } = null!;
 

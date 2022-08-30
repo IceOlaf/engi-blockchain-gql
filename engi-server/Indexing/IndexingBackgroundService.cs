@@ -183,13 +183,20 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         
         // TODO: make this query in one storage call
 
-        foreach (var (jobId, wasCreated) in GetJobIds(block))
+        foreach (var indexable in GetIndexables(block))
         {
-            var snapshot = await RetrieveJobSnapshotAsync(jobId, block, client);
+            if (indexable is JobIndexable jobIndexable)
+            {
+                var snapshot = await RetrieveJobSnapshotAsync(jobIndexable.JobId, block, client);
 
-            snapshot.IsCreation = wasCreated;
+                snapshot.IsCreation = jobIndexable.IsCreation;
 
-            results.Add(snapshot);
+                results.Add(snapshot);
+            }
+            else if (indexable is AttemptIndexable attemptIndexable)
+            {
+                results.Add(JobAttemptedSnapshot.From(attemptIndexable.Data, block));
+            }
         }
 
         // make sure the previous block exists, as a sanity check and if not
@@ -218,21 +225,42 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         return JobSnapshot.Parse(reader, block);
     }
 
-    private IEnumerable<(ulong jobId, bool isCreation)> GetJobIds(ExpandedBlock block)
+    private IEnumerable<Indexable> GetIndexables(ExpandedBlock block)
     {
         foreach (var extrinsic in block.Extrinsics.Where(x => x.IsSuccessful))
         {
-            if (extrinsic.PalletName == "Jobs" && extrinsic.CallName == "create_job")
+            if (extrinsic.PalletName == ChainKeys.Pallets.Jobs.Name)
             {
-                var jobIdGeneratedEvent = extrinsic.Events
-                    .Single(x => x.Event.Section == "Jobs" && x.Event.Method == "JobIdGenerated")
-                    .Event;
+                if (extrinsic.CallName == "create_job")
+                {
+                    var jobIdGeneratedEvent = extrinsic.Events
+                        .Find(ChainKeys.Pallets.Jobs.Name, ChainKeys.Pallets.Jobs.JobIdGeneratedEvent);
 
-                ulong jobId = (ulong)jobIdGeneratedEvent.Data;
+                    ulong jobId = (ulong)jobIdGeneratedEvent.Data;
 
-                yield return (jobId, true);
+                    yield return new JobIndexable
+                    {
+                        JobId = jobId,
+                        IsCreation = true
+                    };
+                }
+                else if (extrinsic.CallName == "attempt_job")
+                {
+                    var jobAttemptedEvent = extrinsic.Events
+                        .Find(ChainKeys.Pallets.Jobs.Name, ChainKeys.Pallets.Jobs.JobAttemptedEvent);
+
+                    var data = (Dictionary<int, object>) jobAttemptedEvent.Data;
+
+                    yield return new AttemptIndexable
+                    {
+                        Data = data
+                    };
+                }
+
+                continue;
             }
-            else if (extrinsic.PalletName == "Sudo" && extrinsic.ArgumentKeys.Contains("call"))
+
+            if (extrinsic.PalletName == "Sudo" && extrinsic.ArgumentKeys.Contains("call"))
             {
                 var call = extrinsic.Arguments["call"] as Dictionary<string, object>;
 
@@ -246,9 +274,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                         ulong jobId = (ulong) solveJob["job"];
 
-                        yield return (jobId, false);
+                        yield return new JobIndexable
+                        {
+                            JobId = jobId
+                        };
                     }
                 }
+
+                continue;
             }
         }
     }
@@ -301,5 +334,19 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         }
 
         await session.SaveChangesAsync();
+    }
+
+    interface Indexable { }
+
+    class JobIndexable : Indexable
+    {
+        public ulong JobId { get; init; }
+
+        public bool IsCreation { get; init; }
+    }
+
+    class AttemptIndexable : Indexable
+    {
+        public Dictionary<int, object> Data { get; init; } = null!;
     }
 }

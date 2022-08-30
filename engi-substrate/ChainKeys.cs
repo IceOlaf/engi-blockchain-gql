@@ -22,4 +22,15 @@ public static class ChainKeys
     public const string StateGetStorage = "state_getStorage";
     public const string StateSubscribeRuntimeVersion = "state_subscribeRuntimeVersion";
     public const string StateRuntimeVersion = "state_runtimeVersion";
+
+    public static class Pallets
+    {
+        public static class Jobs
+        {
+            public const string Name = "Jobs";
+
+            public const string JobIdGeneratedEvent = "JobIdGenerated";
+            public const string JobAttemptedEvent = "JobAttempted";
+        }
+    }
 }

@@ -65,9 +65,9 @@ public class ExpandedBlock
         {
             var extrinsic = Extrinsics[index];
 
-            extrinsic.Events = events
+            extrinsic.Events = new EventRecordCollection(events
                 .Where(x => x.Phase.Data == index)
-                .ToArray();
+                .ToArray());
         }
 
         DateTime = CalculateDateTime(Extrinsics);
@@ -102,10 +102,5 @@ public class ExpandedBlock
         }
 
         return (DateTime)setTimeExtrinsic.Arguments["now"];
-    }
-
-    public static class MetadataKeys
-    {
-        public const string SentryId = "SentryId";
     }
 }

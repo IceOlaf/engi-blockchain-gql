@@ -3,7 +3,7 @@ using Raven.Client.Documents.Indexes;
 
 namespace Engi.Substrate.Indexing;
 
-public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
+public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 {
     public class Result : Job
     {
@@ -14,7 +14,7 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
 
     public JobIndex()
     {
-        Map = snapshots => from snapshot in snapshots
+        AddMap<JobSnapshot>(snapshots => from snapshot in snapshots
             select new Result
             {
                 JobId = snapshot.JobId,
@@ -36,7 +36,27 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
                     snapshot.Repository.Url.Replace("https://github.com/", "")
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null
-            };
+            });
+
+        AddMap<JobAttemptedSnapshot>(attempts => from attempt in attempts
+             select new Result
+             {
+                 JobId = attempt.JobId,
+                 AttemptCount = 1,
+                 UpdatedOn = attempt.SnapshotOn,
+                 //
+                 Creator = null!,
+                 Funding = null!,
+                 Repository = null!,
+                 Language = Language.CSharp,
+                 Name = null!,
+                 Tests = null!,
+                 Requirements = null!,
+                 Solution = null,
+                 CreatedOn = null!,
+                 Query = null!,
+                 CreatedOn_DateTime = DateTime.MinValue
+             });
 
         Reduce = results => from result in results
             group result by result.JobId
@@ -54,7 +74,7 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
                 Tests = latest.Tests,
                 Requirements = latest.Requirements,
                 Solution = latest.Solution,
-                AttemptCount = 0,
+                AttemptCount = g.Sum(x => x.AttemptCount),
                 CreatedOn = createdOn,
                 UpdatedOn = latest.UpdatedOn,
                 Query = g.SelectMany(x => x.Query).Distinct(),

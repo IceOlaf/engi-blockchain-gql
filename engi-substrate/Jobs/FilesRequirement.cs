@@ -4,13 +4,13 @@ namespace Engi.Substrate.Jobs;
 
 public class FilesRequirement : IScaleSerializable
 {
-    [Required(AllowEmptyStrings = true)]
+    [Required(AllowEmptyStrings = true), MaxLength(64)]
     public string IsEditable { get; set; } = null!;
 
-    [Required(AllowEmptyStrings = true)]
+    [Required(AllowEmptyStrings = true), MaxLength(64)]
     public string IsAddable { get; set; } = null!;
 
-    [Required(AllowEmptyStrings = true)]
+    [Required(AllowEmptyStrings = true), MaxLength(64)]
     public string IsDeletable { get; set; } = null!;
 
     public void Serialize(ScaleStreamWriter writer)

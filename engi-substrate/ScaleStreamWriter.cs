@@ -24,6 +24,8 @@ public class ScaleStreamWriter : IDisposable
 
     public void Write(ReadOnlySpan<byte> b) => stream.Write(b);
 
+    public void Write(bool value) => stream.WriteByte((byte)(value ? 1 : 0));
+
     public void Write(int value) => stream.Write(BitConverter.GetBytes(value));
 
     public void Write(uint value) => stream.Write(BitConverter.GetBytes(value));

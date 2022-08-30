@@ -13,11 +13,7 @@ public class TestGraphType : ObjectGraphType<Test>
             .Description("The test id.");
         Field(x => x.Result)
             .Description("The result of the test.");
-        Field(x => x.ResultMessage)
-            .Description("The message associated with the result of the test.");
         Field(x => x.Required)
             .Description("The required result of the test.");
-        Field(x => x.RequiredMessage)
-            .Description("The message associated with the required result of the test.");
     }
 }

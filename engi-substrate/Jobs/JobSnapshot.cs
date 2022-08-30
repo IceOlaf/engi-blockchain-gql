@@ -24,8 +24,6 @@ public class JobSnapshot
 
     public Solution? Solution { get; init; }
 
-    public ulong AttemptCount { get; init; }
-
     public bool IsCreation { get; set; }
 
     public BlockReference SnapshotOn { get; init; } = null!;

@@ -113,10 +113,8 @@ public static class Program
                 new Test
                 {
                     Id = "test-1",
-                    Result = TestResult.Failed,
-                    ResultMessage = "Tests failed.",
-                    Required = TestResult.Passed,
-                    RequiredMessage = "Tests passed."
+                    Result = TestResult.Passed,
+                    Required = true
                 }
             },
             FilesRequirement = new FilesRequirement
@@ -184,7 +182,7 @@ public static class Program
             Origin = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
             GasLimit = 4999999999999,
             InputData0X = "0x0f755a56" // selector from metadata
-                + Hex.GetString(Address.From("5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL").Raw)
+                + Hex.GetString(Address.Parse("5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL").Raw)
         };
 
         var response = await client.RpcAsync<ContractCallResponse>("contracts_call", call);
@@ -198,7 +196,7 @@ public static class Program
 
         var sender = KeypairFactory.CreateFromAny(
             "time treat merit corn crystal fiscal banner zoo jacket pulse frog long");
-        var dest = Address.From("5FZDBCeK9FuUvnny3WhXr62Ah6pneeSaxBWL6osFoUXSszxD");
+        var dest = Address.Parse("5FZDBCeK9FuUvnny3WhXr62Ah6pneeSaxBWL6osFoUXSszxD");
         ulong amount = 1;
         byte tip = 0;
 

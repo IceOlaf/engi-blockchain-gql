@@ -26,7 +26,7 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
                 Tests = snapshot.Tests,
                 Requirements = snapshot.Requirements,
                 Solution = snapshot.Solution,
-                AttemptCount = snapshot.AttemptCount,
+                AttemptCount = 0,
                 CreatedOn = snapshot.IsCreation ? snapshot.SnapshotOn : null!,
                 UpdatedOn = snapshot.SnapshotOn,
                 Query = new []
@@ -54,7 +54,7 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
                 Tests = latest.Tests,
                 Requirements = latest.Requirements,
                 Solution = latest.Solution,
-                AttemptCount = latest.AttemptCount,
+                AttemptCount = 0,
                 CreatedOn = createdOn,
                 UpdatedOn = latest.UpdatedOn,
                 Query = g.SelectMany(x => x.Query).Distinct(),

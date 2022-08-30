@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 
 namespace Engi.Substrate;
 
+[DebuggerDisplay("{HexValue}")]
 public class ScaleStreamWriter : IDisposable
 {
     private readonly Stream stream;
@@ -201,6 +203,8 @@ public class ScaleStreamWriter : IDisposable
     }
 
     // helpers
+
+    internal string HexValue => Hex.GetString0X(((MemoryStream) stream).ToArray());
 
     private static int CountLastZeros(byte[] b)
     {

@@ -1,8 +1,9 @@
-﻿using System.Reactive.Linq;
+﻿using System.Collections.Concurrent;
+using System.Reactive.Linq;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
+using Engi.Substrate.Metadata.V14;
 using Raven.Client.Documents;
-using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
 using Sentry;
 
@@ -27,10 +28,10 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     {
         return @"
             declare function filter(b) {
-                return b.IndexedOn === null && !b['@metadata'].hasOwnProperty('SentryId')
+                return b.IndexedOn === null && b.SentryId === null
             }
 
-            from ExpandedBlocks as b where filter(b)
+            from ExpandedBlocks as b where filter(b) include PreviousId
         ";
     }
 
@@ -49,34 +50,39 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             {
                 try
                 {
-                    // index all the blocks from the last known one to the current
+                    using var session = Store.OpenAsyncSession();
 
-                    ulong lastIndexedBlockNumber = previousHeader?.Number
-                        ?? await FindLastIndexedBlockNumberAsync(header.Number);
+                    session.Advanced.MaxNumberOfRequestsPerSession = 100000;
 
-                    // check whether the last block actually exists in the db - this is an easy
-                    // way to allow re-indexes to occur by deleting all previous documents
+                    var currentBlock = new ExpandedBlock(header);
 
-                    if (lastIndexedBlockNumber != 0)
+                    await session.StoreAsync(currentBlock);
+
+                    // if we don't have a successful previous header,
+                    // check whether the last block actually exists in the db 
+                    // otherwise trigger an index
+
+                    if (previousHeader == null && currentBlock.PreviousId != null)
                     {
-                        using var session = Store.OpenAsyncSession();
-
-                        var lastIndexedBlock = await session
-                            .LoadAsync<ExpandedBlock>(ExpandedBlock.KeyFrom(lastIndexedBlockNumber));
-
-                        if (lastIndexedBlock == null)
-                        {
-                            lastIndexedBlockNumber = 0;
-                        }
+                        // fire and forget
+#pragma warning disable CS4014
+                        EnsureIndexingConsistencyAsync(header.Number - 1);
+#pragma warning restore CS4014
                     }
 
-                    await TriggerIndexingForBlockNumbers(lastIndexedBlockNumber, header);
+                    await session.SaveChangesAsync();
 
                     previousHeader = header;
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Failed to index new header={number}", header.Number);
+
+                    // in the case of an error saving, don't hold up the indexing but
+                    // reset the previousHeader variable so that the next block will
+                    // index the missed ones
+
+                    previousHeader = null;
                 }
             }))
             .Concat()
@@ -95,10 +101,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     protected override async Task ProcessBatchAsync(
         SubscriptionBatch<ExpandedBlock> batch, IServiceProvider serviceProvider)
     {
-        using var session = batch.OpenAsyncSession();
-
-        session.Advanced.MaxNumberOfRequestsPerSession = 10000;
-
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
         var snapshotObserver = serviceProvider
@@ -108,30 +110,32 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         var meta = await snapshotObserver.Metadata;
 
+        using var session = batch.OpenAsyncSession();
+
+        // account for jobs stored
+
+        session.Advanced.MaxNumberOfRequestsPerSession = batch.NumberOfItemsInBatch * 10; 
+
+        var previousBlocks = await session
+            .LoadAsync<ExpandedBlock>(batch.Items.Select(x => x.Result.PreviousId));
+
+        var resultBag = new ConcurrentBag<object>();
+
         await batch.Items.ParallelForEachAsync(async doc =>
         {
             var client = new SubstrateClient(httpClientFactory);
 
             var block = doc.Result;
-
-            Sentry.AddBreadcrumb("Processing block",
-                data: new Dictionary<string, string>
-                {
-                    ["number"] = block.Number.ToString(),
-                    ["hash"] = block.Hash ?? string.Empty
-                });
+            var previous = block.PreviousId != null ? previousBlocks[block.PreviousId] : null;
 
             try
             {
-                string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);
+                var results = await ProcessBatchItemAsync(block, previous, meta, client);
 
-                var signedBlock = await client.GetChainBlockAsync(hash);
-
-                var events = await client.GetSystemEventsAsync(hash, meta);
-
-                block.Fill(signedBlock!.Block, events, meta);
-
-                await ProcessExpandedBlockForJobUpdatesAsync(block, client, session);
+                foreach (var result in results)
+                {
+                    resultBag.Add(result);
+                }
             }
             catch (Exception ex)
             {
@@ -142,43 +146,81 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 // if we didn't make it to the end, store the sentry error
 
-                var blockMeta = session.Advanced.GetMetadataFor(block);
-
-                blockMeta[ExpandedBlock.MetadataKeys.SentryId] = Sentry.CaptureException(ex).ToString();
+                block.SentryId = Sentry.CaptureException(ex).ToString();
             }
         }, maxDegreeOfParallelism: 64);
+
+        foreach (var result in resultBag)
+        {
+            await session.StoreAsync(result, null, session.Advanced.GetDocumentId(result));
+        }
 
         await session.SaveChangesAsync();
     }
 
-    private async Task ProcessExpandedBlockForJobUpdatesAsync(
-        ExpandedBlock block, 
-        SubstrateClient client,
-        IAsyncDocumentSession session)
+    private async Task<IEnumerable<object>> ProcessBatchItemAsync(
+        ExpandedBlock block,
+        ExpandedBlock? previous,
+        RuntimeMetadata meta,
+        SubstrateClient client)
     {
-        async Task<JobSnapshot> RetrieveSnapshotAsync(ulong jobId)
+        Sentry.AddBreadcrumb("Processing block",
+            data: new Dictionary<string, string>
+            {
+                ["number"] = block.Number.ToString(),
+                ["hash"] = block.Hash ?? string.Empty
+            });
+
+        var results = new List<object>();
+
+        string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);
+
+        var signedBlock = await client.GetChainBlockAsync(hash);
+
+        var events = await client.GetSystemEventsAsync(hash, meta);
+
+        block.Fill(signedBlock!.Block, events, meta);
+        
+        // TODO: make this query in one storage call
+
+        foreach (var (jobId, wasCreated) in GetJobIds(block))
         {
-            string snapshotStorageKey = StorageKeys
-                .Blake2Concat(StorageKeys.Jobs, StorageKeys.Jobs, jobId);
-            string snapshotData = (await client.GetStateStorageAsync(snapshotStorageKey, block.Hash!))!;
+            var snapshot = await RetrieveJobSnapshotAsync(jobId, block, client);
 
-            using var reader = new ScaleStreamReader(snapshotData);
+            snapshot.IsCreation = wasCreated;
 
-            return JobSnapshot.Parse(reader, block);
+            results.Add(snapshot);
         }
 
-        async Task UpsertJobAsync(ulong jobId, bool wasCreated = false)
+        // make sure the previous block exists, as a sanity check and if not
+        // trigger its indexing
+
+        if (previous == null && block.PreviousId != null)
         {
-            var retrievedSnapshot = await RetrieveSnapshotAsync(jobId);
-
-            string snapshotDocumentId = JobSnapshot.KeyFrom(jobId, block.Number);
-
-            retrievedSnapshot.IsCreation = wasCreated;
-
-            await session.StoreAsync(retrievedSnapshot, null, snapshotDocumentId);
+            results.Add(
+                new ExpandedBlock(block.Number - 1, block.ParentHash));
         }
 
-        foreach (var extrinsic in block.Extrinsics)
+        return results;
+    }
+
+    private async Task<JobSnapshot> RetrieveJobSnapshotAsync(
+        ulong jobId,
+        ExpandedBlock block,
+        SubstrateClient client)
+    {
+        string snapshotStorageKey = StorageKeys
+            .Blake2Concat(StorageKeys.Jobs, StorageKeys.Jobs, jobId);
+        string snapshotData = (await client.GetStateStorageAsync(snapshotStorageKey, block.Hash!))!;
+
+        using var reader = new ScaleStreamReader(snapshotData);
+
+        return JobSnapshot.Parse(reader, block);
+    }
+
+    private IEnumerable<(ulong jobId, bool isCreation)> GetJobIds(ExpandedBlock block)
+    {
+        foreach (var extrinsic in block.Extrinsics.Where(x => x.IsSuccessful))
         {
             if (extrinsic.PalletName == "Jobs" && extrinsic.CallName == "create_job")
             {
@@ -188,7 +230,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 ulong jobId = (ulong)jobIdGeneratedEvent.Data;
 
-                await UpsertJobAsync(jobId, true);
+                yield return (jobId, true);
             }
             else if (extrinsic.PalletName == "Sudo" && extrinsic.ArgumentKeys.Contains("call"))
             {
@@ -204,105 +246,60 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                         ulong jobId = (ulong) solveJob["job"];
 
-                        await UpsertJobAsync(jobId);
+                        yield return (jobId, false);
                     }
                 }
             }
         }
     }
 
-    private async Task TriggerIndexingForBlockNumbers(ulong fromExclusive, Header current)
-    {
-        await using var bulk = Store.BulkInsert();
-
-        ulong toExclusive = current.Number;
-
-        for (ulong number = fromExclusive + 1; number < toExclusive; ++number)
-        {
-            await bulk.StoreAsync(new ExpandedBlock(number));
-        }
-
-        await bulk.StoreAsync(new ExpandedBlock(current));
-    }
-
-    private async Task<ulong> FindLastIndexedBlockNumberAsync(ulong lastBlockNumber)
+    private async Task EnsureIndexingConsistencyAsync(ulong toInclusive)
     {
         const int walkSize = 256;
 
+        for (ulong number = 1; number <= toInclusive; number += walkSize)
+        {
+            await EnsureIndexingConsistencyAsync(number,
+                number + walkSize <= toInclusive ? number + walkSize : toInclusive);
+        }
+    }
+
+    private async Task EnsureIndexingConsistencyAsync(ulong fromInclusive, ulong toInclusive)
+    {
         using var session = Store.OpenAsyncSession();
 
-        session.Advanced.MaxNumberOfRequestsPerSession = int.MaxValue;
+        var indexes = Enumerable.Range(0, (int) (toInclusive - fromInclusive))
+            .Select(offset => fromInclusive + (ulong) offset)
+            .ToArray();
 
-        // walk back from the current block number to find the last indexed block
-
-        while (true)
+        if (!indexes.Any())
         {
-            session.Advanced.Clear();
-            
-            var indexes = Enumerable.Range(0, walkSize)
-                .Select(offset =>
-                {
-                    try
-                    {
-                        return checked(lastBlockNumber - (uint)offset);
-                    }
-                    catch (OverflowException)
-                    {
-                        return 0ul;
-                    }
-                })
-                .ToList();
-
-            if (indexes.Last() == 0)
-            {
-                indexes.RemoveAll(index => index == 0);
-            }
-
-            if (!indexes.Any())
-            {
-                lastBlockNumber = 0;
-
-                break;
-            }
-
-            string[] keys = indexes
-                .Select(ExpandedBlock.KeyFrom)
-                .ToArray();
-
-            var loadedBlocks = await session.LoadAsync<ExpandedBlock>(keys);
-
-            var missingKeys = loadedBlocks
-                .Where(x => x.Value == null)
-                .Select(x => x.Key)
-                .OrderByDescending(x => x)
-                .ToArray();
-
-            if (!missingKeys.Any())
-            {
-                return lastBlockNumber;
-            }
-
-            if (missingKeys.Length == keys.Length)
-            {
-                // nothing was found, skip to the next batch
-
-                lastBlockNumber = indexes.Last() - 1;
-
-                if (keys.Length < walkSize)
-                {
-                    break;
-                }
-
-                continue;
-            }
-
-            // last known block is bottom of stack, minus one
-
-            string topKey = missingKeys.Last();
-
-            lastBlockNumber = ulong.Parse(topKey.Split('/').Last()) - 1;
+            return;
         }
 
-        return lastBlockNumber;
+        string[] keys = indexes
+            .Select(ExpandedBlock.KeyFrom)
+            .ToArray();
+
+        var loadedBlocks = await session.LoadAsync<ExpandedBlock>(keys);
+
+        var missingKeys = loadedBlocks
+            .Where(x => x.Value == null)
+            .Select(x => x.Key)
+            .OrderByDescending(x => x)
+            .ToArray();
+
+        if (!missingKeys.Any())
+        {
+            return;
+        }
+
+        foreach (var key in missingKeys)
+        {
+            await session.StoreAsync(
+                new ExpandedBlock(ulong.Parse(key.Split('/').Last())));
+        }
+
+        await session.SaveChangesAsync();
     }
 }

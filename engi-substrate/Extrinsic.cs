@@ -18,6 +18,19 @@ public class Extrinsic
 
     public EventRecord[] Events { get; set; } = null!;
 
+    public bool IsSuccessful
+    {
+        get
+        {
+            if (PalletName == "Sudo")
+            {
+                return Events.Any(e => e.Event.Section == "Sudo" && e.Event.Method == "Sudid" && e.Event.DataKeys.Contains("Ok"));
+            }
+
+            return Events.Any(e => e.Event.Section == "System" && e.Event.Method == "ExtrinsicSuccess");
+        }
+    }
+
     public static Extrinsic Parse(string s, RuntimeMetadata meta)
     {
         const byte BIT_SIGNED = 0b10000000;

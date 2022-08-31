@@ -18,19 +18,32 @@ public class ExpandedBlock
 
     public DateTime DateTime { get; set; }
 
+    public string? PreviousId { get; set; }
+
+    public string? SentryId { get; set; }
+
     private ExpandedBlock() { }
 
     public ExpandedBlock(ulong number)
     {
         Id = KeyFrom(number);
         Number = number;
+
+        if (number > 1)
+        {
+            PreviousId = KeyFrom(number - 1);
+        }
+    }
+
+    public ExpandedBlock(ulong number, string hash)
+        : this(number)
+    {
+        Hash = hash;
     }
 
     public ExpandedBlock(Header header)
-        : this(header.Number)
-    {
-        Hash = header.Hash.Value;
-    }
+        : this(header.Number, header.Hash.Value)
+    { }
 
     public void Fill(
         Block block,

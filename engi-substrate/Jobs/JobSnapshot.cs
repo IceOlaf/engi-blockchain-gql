@@ -37,9 +37,12 @@ public class JobSnapshot
 
     public static JobSnapshot Parse(ScaleStreamReader reader, BlockReference blockReference)
     {
+        ulong jobId = reader.ReadUInt64();
+
         return new()
         {
-            JobId = reader.ReadUInt64(),
+            Id = KeyFrom(jobId, blockReference.Number),
+            JobId = jobId,
             Creator = reader.ReadAddressAsId(),
             Funding = reader.ReadUInt128(),
             Repository = Repository.Parse(reader),

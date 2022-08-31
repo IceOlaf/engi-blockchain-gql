@@ -102,7 +102,7 @@ public static class Program
 
         var args = new CreateJobArguments
         {
-            Funding = 10,
+            Funding = 500,
             RepositoryUrl = "https://github.com/ravendb/ravendb",
             BranchName = "master",
             CommitHash = "119158985933033e05de60533d353b7599b0bbab",

@@ -5,7 +5,7 @@ namespace Engi.Substrate.Jobs;
 public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializable
 {
     // TODO: create validation for U128
-    [Range(1, ulong.MaxValue)]
+    [Range(500, ulong.MaxValue)]
     public ulong Funding { get; init; }
 
     public Language Language { get; init; }

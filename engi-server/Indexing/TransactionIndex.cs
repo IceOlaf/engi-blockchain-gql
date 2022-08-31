@@ -152,7 +152,12 @@ namespace Engi.Substrate.Server.Indexing
             if(type == TransactionType.Spend)
             {
                 var jobIdGeneratedEvent = events
-                    .First((Func<dynamic, bool>)(x => x.Event.Section == ""Jobs"" && x.Event.Method == ""JobIdGenerated""));
+                    .FirstOrDefault((Func<dynamic, bool>)(x => x.Event.Section == ""Jobs"" && x.Event.Method == ""JobIdGenerated""));
+
+                if(jobIdGeneratedEvent == null)
+                {
+                    return null;
+                }
 
                 return jobIdGeneratedEvent.Event.Data;
             }

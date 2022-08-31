@@ -18,19 +18,19 @@ namespace Engi.Substrate
         [Fact]
         public void MetadataV14_Types()
         {
-            var stream = CreateScaleStreamFromFile("./TestData/metadata_v14.hex");
+            var stream = CreateScaleStreamFromFile("./Runtime/TestData/metadata_v14.hex");
 
             var metadata = RuntimeMetadataV14.Parse(stream);
 
             var actual = metadata.TypesById.Values;
 
-            AssetJsonEquals("./TestData/metadata_v14_types.json", actual);
+            AssetJsonEquals("./Runtime/TestData/metadata_v14_types.json", actual);
         }
 
         [Fact]
         public void MetadataV14_Metadata()
         {
-            var stream = CreateScaleStreamFromFile("./TestData/metadata_v14.hex");
+            var stream = CreateScaleStreamFromFile("./Runtime/TestData/metadata_v14.hex");
 
             var metadata = RuntimeMetadataV14.Parse(stream);
 
@@ -48,7 +48,7 @@ namespace Engi.Substrate
                 }
             };
 
-            AssetJsonEquals("./TestData/metadata_v14.json", actual);
+            AssetJsonEquals("./Runtime/TestData/metadata_v14.json", actual);
         }
 
         private static ScaleStreamReader CreateScaleStreamFromFile(string filename)
@@ -62,7 +62,7 @@ namespace Engi.Substrate
 
         private static void AssetJsonEquals(
             string expectedFilename,
-            object? actual)
+            object actual)
         {
             string fileJson = File.ReadAllText(expectedFilename);
             string expectedJson = JToken.Parse(fileJson).ToString(Formatting.None);
@@ -102,7 +102,7 @@ namespace Engi.Substrate
 
         class StorageEntryConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
                 switch (value)
                 {
@@ -130,11 +130,11 @@ namespace Engi.Substrate
                         writer.WriteEndObject();
                         break;
 
-                    default: throw new NotImplementedException(value.GetType().ToString());
+                    default: throw new NotImplementedException(value!.GetType().ToString());
                 }
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotImplementedException();
+            public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
             public override bool CanConvert(Type objectType)
             {
@@ -144,9 +144,9 @@ namespace Engi.Substrate
 
         class PortableTypeConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter w, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter w, object? value, JsonSerializer serializer)
             {
-                var t = (PortableType)value;
+                var t = (PortableType)value!;
 
                 w.WriteStartObject();
 
@@ -191,32 +191,32 @@ namespace Engi.Substrate
                 w.WriteEndObject();
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotImplementedException();
+            public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
             public override bool CanConvert(Type objectType) => objectType == typeof(PortableType);
         }
 
         class TTypeConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
-                var t = (TType) value;
+                var t = (TType) value!;
                 writer.WriteValue(t.Value);
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotImplementedException();
+            public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
             public override bool CanConvert(Type objectType) => objectType == typeof(TType);
         }
 
         class ByteArrayConverter : JsonConverter
         {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
             {
-                writer.WriteValue("0x" + Convert.ToHexString((byte[])value).ToLowerInvariant());
+                writer.WriteValue("0x" + Convert.ToHexString((byte[])value!).ToLowerInvariant());
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) => throw new NotImplementedException();
+            public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) => throw new NotImplementedException();
 
             public override bool CanConvert(Type objectType) => objectType == typeof(byte[]);
         }

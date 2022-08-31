@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using Engi.Substrate.Indexing;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;

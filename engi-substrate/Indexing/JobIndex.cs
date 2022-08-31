@@ -1,7 +1,7 @@
 ﻿using Engi.Substrate.Jobs;
 using Raven.Client.Documents.Indexes;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
 {

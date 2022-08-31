@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class InlineByteArrayJsonConvert : JsonConverter<byte[]>
 {

@@ -28,7 +28,7 @@ public class JobSnapshot
 
     public BlockReference SnapshotOn { get; init; } = null!;
 
-    private JobSnapshot() {}
+    internal JobSnapshot() {}
 
     public static string KeyFrom(ulong jobId, ulong blockNumber)
     {

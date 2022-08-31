@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Newtonsoft.Json;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class BigIntegerJsonConverter : JsonConverter<BigInteger>
 {

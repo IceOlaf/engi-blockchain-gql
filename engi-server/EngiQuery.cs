@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Jobs;
+﻿using Engi.Substrate.Indexing;
+using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
 using Engi.Substrate.Server.Types.Validation;

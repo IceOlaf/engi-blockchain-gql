@@ -1,8 +1,7 @@
-﻿using Engi.Substrate.Server.Indexing;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Raven.Client.Json.Serialization.NewtonsoftJson;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Indexing;
 
 public class EngiSerializationConventions : NewtonsoftJsonSerializationConventions
 {

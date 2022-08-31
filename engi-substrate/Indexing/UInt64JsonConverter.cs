@@ -1,12 +1,12 @@
 ﻿using Newtonsoft.Json;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class UInt64JsonConverter : JsonConverter<ulong>
 {
     public override void WriteJson(JsonWriter writer, ulong value, JsonSerializer serializer)
     {
-        writer.WriteValue(value.ToString());
+        writer.WriteValue(value.ToString("D20"));
     }
 
     public override ulong ReadJson(JsonReader reader, Type objectType, ulong existingValue, bool hasExistingValue,

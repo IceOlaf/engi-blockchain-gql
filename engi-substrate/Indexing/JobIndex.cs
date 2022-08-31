@@ -19,7 +19,7 @@ public class JobIndex : AbstractIndexCreationTask<JobSnapshot, JobIndex.Result>
             {
                 JobId = snapshot.JobId,
                 Creator = snapshot.Creator,
-                Funding = snapshot.Funding,
+                Funding = (string)(object)snapshot.Funding,
                 Repository = snapshot.Repository,
                 Language = snapshot.Language,
                 Name = snapshot.Name,

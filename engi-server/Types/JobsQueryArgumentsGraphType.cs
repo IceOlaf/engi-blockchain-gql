@@ -18,10 +18,11 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
         Field(x => x.Language, nullable: true)
             .Description("Job language to search for.");
 
-        Field(x => x.MinFunding, nullable: true)
-            .Description("The minimum funding to search for (inclusive). The value is currently bound to 32-bits.");
+        Field(x => x.MinFunding, nullable: true, type: typeof(UInt128GraphType))
+            .Description("The minimum funding to search for (inclusive).");
 
-        Field(x => x.MaxFunding, nullable: true)
-            .Description("The maximum funding to search for (inclusive). The value is currently bound to 32-bits.");
+        Field(x => x.MaxFunding, nullable: true, type: typeof(UInt128GraphType))
+            .Description("The maximum funding to search for (inclusive).");
     }
 }
+

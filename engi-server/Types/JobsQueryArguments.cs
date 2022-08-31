@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Jobs;
+﻿using System.Numerics;
+using Engi.Substrate.Jobs;
 
 namespace Engi.Substrate.Server.Types;
 
@@ -12,7 +13,7 @@ public class JobsQueryArguments : OrderedQueryArguments<JobsOrderByProperty>
 
     public Language? Language { get; set; }
 
-    public uint? MinFunding { get; set; }
+    public BigInteger? MinFunding { get; set; }
 
-    public uint? MaxFunding { get; set; }
+    public BigInteger? MaxFunding { get; set; }
 }

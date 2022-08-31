@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace Engi.Substrate.Jobs;
+﻿namespace Engi.Substrate.Jobs;
 
 public class Job
 {
@@ -8,7 +6,7 @@ public class Job
 
     public string Creator { get; init; } = null!;
 
-    public BigInteger Funding { get; init; }
+    public string Funding { get; init; } = null!;
 
     public Repository Repository { get; init; } = null!;
 

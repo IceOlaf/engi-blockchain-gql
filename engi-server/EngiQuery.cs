@@ -132,18 +132,18 @@ public class EngiQuery : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var query = session
-            .Query<JobIndex.Result, JobIndex>();
+            .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>();
 
         if (args.Creator != null)
         {
             query = query
-                .Where(x => x.Creator == args.Creator);
+                .WhereEquals(x => x.Creator, args.Creator);
         }
 
         if (args.Status.HasValue)
         {
             query = query
-                .Where(x => x.Status == args.Status.Value);
+                .WhereEquals(x => x.Status, args.Status.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(args.Search))
@@ -155,19 +155,24 @@ public class EngiQuery : ObjectGraphType
         if (args.Language.HasValue)
         {
             query = query
-                .Where(x => x.Language == args.Language.Value);
+                .WhereIn(x => x.Language, new [] { args.Language.Value });
         }
 
-        if (args.MinFunding != null)
+        if (args.MinFunding != null && args.MaxFunding != null)
         {
             query = query
-                .Where(x => x.Funding >= args.MinFunding);
+                .WhereBetween(x => x.Funding, 
+                    args.MinFunding.Value.ToString("D40"), args.MaxFunding.Value.ToString("D40"));
         }
-
-        if (args.MaxFunding != null)
+        else if (args.MinFunding != null)
         {
             query = query
-                .Where(x => x.Funding <= args.MaxFunding);
+                .WhereGreaterThanOrEqual(x => x.Funding, args.MinFunding.Value.ToString("D40"));
+        }
+        else if (args.MaxFunding != null)
+        {
+            query = query
+                .WhereLessThanOrEqual(x => x.Funding, args.MaxFunding.Value.ToString("D40"));
         }
 
         switch (args.OrderByProperty)
@@ -189,7 +194,7 @@ public class EngiQuery : ObjectGraphType
             .Statistics(out var stats)
             .Skip(args.Skip)
             .Take(args.Limit)
-            .As<Job>()
+            .OfType<Job>()
             .ToArrayAsync();
 
         return new PagedResult<Job>(results, stats.LongTotalResults);

@@ -2,7 +2,7 @@
 
 public interface ISignedExtrinsic
 {
-    string SenderSecret { get; set; }
+    string SenderKeypairPkcs8 { get; set; }
 
     byte Tip { get; set; }
 }

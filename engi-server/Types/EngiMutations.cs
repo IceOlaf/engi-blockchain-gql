@@ -27,7 +27,7 @@ public class EngiMutations : ObjectGraphType
             .Argument<NonNullGraphType<CreateJobArgumentsGraphType>>("job")
             .ResolveAsync(CreateJobAsync);
 
-        Field<UserType>("createUser")
+        Field<UserGraphType>("createUser")
             .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
             .Resolve(CreateUser);
     }
@@ -37,7 +37,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<AttemptJobArguments>("args");
         var chainState = await GetLatestChainState();
 
-        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
+        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
@@ -50,7 +50,7 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderSecret), "Account not found.");
+                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
         }
 
         return await client.AttemptJobAsync(chainState, sender, account, args);
@@ -61,7 +61,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
         var chainState = await GetLatestChainState();
 
-        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
+        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
         var dest = Address.Parse(args.RecipientAddress);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
@@ -75,7 +75,7 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderSecret), "Account not found.");
+                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
         }
 
         return await client.BalanceTransferAsync(
@@ -87,7 +87,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<CreateJobArguments>("job");
         var chainState = await GetLatestChainState();
 
-        var sender = KeypairFactory.CreateFromAny(args.SenderSecret);
+        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
@@ -100,7 +100,7 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderSecret), "Account not found.");
+                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
         }
 
         return await client.CreateJobAsync(chainState, sender, account, args);

@@ -7,8 +7,8 @@ public abstract class SignedExtrinsicArgumentsGraphTypeBase<T> : InputObjectGrap
 {
     protected SignedExtrinsicArgumentsGraphTypeBase()
     {
-        Field(x => x.SenderSecret)
-            .Description("The private key of the executor.");
+        Field(x => x.SenderKeypairPkcs8)
+            .Description("The PKCS8 keypair of the executor, base64-encoded, as returned by `createUser`.");
         Field(x => x.Tip)
             .Description("The tip to include in the transaction.");
     }

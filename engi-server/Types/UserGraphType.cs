@@ -2,9 +2,9 @@
 
 namespace Engi.Substrate.Server.Types;
 
-public class UserType : ObjectGraphType<User>
+public class UserGraphType : ObjectGraphType<User>
 {
-    public UserType()
+    public UserGraphType()
     {
         Description = "An ENGI user.";
 
@@ -15,7 +15,7 @@ public class UserType : ObjectGraphType<User>
         Field(x => x.CreatedOn)
             .Description("The date the account was created.");
         Field(x => x.Encoded)
-            .Description("The encoded/encrypted wallet in PKCS8 format.");
+            .Description("The encoded/encrypted wallet in PKCS8 format. This can be used to invoke mutations that correspond to signed extrinsics.");
         Field(x => x.Metadata)
             .Description("The wallet metadata.");
     }

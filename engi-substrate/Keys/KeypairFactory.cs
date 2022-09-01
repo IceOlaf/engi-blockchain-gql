@@ -79,11 +79,19 @@ public class KeypairFactory
     {
         ThrowIfEntropyIsInvalid(seed);
 
-        var keypairBytes = new byte[96];
+        var keypairBytes = new byte[Keypair.KEYPAIR_LENGTH];
 
         SR25519.KeypairFromSeed(seed, keypairBytes);
 
-        return Keypair.Create(keypairBytes);
+        var publicKey = keypairBytes
+            .AsSpan(Keypair.SECRET_KEY_LENGTH, Keypair.PUBLIC_KEY_LENGTH).ToArray();
+
+        return new Keypair
+        {
+            Address = Address.From(publicKey),
+            SecretKey = keypairBytes.AsSpan(0, Keypair.SECRET_KEY_LENGTH).ToArray(),
+            PublicKey = publicKey
+        };
     }
 
     private static Keypair CreateFromMnemonic(int[] mnemonicIndices, string password)

@@ -5,7 +5,7 @@ namespace Engi.Substrate;
 public abstract class SignedExtrinsicArgumentsBase : ISignedExtrinsic
 {
     [Required]
-    public string SenderSecret { get; set; } = null!;
+    public string SenderKeypairPkcs8 { get; set; } = null!;
 
     public byte Tip { get; set; }
 }

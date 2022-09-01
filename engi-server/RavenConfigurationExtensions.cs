@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography.X509Certificates;
 using Engi.Substrate.Indexing;
+using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
@@ -43,6 +44,7 @@ public static class RavenConfigurationExtensions
             // this will fail in real environments, useful for local/CI
         }
 
+        IndexCreation.CreateIndexes(typeof(RuntimeMetadata).Assembly, store);
         IndexCreation.CreateIndexes(typeof(IndexingBackgroundService).Assembly, store);
 
         services.AddSingleton<IDocumentStore>(store);

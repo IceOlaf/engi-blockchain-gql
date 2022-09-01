@@ -18,7 +18,7 @@ public class Solution
         {
             SolutionId = reader.ReadUInt64(),
             JobId = reader.ReadUInt64(),
-            Author = reader.ReadString()!,
+            Author = reader.ReadAddressAsId(),
             PatchUrl = reader.ReadString()!,
             Attempt = Attempt.Parse(reader)
         };

@@ -216,13 +216,10 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         ExpandedBlock block,
         SubstrateClient client)
     {
-        string snapshotStorageKey = StorageKeys
-            .Blake2Concat(StorageKeys.Jobs, StorageKeys.Jobs, jobId);
-        string snapshotData = (await client.GetStateStorageAsync(snapshotStorageKey, block.Hash!))!;
+        string snapshotStorageKey = StorageKeys.ForJobId(jobId);
 
-        using var reader = new ScaleStreamReader(snapshotData);
-
-        return JobSnapshot.Parse(reader, block);
+        return (await client.GetStateStorageAsync(snapshotStorageKey,
+            reader => JobSnapshot.Parse(reader, block), block.Hash!))!;
     }
 
     private IEnumerable<Indexable> GetIndexables(ExpandedBlock block)

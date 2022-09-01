@@ -14,4 +14,9 @@ public static class StorageKeys
         return Hex.ConcatGetOXString(
             root, sub, Hashing.Blake2Concat(idBytes));
     }
+
+    public static string ForJobId(ulong jobId)
+    {
+        return Blake2Concat(Jobs, Jobs, jobId);
+    }
 }

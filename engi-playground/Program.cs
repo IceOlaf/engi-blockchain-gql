@@ -10,7 +10,21 @@ public static class Program
 {
     public static async Task Main()
     {
-        
+
+    }
+
+    private static async Task ReadJobFromChainStorageAsync()
+    {
+        var client = new SubstrateClient("http://localhost:9933");
+
+        ulong jobId = 17667692264274712079;
+
+        string snapshotStorageKey = StorageKeys.ForJobId(jobId);
+
+        var job = await client.GetStateStorageAsync(snapshotStorageKey,
+            reader => JobSnapshot.Parse(reader, new BlockReference()), "0xec69fcb616d954feaf3a9db1c36527abdecb120cbaf0d734df4e625ea3c64d79");
+
+        return;
     }
 
     private static async Task AttemptJobAsync()

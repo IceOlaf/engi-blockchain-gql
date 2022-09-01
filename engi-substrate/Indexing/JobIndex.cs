@@ -55,13 +55,13 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Solution = null,
                  CreatedOn = null!,
                  Query = null!,
-                 CreatedOn_DateTime = DateTime.MinValue
+                 CreatedOn_DateTime = null
              });
 
         Reduce = results => from result in results
             group result by result.JobId
             into g
-            let latest = g.OrderByDescending(x => x.UpdatedOn.DateTime).First()
+            let latest = g.Where(x => x.Creator != null).OrderByDescending(x => x.UpdatedOn.DateTime).First()
             let createdOn = g.First(x => x.CreatedOn != null).CreatedOn
                             select new Result
             {
@@ -76,7 +76,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Solution = latest.Solution,
                 AttemptCount = g.Sum(x => x.AttemptCount),
                 CreatedOn = createdOn,
-                UpdatedOn = latest.UpdatedOn,
+                UpdatedOn = g.OrderByDescending(x => x.UpdatedOn.DateTime).First().UpdatedOn,
                 Query = g.SelectMany(x => x.Query).Distinct(),
                 CreatedOn_DateTime = createdOn.DateTime
             };

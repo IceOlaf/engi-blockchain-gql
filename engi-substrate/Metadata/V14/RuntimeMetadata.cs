@@ -226,6 +226,13 @@ public class RuntimeMetadata
                 PopulateReferences(field.Type);
             }
         }
+        else if (type.Reference.Definition is TupleTypeDefinition tupleType)
+        {
+            foreach (var field in tupleType.Fields)
+            {
+                PopulateReferences(field);
+            }
+        }
     }
 
     private RuntimeMetadata PopulateReferences()

@@ -6,7 +6,7 @@ public class Solution
 
     public ulong JobId { get; set; }
 
-    public string Author { get; set; } = null!;
+    public Address Author { get; set; } = null!;
 
     public string PatchUrl { get; set; } = null!;
 
@@ -18,7 +18,7 @@ public class Solution
         {
             SolutionId = reader.ReadUInt64(),
             JobId = reader.ReadUInt64(),
-            Author = reader.ReadAddressAsId(),
+            Author = reader.ReadAddress(),
             PatchUrl = reader.ReadString()!,
             Attempt = Attempt.Parse(reader)
         };

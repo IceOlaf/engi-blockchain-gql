@@ -9,18 +9,35 @@ public class TestAttempt : IScaleSerializable
 
     public TestResult Result { get; set; }
 
+    public string? FailedResultMessage { get; set; }
+
     public void Serialize(ScaleStreamWriter writer)
     {
         writer.Write(Id);
         writer.Write(Result);
+        
+        if (Result == TestResult.Failed)
+        {
+            writer.Write(FailedResultMessage ?? string.Empty);
+        }
     }
 
     public static TestAttempt Parse(ScaleStreamReader reader)
     {
-        return new()
+        var attempt = new TestAttempt
         {
-            Id = reader.ReadString()!,
-            Result = reader.ReadEnum<TestResult>()
+            Id = reader.ReadString()!
         };
+
+        var testResult = reader.ReadEnum<TestResult>();
+        
+        attempt.Result = testResult;
+
+        if (testResult == TestResult.Failed)
+        {
+            attempt.FailedResultMessage = reader.ReadString();
+        }
+        
+        return attempt;
     }
 }

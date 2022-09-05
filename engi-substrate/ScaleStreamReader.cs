@@ -401,13 +401,11 @@ public class ScaleStreamReader : IDisposable
         return (result, index);
     }
 
-    public string ReadAddressAsId()
+    public Address ReadAddress()
     {
         var bytes = ReadFixedSizeByteArray(32);
 
-        var address = Address.From(bytes);
-
-        return address.Id;
+        return Address.From(bytes);
     }
 
     // helpers

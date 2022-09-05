@@ -1,9 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate.Jobs;
 
-public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializable
+public class CreateJobArguments : IExtrinsic
 {
+    public string PalletName => ChainKeys.Jobs.Name;
+
+    public string CallName => ChainKeys.Jobs.Calls.CreateJob;
+
     // TODO: create validation for U128
     [Range(500, ulong.MaxValue)]
     public ulong Funding { get; init; }
@@ -27,7 +32,22 @@ public class CreateJobArguments : SignedExtrinsicArgumentsBase, IScaleSerializab
 
     [Required]
     public FilesRequirement FilesRequirement { get; init; } = null!;
-    
+
+    public IEnumerable<Func<Field, PortableType, PortableType?, bool>> GetVariantAssertions()
+    {
+        return new Func<Field, PortableType, PortableType?, bool>[]
+        {
+            (field, type, innerType) => field.Name == "funding" && type.Definition is CompactTypeDefinition && innerType!.FullName == "u128",
+            (field, type, _) => field.Name == "language" && type.Definition is VariantTypeDefinition v && v.Variants.Count == 1,
+            (field, _, _) => field.Name == "repository_url",
+            (field, _, _) => field.Name == "branch_name",
+            (field, _, _) => field.Name == "commit_hash",
+            (field, _, innerType) => field.Name == "tests" && innerType!.Definition is CompositeTypeDefinition c && c.Fields.Count == 3,
+            (field, _, _) => field.Name == "name",
+            (field, type, _) => field.Name == "files_requirement" && type.Definition is TupleTypeDefinition t && t.Fields.Length == 3
+        };
+    }
+
     public void Serialize(ScaleStreamWriter writer)
     {
         writer.WriteCompact(Funding);

@@ -3,7 +3,7 @@ using SimpleBase;
 
 namespace Engi.Substrate;
 
-public class Address
+public class Address : IScaleSerializable
 {
     public string Id { get; set; }
 
@@ -15,9 +15,22 @@ public class Address
         Raw = raw;
     }
 
+    public void Serialize(ScaleStreamWriter writer)
+    {
+        writer.Write(Raw);
+    }
+
     public static Address From(byte[] raw) => new(Encode(raw), raw);
 
-    public static Address Parse(string id) => new(id, Decode(id));
+    public static Address Parse(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            throw new ArgumentNullException(nameof(id));
+        }
+
+        return new(id, Decode(id));
+    }
 
     public static bool TryParse(string id, out Address? address)
     {
@@ -39,7 +52,9 @@ public class Address
 
         return From(raw);
     }
-    
+
+    public static implicit operator Address(string s) => Parse(s);
+
     // helpers
 
     private static byte[] Decode(string address)

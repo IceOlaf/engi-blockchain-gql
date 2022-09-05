@@ -11,8 +11,8 @@ public class TestGraphType : ObjectGraphType<Test>
 
         Field(x => x.Id)
             .Description("The test id.");
-        Field(x => x.Result)
-            .Description("The result of the test.");
+        Field(x => x.AnalysisResult)
+            .Description("The result of the test when the repository was analyzed.");
         Field(x => x.Required)
             .Description("The required result of the test.");
     }

@@ -8,7 +8,7 @@ public class Attempt : IScaleSerializable
     public ulong AttemptId { get; set; }
 
     [Required]
-    public string Attempter { get; set; } = null!;
+    public Address Attempter { get; set; } = null!;
 
     [NotNullOrEmptyCollection]
     public TestAttempt[] Tests { get; set; } = null!;
@@ -25,7 +25,7 @@ public class Attempt : IScaleSerializable
         return new()
         {
             AttemptId = reader.ReadUInt64(),
-            Attempter = reader.ReadAddressAsId(),
+            Attempter = reader.ReadAddress(),
             Tests = reader.ReadList(TestAttempt.Parse)
         };
     }

@@ -30,6 +30,14 @@ public class JobGraphType : ObjectGraphType<Job>
             .Description("The solution to this job, if any.");
         Field(x => x.AttemptCount)
             .Description("The number of attempts for this job.");
+        Field(x => x.SolutionUserCount)
+            .Description("The number of users who have submitted a solution for this job.");
+        Field(x => x.LeadingSolution, nullable: true, type: typeof(SolutionGraphType))
+            .Description("The leading solution for this job.");
+        Field(x => x.CurrentUserSolution, nullable: true, type: typeof(SolutionGraphType))
+            .Description("The solution by the current user, if any.");
+        Field(x => x.AverageProgress, nullable: true, type: typeof(FractionalGraphType))
+            .Description("The average (median) progress of the best solution by each author. If this job has no solutions, this field will be null.");
         Field(x => x.CreatedOn, type: typeof(BlockReferenceGraphType))
             .Description("Information about the block that created this job.");
         Field(x => x.UpdatedOn, type: typeof(BlockReferenceGraphType))

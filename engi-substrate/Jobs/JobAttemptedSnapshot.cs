@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Jobs;
 
-public class JobAttemptedSnapshot
+public class JobAttemptedSnapshot : IBlockSnapshot
 {
     public string Id { get; init; } = null!;
 
@@ -20,7 +20,7 @@ public class JobAttemptedSnapshot
 
         return new()
         {
-            Id = $"JobAttemptedSnapshots/{attemptId:D20}",
+            Id = $"JobAttemptedSnapshots/{attemptId.ToString(StorageFormats.UInt64)}",
             AttemptId = attemptId,
             JobId = (ulong) eventData[1],
             Attempter = (string) eventData[2],

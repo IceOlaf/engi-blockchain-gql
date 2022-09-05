@@ -2,7 +2,9 @@
 
 public class PalletCallMetadata
 {
-    public TType Type { get; set; } = null!;
+    public TType Type { get; init; } = null!;
+
+    public CallVariant[] Variants { get; set; } = null!;
 
     public static PalletCallMetadata Parse(ScaleStreamReader stream)
     {

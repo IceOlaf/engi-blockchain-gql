@@ -249,7 +249,7 @@ public static class ScaleStreamReaderExtensions
     {
         var fieldType = meta.TypesById[field.Type];
 
-        if (field.TypeName == "T::AccountId")
+        if (fieldType.FullName == "sp_core:crypto:AccountId32")
         {
             byte[] address = reader.ReadFixedSizeByteArray(32);
 

@@ -77,7 +77,7 @@ public class ExpandedBlock
 
     public static string KeyFrom(ulong number)
     {
-        return $"Blocks/{number:D20}";
+        return $"Blocks/{number.ToString(StorageFormats.UInt64)}";
     }
 
     public static implicit operator BlockReference(ExpandedBlock block)

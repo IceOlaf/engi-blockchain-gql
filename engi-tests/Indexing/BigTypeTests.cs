@@ -2,18 +2,12 @@
 using System.Threading.Tasks;
 using Engi.Substrate.Jobs;
 using Raven.Client.Documents;
-using Raven.TestDriver;
 using Xunit;
 
 namespace Engi.Substrate.Indexing;
 
-public class BigTypeTests : RavenTestDriver
+public class BigTypeTests : EngiRavenTestDriver
 {
-    protected override void PreInitialize(IDocumentStore store)
-    {
-        store.Conventions.Serialization = new EngiSerializationConventions();
-    }
-
     protected override void SetupDatabase(IDocumentStore store)
     {
         store.ExecuteIndex(new JobIndex());
@@ -53,9 +47,11 @@ public class BigTypeTests : RavenTestDriver
 
         WaitForIndexing(store);
 
+        WaitForUserToContinueTheTest(store);
+
         using (var session = store.OpenAsyncSession())
         {
-            string threshold = 15.ToString("D40");
+            string threshold = 15.ToString(StorageFormats.UInt128);
 
             var result = await session.Advanced
                 .AsyncDocumentQuery<JobIndex.Result, JobIndex>()

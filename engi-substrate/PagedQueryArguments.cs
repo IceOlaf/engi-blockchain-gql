@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Engi.Substrate.Server.Types;
+namespace Engi.Substrate;
 
 public class PagedQueryArguments
 {

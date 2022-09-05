@@ -1,8 +1,9 @@
 ﻿using Engi.Substrate.Jobs;
+using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;
 
-public class AttemptJobArgumentsGraphType : SignedExtrinsicArgumentsGraphTypeBase<AttemptJobArguments>
+public class AttemptJobArgumentsGraphType : InputObjectGraphType<AttemptJobArguments>
 {
     public AttemptJobArgumentsGraphType()
     {

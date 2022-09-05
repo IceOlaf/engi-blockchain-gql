@@ -30,7 +30,7 @@ public class PalletMetadata
         {
             Name = stream.ReadString()!,
             Storage = stream.ReadOptional(PalletStorageMetadata.Parse),
-            Calls = stream.ReadOptional(PalletCallMetadata.Parse)!,
+            Calls = stream.ReadOptional(PalletCallMetadata.Parse),
             Events = stream.ReadOptional(PalletEventMetadata.Parse),
             Constants = stream.ReadList(PalletConstantMetadata.Parse),
             Errors = stream.ReadOptional(PalletErrorMetadata.Parse),

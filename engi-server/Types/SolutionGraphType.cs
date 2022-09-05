@@ -14,7 +14,7 @@ public class SolutionGraphType : ObjectGraphType<Solution>
             .Description("The id of the solution on the chain.");
         Field(x => x.JobId, type: typeof(IdGraphType))
             .Description("The id of the job related to this solution.");
-        Field(x => x.Author)
+        Field(x => x.Author, type: typeof(AddressGraphType))
             .Description("The address of the solution author.");
         Field(x => x.PatchUrl)
             .Description("The URL of the patch.");

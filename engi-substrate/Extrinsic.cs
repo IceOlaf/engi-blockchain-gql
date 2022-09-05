@@ -77,10 +77,9 @@ public class Extrinsic
             };
         }
 
-        int moduleIndex = reader.ReadByte();
-        int callIndex = reader.ReadByte();
+        var index = PalletCallIndex.Parse(reader);
 
-        var (pallet, call) = meta.FindPalletCallVariant(moduleIndex, callIndex);
+        var (pallet, call) = meta.FindPalletCallVariant(index);
 
         var fields = new Dictionary<string, object>();
 
@@ -89,7 +88,7 @@ public class Extrinsic
             if (string.IsNullOrEmpty(field.Name))
             {
                 throw new NotImplementedException(
-                    $"Field without a name in module={moduleIndex} call={callIndex}");
+                    $"Field without a name in {index}");
             }
 
             fields[field.Name] = reader.Deserialize(field, meta);

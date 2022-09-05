@@ -2,13 +2,13 @@
 
 namespace Engi.Substrate.Jobs;
 
-public class JobSnapshot
+public class JobSnapshot : IBlockSnapshot
 { 
     public string Id { get; init; } = null!;
 
     public ulong JobId { get; init; }
 
-    public string Creator { get; init; } = null!;
+    public Address Creator { get; init; } = null!;
 
     public BigInteger Funding { get; init; }
 
@@ -32,7 +32,7 @@ public class JobSnapshot
 
     public static string KeyFrom(ulong jobId, ulong blockNumber)
     {
-        return $"JobSnapshots/{jobId:D20}/{blockNumber:D20}";
+        return $"JobSnapshots/{jobId.ToString(StorageFormats.UInt64)}/{blockNumber.ToString(StorageFormats.UInt64)}";
     }
 
     public static JobSnapshot Parse(ScaleStreamReader reader, BlockReference blockReference)
@@ -43,7 +43,7 @@ public class JobSnapshot
         {
             Id = KeyFrom(jobId, blockReference.Number),
             JobId = jobId,
-            Creator = reader.ReadAddressAsId(),
+            Creator = reader.ReadAddress(),
             Funding = reader.ReadUInt128(),
             Repository = Repository.Parse(reader),
             Language = reader.ReadEnum<Language>(),
@@ -57,6 +57,4 @@ public class JobSnapshot
             SnapshotOn = blockReference
         };
     }
-
-   
 }

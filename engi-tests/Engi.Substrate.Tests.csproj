@@ -29,16 +29,4 @@
     <ProjectReference Include="..\engi-substrate\Engi.Substrate.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Runtime\TestData\metadata_v14.hex">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Runtime\TestData\metadata_v14.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Runtime\TestData\metadata_v14_types.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

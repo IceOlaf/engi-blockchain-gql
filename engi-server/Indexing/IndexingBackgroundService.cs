@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Reactive.Linq;
+using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
@@ -181,7 +182,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         block.Fill(signedBlock!.Block, events, meta);
         
-        // TODO: make this query in one storage call
+        // TODO: make this query in one storage call if possible?
 
         foreach (var indexable in GetIndexables(block))
         {
@@ -196,6 +197,27 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             else if (indexable is AttemptIndexable attemptIndexable)
             {
                 results.Add(JobAttemptedSnapshot.From(attemptIndexable.Data, block));
+            }
+            else if (indexable is SolutionIndexable solutionIndexable)
+            {
+                // some solutions have been updated, fetch and store snapshots of those
+                // that belong to the solution from this solve_job invocation
+
+                var storageKeys = solutionIndexable.TestIds
+                    .Select(testId => StorageKeys.Jobs.ForTestSolution(solutionIndexable.JobId, testId))
+                    .ToArray();
+
+                var solutions = await client.QueryStorageAtAsync(storageKeys, Solution.Parse, block.Hash);
+
+                foreach (var solution in solutions.Values
+                    .Where(x => x != null && x.SolutionId == solutionIndexable.SolutionId)
+                    // solutions are copies to each test so can be dupes
+                    .DistinctBy(x => x!.SolutionId))
+                {
+                    var solutionSnapshot = new SolutionSnapshot(solution!, block);
+
+                    results.Add(solutionSnapshot);
+                }
             }
         }
 
@@ -216,7 +238,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         ExpandedBlock block,
         SubstrateClient client)
     {
-        string snapshotStorageKey = StorageKeys.ForJobId(jobId);
+        string snapshotStorageKey = StorageKeys.Jobs.ForJobId(jobId);
 
         return (await client.GetStateStorageAsync(snapshotStorageKey,
             reader => JobSnapshot.Parse(reader, block), block.Hash!))!;
@@ -226,25 +248,23 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     {
         foreach (var extrinsic in block.Extrinsics.Where(x => x.IsSuccessful))
         {
-            if (extrinsic.PalletName == ChainKeys.Pallets.Jobs.Name)
+            if (extrinsic.PalletName == ChainKeys.Jobs.Name)
             {
                 if (extrinsic.CallName == "create_job")
                 {
                     var jobIdGeneratedEvent = extrinsic.Events
-                        .Find(ChainKeys.Pallets.Jobs.Name, ChainKeys.Pallets.Jobs.JobIdGeneratedEvent);
-
-                    ulong jobId = (ulong)jobIdGeneratedEvent.Data;
+                        .Find(ChainKeys.Jobs.Name, ChainKeys.Jobs.Events.JobIdGenerated);
 
                     yield return new JobIndexable
                     {
-                        JobId = jobId,
+                        JobId = (ulong)jobIdGeneratedEvent.Data,
                         IsCreation = true
                     };
                 }
                 else if (extrinsic.CallName == "attempt_job")
                 {
                     var jobAttemptedEvent = extrinsic.Events
-                        .Find(ChainKeys.Pallets.Jobs.Name, ChainKeys.Pallets.Jobs.JobAttemptedEvent);
+                        .Find(ChainKeys.Jobs.Name, ChainKeys.Jobs.Events.JobAttempted);
 
                     var data = (Dictionary<int, object>) jobAttemptedEvent.Data;
 
@@ -263,17 +283,22 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 if (call?.ContainsKey("Jobs") == true)
                 {
-                    var jobs = (Dictionary<string, object>)call["Jobs"];
+                    var jobs = (Dictionary<string, object>) call["Jobs"];
 
                     if (jobs.ContainsKey("solve_job"))
                     {
-                        var solveJob = (Dictionary<string, object>)jobs["solve_job"];
+                        var solveJob = (Dictionary<string, object>) jobs["solve_job"];
+                        var attempt = (Dictionary<string, object>) solveJob["attempt"];
+                        var tests = (object[]) attempt["tests"];
 
-                        ulong jobId = (ulong) solveJob["job"];
-
-                        yield return new JobIndexable
+                        yield return new SolutionIndexable
                         {
-                            JobId = jobId
+                            JobId = (ulong) solveJob["job"],
+                            SolutionId = (ulong) solveJob["id"],
+                            TestIds = tests
+                                .Cast<Dictionary<string, object>>()
+                                .Select(test => Encoding.UTF8.GetString(Hex.GetBytes0X((string) test["id"])))
+                                .ToArray()
                         };
                     }
                 }
@@ -345,5 +370,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     class AttemptIndexable : Indexable
     {
         public Dictionary<int, object> Data { get; init; } = null!;
+    }
+
+    class SolutionIndexable : Indexable
+    {
+        public ulong JobId { get; init; }
+
+        public ulong SolutionId { get; init; }
+
+        public string[] TestIds { get; init; } = null!;
     }
 }

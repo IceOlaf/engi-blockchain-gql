@@ -1,5 +1,4 @@
-﻿using Engi.Substrate.Indexing;
-using Engi.Substrate.Jobs;
+﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
 using Engi.Substrate.Server.Types.Validation;
@@ -7,7 +6,7 @@ using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
-using Raven.Client.Documents.Queries;
+using Raven.Client.Documents.Queries.Suggestions;
 using Raven.Client.Documents.Session;
 using Sentry;
 
@@ -32,7 +31,7 @@ public class EngiQuery : ObjectGraphType
             .Argument<NonNullGraphType<ULongGraphType>>("id")
             .ResolveAsync(GetJobAsync);
 
-        Field<JobsPagedResult>("jobs")
+        Field<JobsQueryResultGraphType>("jobs")
             .Argument<JobsQueryArgumentsGraphType>("query")
             .ResolveAsync(GetJobsAsync);
 
@@ -126,78 +125,51 @@ public class EngiQuery : ObjectGraphType
     {
         await using var scope = serviceProvider.CreateAsyncScope();
 
-        var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query")
-            ?? new JobsQueryArguments();
+        var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var query = session
-            .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>();
+            .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>()
+            .FilterBy(args, out var stats);
 
-        if (args.Creator != null)
+        Lazy<Task<Dictionary<string, SuggestionResult>>>? suggestionsLazy = null;
+        
+        if (!string.IsNullOrEmpty(args?.Search))
         {
-            query = query
-                .WhereEquals(x => x.Creator, args.Creator);
+            suggestionsLazy = session
+                .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>()
+                .SuggestUsing(x => x
+                    .ByField(r => r.Query, args.Search)
+                    .WithOptions(new()
+                    {
+                        SortMode = SuggestionSortMode.Popularity
+                    }))
+                .ExecuteLazyAsync();
         }
 
-        if (args.Status.HasValue)
+        var resultsLazy = query
+            .Include(x => x.SolutionIds)
+            .LazilyAsync();
+
+        await session.Advanced.Eagerly
+            .ExecuteAllPendingLazyOperationsAsync();
+
+        var solutionsByJobId = resultsLazy.Value.Result
+            .ToDictionary(x => x.JobId, x => session.LoadAsync<SolutionSnapshot>(x.SolutionIds).Result.Values);
+
+        foreach (var job in resultsLazy.Value.Result)
         {
-            query = query
-                .WhereEquals(x => x.Status, args.Status.Value);
+            var solutions = solutionsByJobId[job.JobId];
+
+            job.PopulateSolutions(null, solutions);
         }
 
-        if (!string.IsNullOrWhiteSpace(args.Search))
+        return new JobsQueryResult
         {
-            query = query
-                .Search(x => x.Query, $"{args.Search}*", @operator: SearchOperator.And);
-        }
-
-        if (args.Language.HasValue)
-        {
-            query = query
-                .WhereIn(x => x.Language, new [] { args.Language.Value });
-        }
-
-        if (args.MinFunding != null && args.MaxFunding != null)
-        {
-            query = query
-                .WhereBetween(x => x.Funding, 
-                    args.MinFunding.Value.ToString("D40"), args.MaxFunding.Value.ToString("D40"));
-        }
-        else if (args.MinFunding != null)
-        {
-            query = query
-                .WhereGreaterThanOrEqual(x => x.Funding, args.MinFunding.Value.ToString("D40"));
-        }
-        else if (args.MaxFunding != null)
-        {
-            query = query
-                .WhereLessThanOrEqual(x => x.Funding, args.MaxFunding.Value.ToString("D40"));
-        }
-
-        switch (args.OrderByProperty)
-        {
-            case JobsOrderByProperty.CreatedOn:
-                query = args.OrderByDirection == OrderByDirection.Asc
-                    ? query.OrderBy(x => x.CreatedOn.DateTime)
-                    : query.OrderByDescending(x => x.CreatedOn.DateTime);
-                break;
-
-            case JobsOrderByProperty.Funding:
-                query = args.OrderByDirection == OrderByDirection.Asc
-                    ? query.OrderBy(x => x.Funding)
-                    : query.OrderByDescending(x => x.Funding);
-                break;
-        }
-
-        var results = await query
-            .Statistics(out var stats)
-            .Skip(args.Skip)
-            .Take(args.Limit)
-            .OfType<Job>()
-            .ToArrayAsync();
-
-        return new PagedResult<Job>(results, stats.LongTotalResults);
+            Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.LongTotalResults),
+            Suggestions = suggestionsLazy?.Value.Result.Values.First().Suggestions.ToArray()
+        };
     }
 
     private async Task<object?> GetTransactionsAsync(IResolveFieldContext context)

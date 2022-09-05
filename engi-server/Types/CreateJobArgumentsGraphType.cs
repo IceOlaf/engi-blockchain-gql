@@ -3,7 +3,7 @@ using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;
 
-public class CreateJobArgumentsGraphType : SignedExtrinsicArgumentsGraphTypeBase<CreateJobArguments>
+public class CreateJobArgumentsGraphType : InputObjectGraphType<CreateJobArguments>
 {
     public CreateJobArgumentsGraphType()
     {

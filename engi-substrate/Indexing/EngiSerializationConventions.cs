@@ -13,6 +13,7 @@ public class EngiSerializationConventions : NewtonsoftJsonSerializationConventio
 
     private static void CustomizeSerializer(JsonSerializer serializer)
     {
+        serializer.Converters.Add(new AddressJsonConverter());
         serializer.Converters.Add(new BigIntegerJsonConverter());
         serializer.Converters.Add(new InlineByteArrayJsonConvert());
         serializer.Converters.Add(new UInt64JsonConverter());

@@ -9,6 +9,8 @@ namespace Engi.Substrate.Server.Types;
 
 public class EngiMutations : ObjectGraphType
 {
+    private const byte DefaultTip = 1;
+
     private readonly IServiceProvider serviceProvider;
 
     public EngiMutations(IServiceProvider serviceProvider)
@@ -37,7 +39,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<AttemptJobArguments>("args");
         var chainState = await GetLatestChainState();
 
-        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
+        var sender = Keypair.FromPkcs8((string?)null ?? throw new NotImplementedException());
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
@@ -50,10 +52,12 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
+                nameof(args), nameof(sender), "Account not found.");
         }
 
-        return await client.AttemptJobAsync(chainState, sender, account, args);
+        return await client.AuthorSubmitExtrinsicAsync(
+            new SignedExtrinsicArguments<AttemptJobArguments>(
+                sender, args, account, ExtrinsicEra.Immortal, chainState, DefaultTip));
     }
 
     private async Task<object?> BalanceTransferAsync(IResolveFieldContext context)
@@ -61,8 +65,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
         var chainState = await GetLatestChainState();
 
-        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
-        var dest = Address.Parse(args.RecipientAddress);
+        var sender = Keypair.FromPkcs8((string?)null ?? throw new NotImplementedException());
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
@@ -75,11 +78,12 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
+                nameof(args), nameof(sender), "Account not found.");
         }
 
-        return await client.BalanceTransferAsync(
-            chainState, sender, account, dest, args.Amount, ExtrinsicEra.Immortal, args.Tip);
+        return await client.AuthorSubmitExtrinsicAsync(
+            new SignedExtrinsicArguments<BalanceTransferArguments>(
+                sender, args, account, ExtrinsicEra.Immortal, chainState, DefaultTip));
     }
 
     private async Task<object?> CreateJobAsync(IResolveFieldContext context)
@@ -87,7 +91,7 @@ public class EngiMutations : ObjectGraphType
         var args = context.GetValidatedArgument<CreateJobArguments>("job");
         var chainState = await GetLatestChainState();
 
-        var sender = Keypair.FromPkcs8(args.SenderKeypairPkcs8);
+        var sender = Keypair.FromPkcs8((string?)null ?? throw new NotImplementedException());
 
         var client = serviceProvider.GetRequiredService<SubstrateClient>();
 
@@ -100,10 +104,12 @@ public class EngiMutations : ObjectGraphType
         catch (KeyNotFoundException)
         {
             throw new ArgumentValidationException(
-                nameof(args), nameof(args.SenderKeypairPkcs8), "Account not found.");
+                nameof(args), nameof(sender), "Account not found.");
         }
 
-        return await client.CreateJobAsync(chainState, sender, account, args);
+        return await client.AuthorSubmitExtrinsicAsync(
+            new SignedExtrinsicArguments<CreateJobArguments>(
+                sender, args, account, ExtrinsicEra.Immortal, chainState, DefaultTip));
     }
 
     private async Task<ChainState> GetLatestChainState()

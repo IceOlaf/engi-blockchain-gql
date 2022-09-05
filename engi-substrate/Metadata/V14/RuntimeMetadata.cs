@@ -92,34 +92,27 @@ public class RuntimeMetadata
         return FindEvent(index[0], index[1]);
     }
 
-    public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(int palletIndex, int callIndex)
+    public (PalletMetadata pallet, CallVariant variant) FindPalletCallVariant(PalletCallIndex index)
     {
-        var pallet = FindPallet(palletIndex);
+        var pallet = FindPallet(index.PalletIndex);
 
         if (pallet.Calls == null)
         {
-            throw new ArgumentException("Pallet does not define any calls.", nameof(palletIndex));
+            throw new ArgumentException("Pallet does not define any calls.", nameof(index));
         }
 
-        var callType = TypesById[pallet.Calls.Type];
+        var variant = pallet.Calls.Variants.SingleOrDefault(x => x.CallIndex.CallIndex == index.CallIndex);
 
-        if (callType.Definition is VariantTypeDefinition variantType)
+        if (variant == null)
         {
-            var variant = variantType.Variants.Find(callIndex);
-
-            if (variant == null)
-            {
-                throw new InvalidOperationException(
-                    $"Variant '{callIndex}' was not found in pallet '{pallet.Name}'.");
-            }
-
-            return (pallet, variant);
+            throw new InvalidOperationException(
+                $"Variant '{index.CallIndex}' was not found in pallet '{pallet.Name}'.");
         }
 
-        throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
+        return (pallet, variant);
     }
 
-    public (PalletMetadata pallet, Variant variant) FindPalletCallVariant(string palletName, string callName)
+    public (PalletMetadata pallet, CallVariant variant) FindPalletCallVariant(string palletName, string callName)
     {
         var pallet = FindPallet(palletName);
 
@@ -128,23 +121,21 @@ public class RuntimeMetadata
             throw new ArgumentException("Pallet does not define any calls.", nameof(palletName));
         }
 
-        var callType = TypesById[pallet.Calls.Type];
-        
-        if (callType.Definition is VariantTypeDefinition variantType)
+        var variant = pallet.Calls.Variants.SingleOrDefault(
+            x => string.Equals(x.Name, callName, StringComparison.OrdinalIgnoreCase));
+
+        if (variant == null)
         {
-            var variant = variantType.Variants.SingleOrDefault(
-                x => string.Equals(x.Name, callName, StringComparison.OrdinalIgnoreCase));
-
-            if (variant == null)
-            {
-                throw new InvalidOperationException(
-                    $"Variant '{callName}' was not found in pallet '{palletName}'.");
-            }
-
-            return (pallet, variant);
+            throw new InvalidOperationException(
+                $"Variant '{callName}' was not found in pallet '{palletName}'.");
         }
 
-        throw new InvalidOperationException($"Call definition is not a variant; type={callType}.");
+        return (pallet, variant);
+    }
+
+    public (PalletMetadata pallet, CallVariant variant) FindPalletCallVariant(IExtrinsic extrinsic)
+    {
+        return FindPalletCallVariant(extrinsic.PalletName, extrinsic.CallName);
     }
 
     public PortableType GetTypeByFullName(string path)
@@ -156,7 +147,7 @@ public class RuntimeMetadata
     }
 
     public void VerifySignature(
-        Variant variant,
+        CallVariant variant,
         params Func<Field, PortableType, PortableType?, bool>[] assertions)
     {
         if (variant == null)
@@ -250,6 +241,12 @@ public class RuntimeMetadata
             if (pallet.Calls != null)
             {
                 PopulateReferences(pallet.Calls.Type);
+
+                var variantTypeDef = (VariantTypeDefinition)pallet.Calls.Type.Reference!.Definition;
+
+                pallet.Calls.Variants = variantTypeDef.Variants
+                    .Select(v => new CallVariant(pallet, v))
+                    .ToArray();
             }
 
             foreach (var constant in pallet.Constants)
@@ -310,7 +307,7 @@ public class RuntimeMetadata
             throw new InvalidDataException("Only know how to parse v14.");
         }
 
-        return new RuntimeMetadata()
+        return new RuntimeMetadata
         {
             MagicNumber = magicNumber,
             Version = version,

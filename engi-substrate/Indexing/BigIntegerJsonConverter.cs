@@ -7,7 +7,7 @@ public class BigIntegerJsonConverter : JsonConverter<BigInteger>
 {
     public override void WriteJson(JsonWriter writer, BigInteger value, JsonSerializer serializer)
     {
-        writer.WriteValue(value.ToString("D40"));
+        writer.WriteValue(value.ToString(StorageFormats.UInt128));
     }
 
     public override BigInteger ReadJson(JsonReader reader, Type objectType, BigInteger existingValue, bool hasExistingValue,

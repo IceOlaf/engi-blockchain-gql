@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Pallets;
 
@@ -120,6 +121,41 @@ public class SubstrateClient
         return parse(reader);
     }
 
+    public async Task<QueryStorageResult> QueryStorageAtAsync(string[] keys, string? blockHash = null)
+    {
+        var @params = new object[] { keys };
+
+        if (blockHash != null)
+        {
+            Array.Resize(ref @params, 2);
+
+            @params[1] = blockHash;
+        }
+
+        var json = await RpcAsync<JsonArray>(ChainKeys.StateQueryStorageAt, @params);
+
+        if (json?.Count > 1)
+        {
+            throw new NotImplementedException($"Expected a single result from {ChainKeys.StateQueryStorageAt}");
+        }
+
+        var firstItem = json![0]!;
+
+        string resultBlockHash = firstItem["block"]!.GetValue<string>();
+
+        var changes = firstItem["changes"]!.AsArray()
+            .ToDictionary(change => (string)change![0]!, change => (string?)change![1]);
+
+        return new(resultBlockHash, changes);
+    }
+
+    public async Task<QueryStorageResult<T>> QueryStorageAtAsync<T>(string[] keys, Func<ScaleStreamReader, T> transform, string? blockHash = null)
+    {
+        var result = await QueryStorageAtAsync(keys, blockHash);
+
+        return result.Transform(transform);
+    }
+
     // chain_
 
     public Task<SignedBlock?> GetChainBlockAsync(string hash) => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock, hash);
@@ -131,23 +167,24 @@ public class SubstrateClient
 
     // author_
 
-    public Task<string> AuthorSubmitExtrinsicAsync(byte[] payload) =>
-        RpcAsync(ChainKeys.AuthorSubmitExtrinsic, Hex.GetString0X(payload));
+    public Task<string> AuthorSubmitExtrinsicAsync<TExtrinsic>(SignedExtrinsicArguments<TExtrinsic> args) 
+        where TExtrinsic : IExtrinsic
+    {
+        var payload = Hex.GetString0X(args.Serialize());
 
+        return RpcAsync(ChainKeys.AuthorSubmitExtrinsic, payload);
+    }
+    
     // composite
 
-    public async Task<AccountInfo> GetSystemAccountAsync(byte[] accountIdBytes)
+    public async Task<AccountInfo> GetSystemAccountAsync(Address address)
     {
-        if (accountIdBytes == null)
+        if (address == null)
         {
-            throw new ArgumentNullException(nameof(accountIdBytes));
+            throw new ArgumentNullException(nameof(address));
         }
 
-        string addressHex = Hex.ConcatGetOXString(
-            StorageKeys.System,
-            StorageKeys.Account,
-            Hashing.Blake2Concat(accountIdBytes)
-        );
+        string addressHex = StorageKeys.System.Account(address);
 
         string? result = await GetStateStorageAsync(addressHex);
 
@@ -161,23 +198,11 @@ public class SubstrateClient
         return AccountInfo.Parse(scale);
     }
 
-    public Task<AccountInfo> GetSystemAccountAsync(Address address)
-    {
-        if (address == null)
-        {
-            throw new ArgumentNullException(nameof(address));
-        }
-
-        return GetSystemAccountAsync(address.Raw);
-    }
-
     public async Task<EventRecord[]> GetSystemEventsAsync(string blockHash, RuntimeMetadata meta)
     {
-        string key = Hex.ConcatGetOXString(StorageKeys.System, StorageKeys.Events);
-
         // if hash not found, it will throw, not return null
 
-        string? result = await GetStateStorageAsync(key, blockHash);
+        string? result = await GetStateStorageAsync(StorageKeys.System.Events, blockHash);
 
         if (result == null)
         {

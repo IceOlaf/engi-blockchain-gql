@@ -66,10 +66,10 @@ public static class JobIndexQueryExtensions
                 .ContainsAny(x => x.SolvedBy, args.SolvedBy);
         }
 
-        if (!string.IsNullOrEmpty(args.RepositoryOrganization))
+        if (args.RepositoryOrganization != null)
         {
             query = query
-                .WhereEquals(x => x.Repository_Organization, args.RepositoryOrganization);
+                .WhereIn(x => x.Repository_Organization, args.RepositoryOrganization);
         }
 
         switch (args.OrderByProperty)

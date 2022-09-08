@@ -21,5 +21,5 @@ public class JobsQueryArguments : OrderedQueryArguments<JobsOrderByProperty>
 
     public string[]? SolvedBy { get; set; }
 
-    public string? RepositoryOrganization { get; set; }
+    public string[]? RepositoryOrganization { get; set; }
 }

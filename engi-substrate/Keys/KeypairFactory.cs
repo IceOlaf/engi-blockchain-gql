@@ -27,7 +27,7 @@ public class KeypairFactory
                     "The mnemonic was treated as raw seed but contains in invalid hex value.");
             }
 
-            if (mnemonic.Length > 64)
+            if (raw.Length > 64)
             {
                 throw new ArgumentException(
                     "The mnemonic was treated as raw seed but exceeds 32 bytes in length.",
@@ -67,7 +67,9 @@ public class KeypairFactory
         {
             // hex strings contain double the length
 
-            byte[] miniSecretOrPrivateKey = Hex.GetBytes(mnemonic.PadLeft(32 * 2));
+            string raw = mnemonic.Substring(2); // remove0 x
+
+            byte[] miniSecretOrPrivateKey = Hex.GetBytes(raw.PadLeft(32 * 2));
 
             return CreateFromSeed(miniSecretOrPrivateKey);
         }

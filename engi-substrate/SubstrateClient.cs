@@ -167,10 +167,10 @@ public class SubstrateClient
 
     // author_
 
-    public Task<string> AuthorSubmitExtrinsicAsync<TExtrinsic>(SignedExtrinsicArguments<TExtrinsic> args) 
+    public Task<string> AuthorSubmitExtrinsicAsync<TExtrinsic>(SignedExtrinsicArguments<TExtrinsic> args, RuntimeMetadata meta) 
         where TExtrinsic : IExtrinsic
     {
-        var payload = Hex.GetString0X(args.Serialize());
+        var payload = Hex.GetString0X(args.Serialize(meta));
 
         return RpcAsync(ChainKeys.AuthorSubmitExtrinsic, payload);
     }

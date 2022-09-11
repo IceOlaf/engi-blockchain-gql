@@ -1,6 +1,6 @@
-﻿namespace Engi.Substrate.Server.Types;
+﻿namespace Engi.Substrate;
 
-public class AccountMetadata
+public class AccountEncoding
 {
     public string[] Content { get; set; } = null!;
 

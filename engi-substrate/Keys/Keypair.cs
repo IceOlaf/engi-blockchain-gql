@@ -1,11 +1,12 @@
 ﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Chaos.NaCl;
 using CryptSharp.Core.Utility;
 
 namespace Engi.Substrate.Keys;
 
-public class Keypair
+public class Keypair : IPublicKey
 {
     public Address Address { get; internal init; } = null!;
 
@@ -20,11 +21,6 @@ public class Keypair
         SR25519.Sign(PublicKey, SecretKey, message, (uint)message.Length, signature);
 
         return signature;
-    }
-
-    public bool Verify(byte[] signature, byte[] message)
-    {
-        return SR25519.Verify(signature, message, (uint)message.Length, PublicKey);
     }
 
     public static Keypair FromPkcs8(byte[] data)
@@ -48,6 +44,14 @@ public class Keypair
         return FromPkcs8(Convert.FromBase64String(data));
     }
 
+    public static Keypair FromPkcs8(byte[] data, X509Certificate2 cert)
+    {
+        byte[] decrypted = cert.GetRSAPrivateKey()!
+            .Decrypt(data, RSAEncryptionPadding.Pkcs1);
+
+        return FromPkcs8(decrypted);
+    }
+
     public byte[] ExportToPkcs8()
     {
         byte[] result = new byte[PKCS8_LENGTH];
@@ -69,6 +73,14 @@ public class Keypair
         RandomNumberGenerator.Fill(xsalsaNonce);
 
         return ExportToPkcs8(passphrase, salt, xsalsaNonce);
+    }
+
+    public byte[] ExportToPkcs8(X509Certificate2 cert)
+    {
+        var pkcs8 = ExportToPkcs8();
+
+        return cert.GetRSAPrivateKey()!
+            .Encrypt(pkcs8, RSAEncryptionPadding.Pkcs1);
     }
 
     /// <summary>

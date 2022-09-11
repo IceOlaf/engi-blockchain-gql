@@ -14,7 +14,7 @@ public class HeaderGraphType : ObjectGraphType<Header>
             .Description("The block's parent hash.");
         Field(x => x.ExtrinsicsRoot);
         Field(x => x.StateRoot);
-        Field(x => x.Digest);
+        Field(x => x.Digest, type: typeof(DigestGraphType));
         Field("Hash", x => x.Hash.Value)
             .Description("The calculated hash.");
     }

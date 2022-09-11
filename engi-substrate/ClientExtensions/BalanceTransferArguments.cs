@@ -6,13 +6,6 @@ namespace Engi.Substrate;
 
 public class BalanceTransferArguments : IExtrinsic
 {
-    private readonly byte addressType;
-
-    public BalanceTransferArguments(RuntimeMetadata meta)
-    {
-        addressType = meta.MultiAddressTypeDefinition.Variants.IndexOf("Id");
-    }
-
     public string PalletName => ChainKeys.Balances.Name;
     public string CallName => ChainKeys.Balances.Calls.Transfer;
 
@@ -22,10 +15,12 @@ public class BalanceTransferArguments : IExtrinsic
     // TODO: validate
     public BigInteger Amount { get; set; }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata meta)
     {
+        var addressType = meta.MultiAddressTypeDefinition.Variants.IndexOf("Id");
+        
         writer.Write(addressType);
-        writer.Write(Destination);
+        writer.Write(Destination, meta);
         writer.WriteCompact(Amount);
     }
 

@@ -33,12 +33,12 @@ public class SolveJobArguments : IExtrinsic
         };
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata meta)
     {
         writer.Write(SolutionId);
         writer.Write(JobId);
-        writer.Write(Author);
+        writer.Write(Author, meta);
         writer.Write(PatchFileUrl);
-        writer.Write(Attempt);
+        writer.Write(Attempt, meta);
     }
 }

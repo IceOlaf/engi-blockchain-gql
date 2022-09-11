@@ -1,13 +1,19 @@
 ﻿using Blake2Core;
+using Engi.Substrate.Keys;
+using Engi.Substrate.Metadata.V14;
 using SimpleBase;
 
 namespace Engi.Substrate;
 
-public class Address : IScaleSerializable
+public class Address : IScaleSerializable, IPublicKey
 {
     public string Id { get; set; }
 
     public byte[] Raw { get; set; }
+
+    byte[] IPublicKey.PublicKey => Raw;
+
+    public override string ToString() => Id;
 
     private Address(string id, byte[] raw)
     {
@@ -15,7 +21,7 @@ public class Address : IScaleSerializable
         Raw = raw;
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata _)
     {
         writer.Write(Raw);
     }

@@ -4,13 +4,17 @@ namespace Engi.Substrate.Server.Types;
 
 public class EngiSubscriptions : ObjectGraphType
 {
-    public EngiSubscriptions(IServiceProvider serviceProvider)
+    public EngiSubscriptions()
     {
-        var newHeadObserver = serviceProvider.GetServices<IChainObserver>()
-            .OfType<NewHeadChainObserver>()
-            .Single();
-
         Field<HeaderGraphType>("newFinalizedHead")
-            .ResolveStream(_ => newHeadObserver.FinalizedHeaders);
+            .ResolveStream(context =>
+            {
+                var newHeadObserver = context.RequestServices!
+                    .GetServices<IChainObserver>()
+                    .OfType<NewHeadChainObserver>()
+                    .Single();
+
+                return newHeadObserver.FinalizedHeaders;
+            });
     }
 }

@@ -14,11 +14,9 @@ namespace Engi.Substrate.Server;
 
 public class EngiQuery : ObjectGraphType
 {
-    private readonly IServiceProvider serviceProvider;
-
-    public EngiQuery(IServiceProvider serviceProvider)
+    public EngiQuery()
     {
-        this.serviceProvider = serviceProvider;
+        this.AuthorizeWithPolicy(PolicyNames.Authenticated);
 
         Field<AccountInfoGraphType>("account")
             .Argument<NonNullGraphType<StringGraphType>>("id")
@@ -42,7 +40,7 @@ public class EngiQuery : ObjectGraphType
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)
     {
-        await using var scope = serviceProvider.CreateAsyncScope();
+        await using var scope = context.RequestServices!.CreateAsyncScope();
 
         var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
@@ -60,9 +58,9 @@ public class EngiQuery : ObjectGraphType
         }
     }
 
-    private async Task<object?> GetHealthAsync(IResolveFieldContext _)
+    private async Task<object?> GetHealthAsync(IResolveFieldContext context)
     {
-        using var scope = serviceProvider.CreateScope();
+        using var scope = context.RequestServices!.CreateScope();
 
         var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
         var sentry = scope.ServiceProvider.GetRequiredService<IHub>();
@@ -105,7 +103,7 @@ public class EngiQuery : ObjectGraphType
     {
         ulong jobId = context.GetArgument<ulong>("id");
 
-        await using var scope = serviceProvider.CreateAsyncScope();
+        await using var scope = context.RequestServices!.CreateAsyncScope();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
@@ -123,7 +121,7 @@ public class EngiQuery : ObjectGraphType
 
     private async Task<object?> GetJobsAsync(IResolveFieldContext context)
     {
-        await using var scope = serviceProvider.CreateAsyncScope();
+        await using var scope = context.RequestServices!.CreateAsyncScope();
 
         var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query");
 
@@ -174,7 +172,7 @@ public class EngiQuery : ObjectGraphType
 
     private async Task<object?> GetTransactionsAsync(IResolveFieldContext context)
     {
-        await using var scope = serviceProvider.CreateAsyncScope();
+        await using var scope = context.RequestServices!.CreateAsyncScope();
 
         var args = context.GetValidatedArgument<TransactionsPagedQueryArguments>("query");
 

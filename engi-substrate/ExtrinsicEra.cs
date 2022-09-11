@@ -1,4 +1,6 @@
-﻿namespace Engi.Substrate;
+﻿using Engi.Substrate.Metadata.V14;
+
+namespace Engi.Substrate;
 
 public class ExtrinsicEra : IScaleSerializable, IScaleCalculateLength
 {
@@ -56,7 +58,7 @@ public class ExtrinsicEra : IScaleSerializable, IScaleCalculateLength
         return new ExtrinsicEra(period, phase);
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata _)
     {
         if (IsMortal == false)
         {

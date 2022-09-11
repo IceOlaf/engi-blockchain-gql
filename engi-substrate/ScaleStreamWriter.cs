@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Text;
+using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate;
 
@@ -93,9 +94,9 @@ public class ScaleStreamWriter : IDisposable
         stream.Write(bytes);
     }
 
-    public void Write(IScaleSerializable serializable)
+    public void Write(IScaleSerializable serializable, RuntimeMetadata meta)
     {
-        serializable.Serialize(this);
+        serializable.Serialize(this, meta);
     }
 
     public void Write<T>(IList<T> items, Action<ScaleStreamWriter, T> writeItemFunc)
@@ -118,13 +119,13 @@ public class ScaleStreamWriter : IDisposable
         }
     }
 
-    public void Write(IScaleSerializable[] items)
+    public void Write(IScaleSerializable[] items, RuntimeMetadata meta)
     {
         WriteCompact(items.Length);
 
         foreach (var item in items)
         {
-            Write(item);
+            Write(item, meta);
         }
     }
 

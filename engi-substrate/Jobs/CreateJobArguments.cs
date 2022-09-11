@@ -48,15 +48,15 @@ public class CreateJobArguments : IExtrinsic
         };
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata meta)
     {
         writer.WriteCompact(Funding);
         writer.Write(Language);
         writer.Write(RepositoryUrl);
         writer.Write(BranchName);
         writer.Write(CommitHash);
-        writer.Write(Tests);
+        writer.Write(Tests, meta);
         writer.Write(Name);
-        writer.Write(FilesRequirement);
+        writer.Write(FilesRequirement, meta);
     }
 }

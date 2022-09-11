@@ -6,8 +6,13 @@ public class AddressGraphType : ScalarGraphType
 {
     public override object? ParseValue(object? value)
     {
-        var address = (Address?)value;
+        string? s = (string?)value;
 
-        return address?.Id;
+        if (s == null)
+        {
+            return null;
+        }
+
+        return Address.Parse(s);
     }
 }

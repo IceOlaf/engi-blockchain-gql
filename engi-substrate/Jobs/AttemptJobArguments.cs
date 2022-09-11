@@ -23,7 +23,7 @@ public class AttemptJobArguments : IExtrinsic
         };
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata _)
     {
         writer.Write(JobId);
         writer.Write(SubmissionPatchFileUrl);

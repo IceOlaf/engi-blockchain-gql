@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Types;
+﻿namespace Engi.Substrate.Jobs;
 
 public enum JobsOrderByProperty
 {

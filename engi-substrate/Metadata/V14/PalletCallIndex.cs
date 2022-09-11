@@ -11,7 +11,7 @@ public class PalletCallIndex : IScaleSerializable
         return $"pallet index={PalletIndex}; call index={CallIndex}";
     }
 
-    public void Serialize(ScaleStreamWriter writer)
+    public void Serialize(ScaleStreamWriter writer, RuntimeMetadata _)
     {
         writer.Write(PalletIndex);
         writer.Write(CallIndex);

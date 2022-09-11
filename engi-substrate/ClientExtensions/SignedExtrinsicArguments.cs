@@ -18,7 +18,7 @@ public class SignedExtrinsicArguments<TExtrinsic> : IScaleSerializable where TEx
     {
         CallIndex = extrinsic.VerifySignature(chainState.Metadata);
         Extrinsic = extrinsic;
-        Payload = extrinsic.Serialize();
+        Payload = extrinsic.Serialize(chainState.Metadata);
         Era = era;
         AccountNonce = accountInfo.Nonce;
         Tip = tip;
@@ -53,11 +53,11 @@ public class SignedExtrinsicArguments<TExtrinsic> : IScaleSerializable where TEx
 
     public Keypair Sender { get; }
 
-    public virtual void Serialize(ScaleStreamWriter writer)
+    public virtual void Serialize(ScaleStreamWriter writer, RuntimeMetadata meta)
     {
-        var methodCall = SerializeMethodCall();
+        var methodCall = SerializeMethodCall(meta);
 
-        byte[] signature = CreateSignature();
+        byte[] signature = CreateSignature(meta);
 
         int payloadLength = 1 // version
                             + 1 // addressType
@@ -72,31 +72,31 @@ public class SignedExtrinsicArguments<TExtrinsic> : IScaleSerializable where TEx
         writer.WriteCompact((ulong)payloadLength);
         writer.Write((byte)(ExtrinsicVersion + SIGNED_EXTRINSIC));
         writer.Write(addressType);
-        writer.Write(Sender.Address);
+        writer.Write(Sender.Address, meta);
         writer.Write((byte)1); // signature type
         writer.Write(signature);
-        writer.Write(Era);
+        writer.Write(Era, meta);
         writer.WriteCompact(AccountNonce);
         writer.WriteCompact(Tip);
         writer.Write(methodCall);
     }
 
-    private byte[] SerializeMethodCall()
+    private byte[] SerializeMethodCall(RuntimeMetadata meta)
     {
         using var writer = new ScaleStreamWriter();
 
-        writer.Write(CallIndex);
+        writer.Write(CallIndex, meta);
         writer.Write(Payload);
 
         return writer.GetBytes();
     }
-    private byte[] CreateSignature()
+    private byte[] CreateSignature(RuntimeMetadata meta)
     {
         using var writer = new ScaleStreamWriter();
 
-        writer.Write(CallIndex);
+        writer.Write(CallIndex, meta);
         writer.Write(Payload);
-        writer.Write(Era);
+        writer.Write(Era, meta);
         writer.WriteCompact(AccountNonce);
         writer.WriteCompact(Tip);
         writer.Write(RuntimeVersion.SpecVersion);

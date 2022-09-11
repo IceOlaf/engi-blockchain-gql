@@ -1,9 +1,15 @@
 ﻿using System.Reactive.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Encodings;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
 using Raven.Client.Documents;
 
 namespace Engi.Substrate.Playground;
@@ -25,7 +31,49 @@ public static class Program
 
     public static async Task Main()
     {
+    }
 
+    private static async Task EncryptKeypairWithEngiPublicKey(Keypair keypair)
+    {
+        var http = new HttpClient();
+
+        var engiPublicKeyData = await http.GetByteArrayAsync("http://localhost:5000/api/engi/public-key");
+
+        var publicKeyParameters = PublicKeyFactory.CreateKey(engiPublicKeyData);
+
+        var e = new Pkcs1Encoding(new RsaEngine());
+
+        e.Init(true, publicKeyParameters);
+
+        var keypairPkcs8 = keypair.ExportToPkcs8();
+
+        var encrypted = e.ProcessBlock(keypairPkcs8, 0, keypairPkcs8.Length);
+
+        Console.WriteLine(Convert.ToBase64String(encrypted));
+
+        //var rsa = new RSACryptoServiceProvider();
+        //rsa.ImportRSAPublicKey();
+        
+        //var key = new RSACryptoServiceProvider(publicKeyParameters);
+    }
+
+    private static void CreateLoginPayload(Keypair keypair)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        string payload = $"{keypair.Address.Id}|{now.ToUnixTimeMilliseconds()}";
+
+        var signature = keypair.Sign(Encoding.UTF8.GetBytes(payload));
+
+        Console.WriteLine($@"
+args: {{
+    address: ""{keypair.Address.Id}"",
+    signedOn: ""{now.UtcDateTime.ToString("o")}"",
+    signedRequestHex: ""{Hex.GetString0X(signature)}""
+}}
+");
+
+        return;
     }
 
     private static async Task JobWorkflowTestCaseAsync()
@@ -164,11 +212,11 @@ public static class Program
             mutateTests(callExtrinsic.Attempt.Tests);
         }
 
-        var args = new SudoCallArguments(callExtrinsic, chainState.Metadata);
+        var args = new SudoCallArguments(callExtrinsic);
 
         var result = await client.AuthorSubmitExtrinsicAsync(
             new SignedExtrinsicArguments<SudoCallArguments>(
-                AliceKeyPair, args, account, ExtrinsicEra.Immortal, chainState, 0));
+                AliceKeyPair, args, account, ExtrinsicEra.Immortal, chainState, 0), chainState.Metadata);
 
         return;
     }
@@ -202,7 +250,8 @@ public static class Program
         };
 
         string result = await client.AuthorSubmitExtrinsicAsync(
-            new SignedExtrinsicArguments<AttemptJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0));
+            new SignedExtrinsicArguments<AttemptJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0), 
+            chainState.Metadata);
         
         return;
     }
@@ -240,7 +289,8 @@ public static class Program
         };
 
         await client.AuthorSubmitExtrinsicAsync(
-            new SignedExtrinsicArguments<CreateJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0));
+            new SignedExtrinsicArguments<CreateJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0),
+            chainState.Metadata);
 
         return; // set breakpoint here
     }

@@ -56,8 +56,8 @@ builder.Services
         opts.JsonSerializerOptions.Converters.Add(new InputsJsonConverter());
     });
 
-builder.Services.Configure<ApiOptions>(
-    builder.Configuration.GetRequiredSection("Api"));
+builder.Services.Configure<ApplicationOptions>(
+    builder.Configuration.GetRequiredSection("Application"));
 builder.Services.Configure<EngiOptions>(
     builder.Configuration.GetRequiredSection("Engi"));
 

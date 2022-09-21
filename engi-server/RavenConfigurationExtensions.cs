@@ -17,7 +17,7 @@ public static class RavenConfigurationExtensions
 
         var store = new DocumentStore
         {
-            Urls = options.Urls,
+            Urls = options.GetParsedUrls(),
             Database = options.Database,
             Certificate = string.IsNullOrEmpty(options.Certificate) 
                 ? null : new X509Certificate2(Convert.FromBase64String(options.Certificate))

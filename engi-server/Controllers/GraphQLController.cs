@@ -18,13 +18,13 @@ public class GraphQLController : ControllerBase
     private readonly IDocumentExecuter documentExecuter;
     private readonly ISchema schema;
     private readonly IWebHostEnvironment environment;
-    private readonly ApiOptions apiOptions;
+    private readonly ApplicationOptions apiOptions;
 
     public GraphQLController(
         IDocumentExecuter documentExecuter, 
         ISchema schema,
         IWebHostEnvironment environment,
-        IOptions<ApiOptions> apiOptions)
+        IOptions<ApplicationOptions> apiOptions)
     {
         this.documentExecuter = documentExecuter;
         this.schema = schema;
@@ -64,7 +64,7 @@ public class GraphQLController : ControllerBase
         {
             Response.Cookies.Append("refreshToken", tokenPair.RefreshToken.Value!, new()
             {
-                Domain = apiOptions.Domain,
+                Domain = apiOptions.ApiDomain,
                 HttpOnly = true,
                 Secure = !environment.IsDevelopment(),
                 Expires = tokenPair.RefreshToken.ExpiresOn

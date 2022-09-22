@@ -2,7 +2,7 @@ spectaql:
   displayAllServers: true
 
 introspection:
-  url: http://api:5000/graphql
+  url: http://api:5000/api/graphql
   queryNameStrategy: capitalizeFirst
   fieldExpansionDepth: 2
   spectaqlDirective:

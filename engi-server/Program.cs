@@ -170,13 +170,19 @@ builder.Services.AddGraphQL(graphql => graphql
     })
     .AddAuthorizationRule());
 
+var engiOptions = builder.Configuration
+    .GetRequiredSection("Engi")
+    .Get<EngiOptions>();
+
+if (engiOptions.DisableChainObserver == false)
+{
+    builder.Services.AddHostedService<ChainObserverBackgroundService>();
+}
+
 builder.Services.AddSingleton<IChainObserver, NewHeadChainObserver>();
 builder.Services.AddSingleton<IChainObserver, ChainSnapshotObserver>();
-builder.Services.AddHostedService<ChainObserverBackgroundService>();
-
-builder.Services.AddHostedService<IndexingBackgroundService>();
-
 builder.Services.AddScoped<LatestChainStateProvider>();
+builder.Services.AddHostedService<IndexingBackgroundService>();
 builder.Services.AddScoped<TransactionTipCalculator>();
 
 // pipeline

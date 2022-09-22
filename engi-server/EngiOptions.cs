@@ -8,6 +8,8 @@ public class EngiOptions
 
     public TimeSpan SignatureSkew { get; set; }
 
+    public bool DisableChainObserver { get; set; }
+
     public X509Certificate2 EncryptionCertificateAsX509 =>
         X509CertificatesHelper.CertificateFromBase64String(EncryptionCertificate);
 }

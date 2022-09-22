@@ -5,14 +5,12 @@ services:
     extends:
       file: docker-compose-services.yml
       service: ravendb
-  substrate:
-    extends:
-      file: docker-compose-services.yml
-      service: substrate
   api:
     extends:
       file: docker-compose-services.yml
       service: api
+    environment:
+      - WAIT_HOSTS=ravendb:8080, ravendb:38888
   docs:
     build:
       context: ./engi-docs

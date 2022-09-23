@@ -9,6 +9,7 @@ using GraphQL.Instrumentation;
 using GraphQL.SystemTextJson;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
@@ -121,6 +122,9 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true
     };
 });
+
+builder.Services.AddDataProtection()
+    .PersistKeysToRaven();
 
 var authenticatedPolicy = new AuthorizationPolicyBuilder()
     .RequireAuthenticatedUser()

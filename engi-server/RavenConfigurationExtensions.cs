@@ -4,6 +4,7 @@ using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
+using Raven.Client.Documents.Operations.Expiration;
 using Raven.Client.Documents.Operations.Refresh;
 using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
@@ -47,10 +48,16 @@ public static class RavenConfigurationExtensions
 
         try
         {
-            store.Maintenance.Send(new ConfigureRefreshOperation(new RefreshConfiguration
+            store.Maintenance.Send(new ConfigureRefreshOperation(new()
             {
                 Disabled = false,
                 RefreshFrequencyInSec = 60
+            }));
+
+            store.Maintenance.Send(new ConfigureExpirationOperation(new()
+            {
+                Disabled = false,
+                DeleteFrequencyInSec = 60
             }));
         }
         catch (Exception)

@@ -1,7 +1,10 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Org.BouncyCastle.OpenSsl;
 
 namespace Engi.Substrate.Server.Controllers;
 
@@ -22,6 +25,8 @@ public class EngiController : ControllerBase
             .GetRSAPublicKey()!
             .ExportSubjectPublicKeyInfo();
 
-        return File(new MemoryStream(publicKey, false), "application/octet-stream");
+        var pem = PemEncoding.Write("PUBLIC KEY", publicKey);
+
+        return Content(new string(pem));
     }
 }

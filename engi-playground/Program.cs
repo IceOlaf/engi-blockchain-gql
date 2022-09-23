@@ -68,8 +68,10 @@ public static class Program
         Console.WriteLine($@"
 args: {{
     address: ""{keypair.Address.Id}"",
-    signedOn: ""{now.UtcDateTime.ToString("o")}"",
-    signedRequestHex: ""{Hex.GetString0X(signature)}""
+    signature: {{
+        signedOn: ""{now.UtcDateTime.ToString("o")}"",
+        value: ""{Hex.GetString0X(signature)}""
+    }}
 }}
 ");
 

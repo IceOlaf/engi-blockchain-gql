@@ -10,9 +10,7 @@ public class LoginArgumentsGraphType : InputObjectGraphType<LoginArguments>
 
         Field(x => x.Address)
             .Description("The address (public key) that belongs to the user trying to login e.g. 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY");
-        Field(x => x.Signature)
-            .Description("The hex-formatted signature, calculated with the user's private key, for the string `{address}|{unixTimeMs}`, where 'address' is the address submitted and 'unixTimeMs' the current time, in milliseconds since the UNIX epoch.");
-        Field(x => x.SignedOn)
-            .Description("The date and time (ISO 8601) the signature was produced, which must match the timestamp in the signature string.");
+        Field(x => x.Signature, type: typeof(SignatureArgumentsGraphType))
+            .Description("The signature generated with the user's private key.");
     }
 }

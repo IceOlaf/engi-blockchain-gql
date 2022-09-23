@@ -19,19 +19,19 @@ public class JobMutations : ObjectGraphType
 
         Field<StringGraphType>("attempt")
             .Argument<NonNullGraphType<AttemptJobArgumentsGraphType>>("args")
-            .Argument<NonNullGraphType<SignedMutationArgumentsGraphType>>("signature")
+            .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(AttemptJobAsync);
 
         Field<StringGraphType>("create")
             .Argument<NonNullGraphType<CreateJobArgumentsGraphType>>("job")
-            .Argument<NonNullGraphType<SignedMutationArgumentsGraphType>>("signature")
+            .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(CreateJobAsync);
     }
 
     private async Task<object?> AttemptJobAsync(IResolveFieldContext context)
     {
         var args = context.GetValidatedArgument<AttemptJobArguments>("args");
-        var signature = context.GetValidatedArgument<SignedMutationArguments>("signature");
+        var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
@@ -79,7 +79,7 @@ public class JobMutations : ObjectGraphType
     private async Task<object?> CreateJobAsync(IResolveFieldContext context)
     {
         var args = context.GetValidatedArgument<CreateJobArguments>("args");
-        var signature = context.GetValidatedArgument<SignedMutationArguments>("signature");
+        var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 

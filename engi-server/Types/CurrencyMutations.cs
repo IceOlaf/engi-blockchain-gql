@@ -18,7 +18,7 @@ public class CurrencyMutations : ObjectGraphType
 
         Field<StringGraphType>("balanceTransfer")
             .Argument<NonNullGraphType<BalanceTransferArgumentsGraphType>>("transfer")
-            .Argument<NonNullGraphType<SignedMutationArgumentsGraphType>>("signature")
+            .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(BalanceTransferAsync);
     }
 
@@ -26,7 +26,7 @@ public class CurrencyMutations : ObjectGraphType
         IResolveFieldContext context)
     {
         var args = context.GetValidatedArgument<BalanceTransferArguments>("transfer");
-        var signature = context.GetValidatedArgument<SignedMutationArguments>("signature");
+        var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 

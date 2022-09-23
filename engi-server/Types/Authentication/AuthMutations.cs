@@ -86,7 +86,7 @@ public class AuthMutations : ObjectGraphType
 
         var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
 
-        if (!args.IsValid(publicKey, engiOptions.Value.SignatureSkew))
+        if (!args.Signature.IsValid(publicKey, engiOptions.Value.SignatureSkew))
         {
             throw new AuthenticationError();
         }

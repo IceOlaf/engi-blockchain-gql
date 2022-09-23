@@ -1,0 +1,14 @@
+﻿@using RazorLight
+@inherits TemplatePage<Engi.Substrate.Server.Email.EmailModel>
+<html>
+<title>Please confirm your e-mail</title>
+<body>
+    <p>
+        Hey @Model.User.Display
+    </p>
+
+    <p>Please confirm your e-mail address by visiting <a href="@Model.Data["Url"]">@Model.Data["Url"]</a>.</p>
+
+    <p>ENGI</p>
+</body>
+</html>

@@ -4,6 +4,7 @@ using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Indexes;
+using Raven.Client.Documents.Operations.Refresh;
 using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
 
@@ -41,7 +42,20 @@ public static class RavenConfigurationExtensions
         }
         catch(Exception)
         {
-            // this will fail in real environments, useful for local/CI
+            // this may fail in real environments, useful for local/CI
+        }
+
+        try
+        {
+            store.Maintenance.Send(new ConfigureRefreshOperation(new RefreshConfiguration
+            {
+                Disabled = false,
+                RefreshFrequencyInSec = 60
+            }));
+        }
+        catch (Exception)
+        {
+            // this may fail in real environments, useful for local/CI
         }
 
         IndexCreation.CreateIndexes(typeof(RuntimeMetadata).Assembly, store);

@@ -3,10 +3,9 @@ using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
-using Engi.Substrate.Server.Types.Validation;
+using Engi.Substrate.Server.Email;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.Options;
@@ -34,6 +33,43 @@ public class AuthMutations : ObjectGraphType
         Field<IdGraphType>("register")
             .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
             .ResolveAsync(RegisterAsync);
+
+        Field<IdGraphType>("confirmEmail")
+            .Argument<NonNullGraphType<ConfirmEmailArgumentsGraphType>>("args")
+            .ResolveAsync(ConfirmEmailAsync);
+    }
+
+    private async Task<object?> ConfirmEmailAsync(IResolveFieldContext context)
+    {
+        var args = context.GetValidatedArgument<ConfirmEmailArguments>("args");
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider
+            .GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<User>(args.UserId);
+
+        if (user is not { EmailConfirmedOn: null })
+        {
+            throw new AuthenticationError();
+        }
+
+        var token = user.Tokens
+            .OfType<EmailConfirmationToken>()
+            .SingleOrDefault();
+
+        if (token == null || token.Value != args.Token)
+        {
+            throw new AuthenticationError();
+        }
+
+        user.Tokens.Remove(token);
+        user.EmailConfirmedOn = DateTime.UtcNow;
+
+        await session.SaveChangesAsync();
+
+        return null;
     }
 
     private async Task<object?> LoginAsync(IResolveFieldContext context)
@@ -65,7 +101,7 @@ public class AuthMutations : ObjectGraphType
 
         var user = await session.LoadAsync<User>(userId);
 
-        if (user == null)
+        if (user?.EmailConfirmedOn == null)
         {
             throw new AuthenticationError();
         }
@@ -87,7 +123,7 @@ public class AuthMutations : ObjectGraphType
 
     private async Task<object?> RefreshAsync(IResolveFieldContext context)
     {
-        var enhancedContext = (EnhancedGraphQLContext) context.UserContext;
+        var enhancedContext = (EnhancedGraphQLContext)context.UserContext;
 
         var jwtOptions = context.RequestServices!
             .GetRequiredService<IOptions<JwtOptions>>();
@@ -173,6 +209,7 @@ public class AuthMutations : ObjectGraphType
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
         var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
+        var applicationOptions = scope.ServiceProvider.GetRequiredService<IOptions<ApplicationOptions>>();
 
         var privateKey = engiOptions.Value.EncryptionCertificateAsX509.GetRSAPrivateKey()!;
 
@@ -203,13 +240,15 @@ public class AuthMutations : ObjectGraphType
             TransactionMode = TransactionMode.ClusterWide
         });
 
+        var emailConfirmationToken = new EmailConfirmationToken();
+
         var user = new User
         {
             Id = User.KeyFrom(keypair.Address.Id),
             Email = args.Email.ToLowerInvariant().Trim(),
             Address = keypair.Address.Id,
             KeypairPkcs8 = keypair.ExportToPkcs8(engiOptions.Value.EncryptionCertificateAsX509),
-            Tokens = { new EmailConfirmationToken() }
+            Tokens = { emailConfirmationToken }
         };
 
         await session.StoreAsync(user);
@@ -217,6 +256,16 @@ public class AuthMutations : ObjectGraphType
         var emailReference = new UserEmailReference(user);
 
         await session.StoreAsync(emailReference);
+
+        await session.StoreAsync(new EmailDispatchCommand
+        {
+            UserId = user.Id,
+            TemplateName = "ConfirmEmail",
+            Data = new()
+            {
+                ["Url"] = $"{applicationOptions.Value.Url}/confirm/{emailConfirmationToken.Value}?id={user.Id}"
+            }
+        });
 
         try
         {

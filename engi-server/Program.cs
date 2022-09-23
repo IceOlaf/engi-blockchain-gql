@@ -1,5 +1,6 @@
 using Engi.Substrate;
 using Engi.Substrate.Server;
+using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;
@@ -169,6 +170,17 @@ builder.Services.AddGraphQL(graphql => graphql
         options.ExposeExceptionDetails = builder.Environment.IsDevelopment();
     })
     .AddAuthorizationRule());
+
+// email
+
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetRequiredSection("Email"));
+builder.Services.AddRazorLight(builder.Environment);
+builder.Services.AddSendgrid(
+    builder.Configuration.GetRequiredSection("Sendgrid"));
+builder.Services.AddHostedService<EmailDispatchCommandProcessor>();
+
+// chain/engi
 
 var engiOptions = builder.Configuration
     .GetRequiredSection("Engi")

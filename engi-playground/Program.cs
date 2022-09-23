@@ -5,10 +5,8 @@ using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
-using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using Raven.Client.Documents;
 
@@ -18,6 +16,8 @@ namespace Engi.Substrate.Playground;
 
 public static class Program
 {
+    private static readonly string BaseUrl = "http://localhost:5000";
+
     private static readonly Keypair AliceKeyPair = KeypairFactory.CreateFromAny("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a");
     private static readonly Keypair GeorgiosdKeypair = KeypairFactory.CreateFromAny("ridge accuse cotton debate step theory fade bench flock liar seek day");
 
@@ -37,7 +37,7 @@ public static class Program
     {
         var http = new HttpClient();
 
-        var engiPublicKeyData = await http.GetByteArrayAsync("http://localhost:5000/api/engi/public-key");
+        var engiPublicKeyData = await http.GetByteArrayAsync($"{BaseUrl}/api/engi/public-key");
 
         var publicKeyParameters = PublicKeyFactory.CreateKey(engiPublicKeyData);
 

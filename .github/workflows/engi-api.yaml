@@ -45,6 +45,7 @@ jobs:
         files: ${{ env.working_directory }}/deploy/appsettings.json
       env:
         Raven.Certificate: ${{ secrets.RAVEN_CERTIFICATE }}
+        Sendgrid.ApiKey: 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
     - uses: zerotomvp/rolling-systemd-update@v1-beta.7
       with:
         serviceName: ${{ env.application_name }}

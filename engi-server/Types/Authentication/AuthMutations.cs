@@ -48,7 +48,9 @@ public class AuthMutations : ObjectGraphType
         using var session = scope.ServiceProvider
             .GetRequiredService<IAsyncDocumentSession>();
 
-        var user = await session.LoadAsync<User>(args.UserId);
+        string userId = User.KeyFrom(args.Address);
+
+        var user = await session.LoadAsync<User>(userId);
 
         if (user is not { EmailConfirmedOn: null })
         {
@@ -263,7 +265,7 @@ public class AuthMutations : ObjectGraphType
             TemplateName = "ConfirmEmail",
             Data = new()
             {
-                ["Url"] = $"{applicationOptions.Value.Url}/confirm/{emailConfirmationToken.Value}?id={user.Id}"
+                ["Url"] = $"{applicationOptions.Value.Url}/confirm/{user.Address}?token={emailConfirmationToken.Value}"
             }
         });
 

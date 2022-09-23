@@ -76,7 +76,7 @@ To generate the value of `encryptedPkcs8key` you need to encrypt your keypair us
 const fetch = require("node-fetch");
 const { Keyring } = require("@polkadot/keyring");
 const { u8aToBuffer } = require("@polkadot/util");
-const { JSEncrypt } = require("nodejs-jsencrypt");
+const { JSEncrypt } = require("nodejs-jsencrypt"); // use jsencrypt on the web
 
 async function main() {
   const publicKey = await fetch(

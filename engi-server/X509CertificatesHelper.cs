@@ -2,7 +2,7 @@
 
 namespace Engi.Substrate.Server;
 
-class X509CertificatesHelper
+public class X509CertificatesHelper
 {
     public static X509Certificate2 CertificateFromBase64String(string certificate)
     {

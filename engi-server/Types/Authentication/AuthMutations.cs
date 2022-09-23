@@ -3,6 +3,7 @@ using System.Security.Authentication;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
 using Engi.Substrate.Server.Email;
@@ -221,7 +222,9 @@ public class AuthMutations : ObjectGraphType
         {
             var encryptedData = Convert.FromBase64String(args.EncryptedPkcs8Key);
 
-            var keypairPkcs8 = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
+            var decrypted = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
+
+            var keypairPkcs8 = Convert.FromBase64String(Encoding.UTF8.GetString(decrypted));
 
             keypair = Keypair.FromPkcs8(keypairPkcs8);
         }

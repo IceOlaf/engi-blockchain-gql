@@ -13,7 +13,7 @@ info:
   description: This documentation is automatically generated from the development branch and can thus differ from the API available in production.
 
 servers:
-  - url: https://staging.engi.network/api/graphql
+  - url: https://api.staging.engi.network/api/graphql
     description: Staging
-  - url: https://engi.network/api/graphql
+  - url: https://api.engi.network/api/graphql
     description: Production

@@ -16,7 +16,7 @@ public class EngiQuery : ObjectGraphType
 {
     public EngiQuery()
     {
-        this.AuthorizeWithPolicy(PolicyNames.Authenticated);
+        this.AllowAnonymous();
 
         Field<AccountInfoGraphType>("account")
             .Argument<NonNullGraphType<StringGraphType>>("id")

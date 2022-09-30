@@ -251,6 +251,7 @@ public class AuthMutations : ObjectGraphType
         {
             Id = User.KeyFrom(keypair.Address.Id),
             Email = args.Email.ToLowerInvariant().Trim(),
+            Display = args.Display,
             Address = keypair.Address.Id,
             KeypairPkcs8 = keypair.ExportToPkcs8(engiOptions.Value.EncryptionCertificateAsX509),
             Tokens = { emailConfirmationToken }

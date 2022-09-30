@@ -15,7 +15,7 @@ public sealed class SignatureArguments : IValidatableObject
     public bool IsValid(Address address, TimeSpan tolerance)
     {
         string expectedSignatureContent =
-            $"{address}|{new DateTimeOffset(SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}";
+            $"<Bytes>{address}|{new DateTimeOffset(SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}</Bytes>";
 
         bool valid = address.Verify(
             Hex.GetBytes0X(Value),

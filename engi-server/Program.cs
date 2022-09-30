@@ -11,15 +11,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (!builder.Environment.IsDevelopment())
-{
-    // data protection + secrets manager?
-}
+var applicationSection = builder.Configuration.GetRequiredSection("Application");
+var engiSection = builder.Configuration.GetRequiredSection("Engi");
+var substrateSection = builder.Configuration.GetRequiredSection("Substrate");
 
 builder.WebHost.UseSentry();
 
@@ -29,13 +29,12 @@ builder.Services.AddCors();
 
 builder.Services.AddHealthChecks();
 
-builder.Services.Configure<SubstrateClientOptions>(builder.Configuration.GetRequiredSection("Substrate"));
+builder.Services.Configure<SubstrateClientOptions>(substrateSection);
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient(nameof(SubstrateClient), http =>
     {
-        var options = builder.Configuration
-            .GetRequiredSection("Substrate")
+        var options = substrateSection
             .Get<SubstrateClientOptions>();
 
         http.BaseAddress = new Uri(options.HttpUrl);
@@ -58,10 +57,8 @@ builder.Services
         opts.JsonSerializerOptions.Converters.Add(new InputsJsonConverter());
     });
 
-builder.Services.Configure<ApplicationOptions>(
-    builder.Configuration.GetRequiredSection("Application"));
-builder.Services.Configure<EngiOptions>(
-    builder.Configuration.GetRequiredSection("Engi"));
+builder.Services.Configure<ApplicationOptions>(applicationSection);
+builder.Services.Configure<EngiOptions>(engiSection);
 
 var jwtSection = builder.Configuration.GetRequiredSection("Jwt");
 var jwtOptions = jwtSection.Get<JwtOptions>();
@@ -121,6 +118,21 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true
     };
+});
+
+builder.Services.AddCors(cors =>
+{
+    var application = applicationSection.Get<ApplicationOptions>();
+
+    cors.AddDefaultPolicy(policy => 
+    {
+        policy.WithOrigins(application.Url)
+            .AllowAnyMethod()
+            .WithHeaders(new[] { "Authorization", "Content-Type" })
+            .WithExposedHeaders("Token-Expired")
+            .AllowCredentials()
+            .SetPreflightMaxAge(TimeSpan.FromHours(1));
+    });
 });
 
 builder.Services.AddDataProtection()

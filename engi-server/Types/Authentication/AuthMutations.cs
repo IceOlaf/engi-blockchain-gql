@@ -269,7 +269,7 @@ public class AuthMutations : ObjectGraphType
             TemplateName = "ConfirmEmail",
             Data = new()
             {
-                ["Url"] = $"{applicationOptions.Value.Url}/confirm/{user.Address}?token={emailConfirmationToken.Value}"
+                ["Url"] = $"{applicationOptions.Value.Url}/signup/confirm/{user.Address}?token={emailConfirmationToken.Value}"
             }
         });
 

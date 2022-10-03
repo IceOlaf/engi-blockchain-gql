@@ -18,11 +18,13 @@ public class JobMutations : ObjectGraphType
         this.AuthorizeWithPolicy(PolicyNames.Authenticated);
 
         Field<StringGraphType>("attempt")
+            .Description("Register a job attempt by calling attempt_job on the chain.")
             .Argument<NonNullGraphType<AttemptJobArgumentsGraphType>>("args")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(AttemptJobAsync);
 
         Field<StringGraphType>("create")
+            .Description("Create a job by calling create_job on the chain.")
             .Argument<NonNullGraphType<CreateJobArgumentsGraphType>>("job")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(CreateJobAsync);

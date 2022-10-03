@@ -12,9 +12,15 @@ namespace Engi.Substrate.Server.Email;
 
 public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDispatchCommand>
 {
-    public EmailDispatchCommandProcessor(IDocumentStore store, IServiceProvider serviceProvider, IHub sentry, ILoggerFactory loggerFactory)
+    public EmailDispatchCommandProcessor(
+        IDocumentStore store, 
+        IServiceProvider serviceProvider, 
+        IHub sentry, 
+        IWebHostEnvironment env,
+        ILoggerFactory loggerFactory)
         : base(store, serviceProvider, sentry, loggerFactory)
     {
+        ProcessConcurrently = env.IsProduction();
     }
 
     protected override string CreateQuery()

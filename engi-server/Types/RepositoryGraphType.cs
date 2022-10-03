@@ -17,6 +17,8 @@ public class RepositoryGraphType : ObjectGraphType<Repository>
             .Description("The commit hash.");
         Field(x => x.Organization)
             .Description("The repository organization. e.g. for https://github.com/engi-network/blockchain, 'engi-network'.");
+        Field(x => x.Name)
+            .Description("The repository name. e.g. for https://github.com/engi-network/blockchain, 'blockchain'.");
         Field(x => x.FullName)
             .Description("The full name of the repository slug. e.g. for https://github.com/engi-network/blockchain, 'engi-network/blockchain'.");
     }

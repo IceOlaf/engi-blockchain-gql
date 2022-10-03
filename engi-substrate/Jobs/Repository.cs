@@ -10,6 +10,8 @@ public class Repository
 
     public string? Organization { get; set; }
 
+    public string? Name { get; set; }
+
     public string? FullName { get; set; }
 
     public static Repository Parse(ScaleStreamReader reader)
@@ -24,6 +26,7 @@ public class Repository
         var (organization, name) = ParseFullName(repository.Url);
 
         repository.Organization = organization;
+        repository.Name = name;
         repository.FullName = $"{organization}/{name}";
 
         return repository;

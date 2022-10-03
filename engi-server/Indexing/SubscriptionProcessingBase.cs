@@ -29,6 +29,8 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
     protected bool ProcessConcurrently { get; set; }
 
+    protected int? MaxDocumentsPerBatch { get; set; }
+
     protected abstract string CreateQuery();
 
     protected virtual Task InitializeAsync() => Task.CompletedTask;
@@ -45,6 +47,11 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
             MaxErroneousPeriod = TimeSpan.FromHours(1),
             TimeToWaitBeforeConnectionRetry = TimeSpan.FromMinutes(1),
         };
+
+        if(MaxDocumentsPerBatch.HasValue)
+        {
+            workerOptions.MaxDocsPerBatch = MaxDocumentsPerBatch.Value;
+        }
 
         string query = CreateQuery();
 
@@ -129,21 +136,25 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
             if (state.Query != query)
             {
-                await Store.Subscriptions.UpdateAsync(new SubscriptionUpdateOptions
+                var options = new SubscriptionUpdateOptions
                 {
                     Id = state.SubscriptionId,
                     Name = state.SubscriptionName,
                     Query = query
-                });
+                };
+
+                await Store.Subscriptions.UpdateAsync(options);
             }
         }
         catch (SubscriptionDoesNotExistException)
         {
-            await Store.Subscriptions.CreateAsync(new SubscriptionCreationOptions
+            var options = new SubscriptionCreationOptions
             {
                 Name = name,
                 Query = query
-            });
+            };
+            
+            await Store.Subscriptions.CreateAsync(options);
         }
     }
 

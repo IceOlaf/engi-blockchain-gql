@@ -9,7 +9,8 @@ using Engi.Substrate.Pallets;
 using Engi.Substrate.Server;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
-using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.OpenSsl;
 using Raven.Client.Documents;
 
 namespace Engi.Substrate.Playground;
@@ -35,7 +36,7 @@ public static class Program
     {
     }
 
-    private static async Task TryLoginAsync(string baseAddress, Keypair keypair)
+    private static async Task TryLoginAsync(Keypair keypair)
     {
         var now = DateTimeOffset.UtcNow;
 
@@ -65,7 +66,7 @@ public static class Program
 
         var http = new HttpClient();
 
-        var response = await http.PostAsync($"{baseAddress}/api/graphql", 
+        var response = await http.PostAsync($"{BaseUrl}/api/graphql", 
             new StringContent(json.Replace("\n", string.Empty), Encoding.UTF8, "application/json"));
 
         Console.WriteLine(await response.Content.ReadAsStringAsync());
@@ -91,24 +92,22 @@ public static class Program
     {
         var http = new HttpClient();
 
-        var engiPublicKeyData = await http.GetByteArrayAsync($"{BaseUrl}/api/engi/public-key");
+        var engiPublicKeyData = await http.GetStringAsync($"{BaseUrl}/api/engi/public-key");
 
-        var publicKeyParameters = PublicKeyFactory.CreateKey(engiPublicKeyData);
-
+        using var stringReader = new StringReader(engiPublicKeyData);
+        
+        var pemReader = new PemReader(stringReader);
+        var publicKeyParameters = (RsaKeyParameters) pemReader.ReadObject();
+        
         var e = new Pkcs1Encoding(new RsaEngine());
 
         e.Init(true, publicKeyParameters);
 
-        var keypairPkcs8 = keypair.ExportToPkcs8();
+        var keypairPkcs8 = Encoding.UTF8.GetBytes(Convert.ToBase64String(keypair.ExportToPkcs8()));
 
         var encrypted = e.ProcessBlock(keypairPkcs8, 0, keypairPkcs8.Length);
 
         Console.WriteLine(Convert.ToBase64String(encrypted));
-
-        //var rsa = new RSACryptoServiceProvider();
-        //rsa.ImportRSAPublicKey();
-        
-        //var key = new RSACryptoServiceProvider(publicKeyParameters);
     }
 
     private static async Task JobWorkflowTestCaseAsync()

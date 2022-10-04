@@ -49,7 +49,7 @@ public static class Program
                 ""query"": ""mutation {{
                     auth {{
                         login(args: {{
-                            address: \""5DyGbtJH1HeV439QEE482cuR6h7CEzrWVEwfwJxXw7LeCLND\"",
+                            address: \""{keypair.Address}\"",
                             signature: {{
                                 signedOn: \""{now.UtcDateTime.ToString("o")}\"",
                                 value: \""{Hex.GetString0X(signature)}\""
@@ -67,7 +67,7 @@ public static class Program
         var http = new HttpClient();
 
         var response = await http.PostAsync($"{BaseUrl}/api/graphql", 
-            new StringContent(json.Replace("\n", string.Empty), Encoding.UTF8, "application/json"));
+            new StringContent(json.Replace("\r\n", string.Empty), Encoding.UTF8, "application/json"));
 
         Console.WriteLine(await response.Content.ReadAsStringAsync());
 

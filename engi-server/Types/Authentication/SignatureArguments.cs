@@ -15,11 +15,22 @@ public sealed class SignatureArguments : IValidatableObject
     public bool IsValid(Address address, TimeSpan tolerance)
     {
         string expectedSignatureContent =
-            $"<Bytes>{address}|{new DateTimeOffset(SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}</Bytes>";
+            $"{address}|{new DateTimeOffset(SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}";
 
-        bool valid = address.Verify(
-            Hex.GetBytes0X(Value),
-            Encoding.UTF8.GetBytes(expectedSignatureContent));
+        string wrappedSignatureContent = $"<Bytes>{expectedSignatureContent}</Bytes>";
+
+        byte[] valueBytes = Hex.GetBytes0X(Value);
+
+        // first try to verify wrapped as most expected case, then raw
+
+        bool valid = address.Verify(valueBytes,
+            Encoding.UTF8.GetBytes(wrappedSignatureContent));
+
+        if (!valid)
+        {
+            valid = address.Verify(valueBytes,
+                Encoding.UTF8.GetBytes(expectedSignatureContent));
+        }
 
         return valid && SignedOn < DateTime.UtcNow.Add(tolerance);
     }

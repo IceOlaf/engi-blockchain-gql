@@ -8,11 +8,11 @@ public class Repository
 
     public string Commit { get; set; } = null!;
 
-    public string? Organization { get; set; }
+    public string Organization { get; set; } = null!;
 
-    public string? Name { get; set; }
+    public string Name { get; set; } = null!;
 
-    public string? FullName { get; set; }
+    public string FullName { get; set; } = null!;
 
     public static Repository Parse(ScaleStreamReader reader)
     {
@@ -32,16 +32,18 @@ public class Repository
         return repository;
     }
 
-    internal static (string? organization, string? name) ParseFullName(string url)
+    internal static (string organization, string name) ParseFullName(string url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
-            return (null, null);
+            throw new ArgumentOutOfRangeException(
+                nameof(url), url, "Invalid URI.");
         }
 
         if (!uri.Host.EndsWith("github.com") && !uri.Host.EndsWith("gitlab.com"))
         {
-            return (null, null);
+            throw new ArgumentOutOfRangeException(
+                nameof(url), url, "Only github and gitlab repositories are supported currently.");
         }
 
         string pathName = uri.AbsolutePath.TrimStart('/');
@@ -55,7 +57,8 @@ public class Repository
 
         if (parts.Length != 2)
         {
-            return (null, null);
+            throw new ArgumentOutOfRangeException(
+                nameof(url), url, "Invalid URI.");
         }
 
         return (parts[0].ToLowerInvariant(), parts[1].ToLowerInvariant());

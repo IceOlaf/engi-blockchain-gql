@@ -3,12 +3,15 @@ using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Instrumentation;
 using GraphQL.Server.Transports.AspNetCore;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Transport;
 using GraphQL.Types;
 using GraphQLParser.AST;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+
 using AllowAnonymousAttribute = Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute;
+using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 namespace Engi.Substrate.Server.Controllers;
 
@@ -16,43 +19,26 @@ namespace Engi.Substrate.Server.Controllers;
 public class GraphQLController : ControllerBase
 {
     private readonly IDocumentExecuter documentExecuter;
-    private readonly ISchema schema;
     private readonly IWebHostEnvironment environment;
     private readonly ApplicationOptions apiOptions;
 
     public GraphQLController(
         IDocumentExecuter documentExecuter, 
-        ISchema schema,
         IWebHostEnvironment environment,
         IOptions<ApplicationOptions> apiOptions)
     {
         this.documentExecuter = documentExecuter;
-        this.schema = schema;
         this.environment = environment;
         this.apiOptions = apiOptions.Value;
     }
 
-    [HttpPost]
+    [HttpPost, Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
     public async Task<IActionResult> Execute([FromBody] GraphQLRequest request)
     {
         var startTime = DateTime.UtcNow;
 
-        void Configure(ExecutionOptions s)
-        {
-            s.Schema = schema;
-            s.Query = request.Query;
-            s.Variables = request.Variables;
-            s.OperationName = request.OperationName;
-            s.RequestServices = HttpContext.RequestServices;
-            s.User = User;
-            s.UserContext = new EnhancedGraphQLContext 
-            { 
-                Cookies = Request.Cookies
-            };
-            s.CancellationToken = HttpContext.RequestAborted;
-        }
-
-        var result = await documentExecuter.ExecuteAsync(Configure);
+        var result = await documentExecuter
+            .ExecuteAsync(options => Configure<RootSchema>(request, options));
 
         // hijack refresh tokens and return them as cookies
 
@@ -73,6 +59,27 @@ public class GraphQLController : ControllerBase
 
         result.EnrichWithApolloTracing(startTime);
 
+        if (result.Errors?.OfType<AccessDeniedError>().Any() == true)
+        {
+            return Unauthorized();
+        }
+
         return new ExecutionResultActionResult(result);
+    }
+
+    private void Configure<TSchema>(GraphQLRequest request, ExecutionOptions s)
+        where TSchema : ISchema, new()
+    {
+        s.Schema = new TSchema();
+        s.Query = request.Query;
+        s.Variables = request.Variables;
+        s.OperationName = request.OperationName;
+        s.RequestServices = HttpContext.RequestServices;
+        s.User = User;
+        s.UserContext = new EnhancedGraphQLContext
+        {
+            Cookies = Request.Cookies
+        };
+        s.CancellationToken = HttpContext.RequestAborted;
     }
 }

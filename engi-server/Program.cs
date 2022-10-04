@@ -1,5 +1,6 @@
 using Engi.Substrate;
 using Engi.Substrate.Server;
+using Engi.Substrate.Server.Authentication;
 using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types.Authentication;
@@ -11,7 +12,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 
@@ -68,9 +68,9 @@ builder.Services.AddSingleton(jwtOptions);
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = AuthenticationSchemes.Jwt;
+    options.DefaultChallengeScheme = AuthenticationSchemes.Jwt;
+    options.DefaultScheme = AuthenticationSchemes.Jwt;
 })
 .AddJwtBearer(options =>
 {
@@ -118,6 +118,12 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true
     };
+})
+.AddScheme<SudoApiKeyAuthenticationOptions, SudoApiKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey, options =>
+{
+    var engiOptions = engiSection.Get<EngiOptions>();
+
+    options.ApiKey = engiOptions.SudoApiKey;
 });
 
 builder.Services.AddCors(cors =>
@@ -128,7 +134,7 @@ builder.Services.AddCors(cors =>
     {
         policy.WithOrigins(application.Url)
             .AllowAnyMethod()
-            .WithHeaders(new[] { "Authorization", "Content-Type" })
+            .WithHeaders("Authorization", "Content-Type")
             .WithExposedHeaders("Token-Expired")
             .AllowCredentials()
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
@@ -138,14 +144,19 @@ builder.Services.AddCors(cors =>
 builder.Services.AddDataProtection()
     .PersistKeysToRaven();
 
-var authenticatedPolicy = new AuthorizationPolicyBuilder()
+var authenticatedPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
     .RequireAuthenticatedUser()
+    .AddRequirements(new NonSudoAuthorizationRequirement())
     .Build();
 
+builder.Services.AddSingleton<IAuthorizationHandler, NonSudoAuthorizationRequirement>();
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(PolicyNames.Authenticated,
-        builder => builder.RequireAuthenticatedUser());
+    options.DefaultPolicy = authenticatedPolicy;
+
+    options.AddPolicy(PolicyNames.Authenticated, authenticatedPolicy);
+    options.AddPolicy(PolicyNames.Sudo,
+        builder => builder.AddAuthenticationSchemes(AuthenticationSchemes.ApiKey).RequireRole(Roles.Sudo));
 });
 
 builder.Services.AddControllers(options =>

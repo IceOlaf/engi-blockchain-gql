@@ -49,11 +49,18 @@ public class AuthMutations : ObjectGraphType
         using var session = scope.ServiceProvider
             .GetRequiredService<IAsyncDocumentSession>();
 
-        string userId = User.KeyFrom(args.Address);
+        var userAddressRef = await session
+            .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(args.Address),
+                include => include.IncludeDocuments(x => x.UserId));
 
-        var user = await session.LoadAsync<User>(userId);
+        if (userAddressRef == null)
+        {
+            throw new AuthenticationError();
+        }
 
-        if (user is not { EmailConfirmedOn: null })
+        var user = session.LoadAsync<User>(userAddressRef.UserId).Result;
+
+        if (user.EmailConfirmedOn.HasValue)
         {
             throw new AuthenticationError();
         }
@@ -93,11 +100,18 @@ public class AuthMutations : ObjectGraphType
         var jwtOptions = scope.ServiceProvider
             .GetRequiredService<IOptions<JwtOptions>>();
 
-        string userId = User.KeyFrom(args.Address);
+        var userAddressRef = await session
+            .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(args.Address),
+                include => include.IncludeDocuments(x => x.UserId));
 
-        var user = await session.LoadAsync<User>(userId);
+        if (userAddressRef == null)
+        {
+            throw new AuthenticationError();
+        }
 
-        if (user?.EmailConfirmedOn == null)
+        var user = session.LoadAsync<User>(userAddressRef.UserId).Result;
+
+        if (user.EmailConfirmedOn == null)
         {
             throw new AuthenticationError();
         }
@@ -202,38 +216,41 @@ public class AuthMutations : ObjectGraphType
     {
         var args = context.GetValidatedArgument<CreateUserArguments>("user");
 
-        // make sure we can decode the key
-
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
         var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
         var applicationOptions = scope.ServiceProvider.GetRequiredService<IOptions<ApplicationOptions>>();
 
-        var privateKey = engiOptions.Value.EncryptionCertificateAsX509.GetRSAPrivateKey()!;
+        // make sure we can decode the key, if there is one
 
-        Keypair keypair;
+        Keypair? keypair = null;
 
-        try
+        if (args.EncryptedPkcs8Key != null)
         {
-            var encryptedData = Convert.FromBase64String(args.EncryptedPkcs8Key);
+            var privateKey = engiOptions.Value.EncryptionCertificateAsX509.GetRSAPrivateKey()!;
 
-            var decrypted = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
-
-            var keypairPkcs8 = Convert.FromBase64String(Encoding.UTF8.GetString(decrypted));
-
-            keypair = Keypair.FromPkcs8(keypairPkcs8);
-        }
-        catch (Exception)
-        {
-            throw new ExecutionError("Unable to decrypt and decode key.")
+            try
             {
-                Code = "INVALID_KEY"
-            };
-        }
+                var encryptedData = Convert.FromBase64String(args.EncryptedPkcs8Key);
 
-        var store = scope.ServiceProvider.GetRequiredService<IDocumentStore>();
+                var decrypted = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
+
+                var keypairPkcs8 = Convert.FromBase64String(Encoding.UTF8.GetString(decrypted));
+
+                keypair = Keypair.FromPkcs8(keypairPkcs8);
+            }
+            catch (Exception)
+            {
+                throw new ExecutionError("Unable to decrypt and decode key.")
+                {
+                    Code = "INVALID_KEY"
+                };
+            }
+        }
 
         // create user
+
+        var store = scope.ServiceProvider.GetRequiredService<IDocumentStore>();
 
         using var session = store.OpenAsyncSession(new SessionOptions
         {
@@ -244,19 +261,21 @@ public class AuthMutations : ObjectGraphType
 
         var user = new User
         {
-            Id = User.KeyFrom(keypair.Address.Id),
             Email = args.Email.ToLowerInvariant().Trim(),
             Display = args.Display,
-            Address = keypair.Address.Id,
-            KeypairPkcs8 = keypair.ExportToPkcs8(engiOptions.Value.EncryptionCertificateAsX509),
             Tokens = { emailConfirmationToken }
         };
 
+        if (keypair != null)
+        {
+            user.Address = keypair.Address.Id;
+            user.KeypairPkcs8 = keypair.ExportToPkcs8(engiOptions.Value.EncryptionCertificateAsX509);
+        }
+
         await session.StoreAsync(user);
 
-        var emailReference = new UserEmailReference(user);
-
-        await session.StoreAsync(emailReference);
+        await session.StoreAsync(new UserEmailReference(user));
+        await session.StoreAsync(new UserAddressReference(user));
 
         await session.StoreAsync(new EmailDispatchCommand
         {

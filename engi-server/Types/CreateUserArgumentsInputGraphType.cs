@@ -12,7 +12,7 @@ public class CreateUserArgumentsGraphType : InputObjectGraphType<CreateUserArgum
             .Description("The user's display name.");
         Field(x => x.Email)
             .Description("The user's email.");
-        Field(x => x.EncryptedPkcs8Key)
-            .Description("The user's key, packaged in a PKCS8 envelope and encrypted (with PKCS1 padding) with ENGI's public key.");
+        Field(x => x.EncryptedPkcs8Key, nullable: true)
+            .Description("The user's key, packaged in a PKCS8 envelope and encrypted (with PKCS1 padding) with ENGI's public key (optional).");
     }
 }

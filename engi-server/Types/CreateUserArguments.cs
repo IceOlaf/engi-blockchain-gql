@@ -10,6 +10,5 @@ public class CreateUserArguments
     [Required, StringLength(50, MinimumLength = 4)]
     public string Display { get; set; } = null!;
 
-    [Required]
-    public string EncryptedPkcs8Key { get; set; } = null!;
+    public string? EncryptedPkcs8Key { get; set; }
 }

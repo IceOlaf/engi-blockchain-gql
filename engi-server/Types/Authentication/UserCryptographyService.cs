@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
+using GraphQL;
 using Microsoft.Extensions.Options;
 
 namespace Engi.Substrate.Server.Types.Authentication;
@@ -49,6 +50,14 @@ public class UserCryptographyService
 
     public Keypair DecodeKeypair(User user)
     {
+        if (user.KeypairPkcs8 == null)
+        {
+            throw new ExecutionError("User has not imported their key into ENGI.")
+            {
+                Code = "NO_USER_KEY"
+            };
+        }
+
         return Keypair.FromPkcs8(user.KeypairPkcs8, options.EncryptionCertificateAsX509);
     }
 }

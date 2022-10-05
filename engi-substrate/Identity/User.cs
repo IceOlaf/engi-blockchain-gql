@@ -10,16 +10,11 @@ public class User
 
     public string Display { get; set; } = null!;
 
-    public byte[] KeypairPkcs8 { get; set; } = null!;
+    public byte[]? KeypairPkcs8 { get; set; }
 
     public List<string> SystemRoles { get; } = new();
 
     public List<UserToken> Tokens { get; } = new();
 
     public DateTime? EmailConfirmedOn { get; set; }
-    
-    public static string KeyFrom(string address)
-    {
-        return $"Users/{address}";
-    }
 }

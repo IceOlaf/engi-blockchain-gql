@@ -30,16 +30,13 @@ public class CurrencyMutations : ObjectGraphType
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
+        var crypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
+
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
-
-        if (!signature.IsValid(user.Address, engiOptions.Value.SignatureSkew))
-        {
-            throw new AuthenticationError();
-        }
+        crypto.ValidateOrThrow(user, signature);
         
         var chainStateProvider = scope.ServiceProvider.GetRequiredService<LatestChainStateProvider>();
 
@@ -47,7 +44,7 @@ public class CurrencyMutations : ObjectGraphType
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
-        var sender = Keypair.FromPkcs8(user.KeypairPkcs8, engiOptions.Value.EncryptionCertificateAsX509);
+        var sender = crypto.DecodeKeypair(user);
 
         AccountInfo account;
 

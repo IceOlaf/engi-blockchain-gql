@@ -39,14 +39,11 @@ public class JobMutations : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
+        var crypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
+
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
-
-        if (!signature.IsValid(user.Address, engiOptions.Value.SignatureSkew))
-        {
-            throw new AuthenticationError();
-        }
+        crypto.ValidateOrThrow(user, signature);
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
         
@@ -54,7 +51,7 @@ public class JobMutations : ObjectGraphType
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
 
-        var sender = Keypair.FromPkcs8(user.KeypairPkcs8, engiOptions.Value.EncryptionCertificateAsX509);
+        var sender = crypto.DecodeKeypair(user);
 
         AccountInfo account;
 
@@ -85,16 +82,13 @@ public class JobMutations : ObjectGraphType
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
+        var crypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
+
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
-
-        if (!signature.IsValid(user.Address, engiOptions.Value.SignatureSkew))
-        {
-            throw new AuthenticationError();
-        }
+        crypto.ValidateOrThrow(user, signature);
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
@@ -102,7 +96,7 @@ public class JobMutations : ObjectGraphType
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
 
-        var sender = Keypair.FromPkcs8(user.KeypairPkcs8, engiOptions.Value.EncryptionCertificateAsX509);
+        var sender = crypto.DecodeKeypair(user);
 
         AccountInfo account;
 

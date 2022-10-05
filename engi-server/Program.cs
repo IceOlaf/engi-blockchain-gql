@@ -12,7 +12,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Octokit;
 using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -223,6 +225,15 @@ builder.Services.AddSingleton<IChainObserver, ChainSnapshotObserver>();
 builder.Services.AddScoped<LatestChainStateProvider>();
 builder.Services.AddHostedService<IndexingBackgroundService>();
 builder.Services.AddScoped<TransactionTipCalculator>();
+builder.Services.AddTransient<UserCryptographyService>();
+
+builder.Services.AddTransient(serviceProvider =>
+{
+    var octokit = new GitHubClient(
+        new ProductHeaderValue("engi-bot"));
+
+    return octokit;
+});
 
 // pipeline
 

@@ -15,7 +15,7 @@ public class RepositoryUrlParsingTests
     [InlineData("https://gitlab.com/ravendb/ravendb", "ravendb", "ravendb")]
     public void ParsesSupportedUrl(string url, string expectedOrganization, string expectedName)
     {
-        var (org, name) = Repository.ParseFullName(url);
+        var (org, name) = RepositoryUrl.Parse(url);
 
         Assert.Equal(expectedOrganization, org);
         Assert.Equal(expectedName, name);
@@ -27,7 +27,7 @@ public class RepositoryUrlParsingTests
     [InlineData("https://gitlab.acme.com/ravendb/ravendb")]
     public void DoesNotParseUnsupportedOrInvalidUrls(string url)
     {
-        var (org, name) = Repository.ParseFullName(url);
+        var (org, name) = RepositoryUrl.Parse(url);
 
         Assert.Null(org);
         Assert.Null(name);

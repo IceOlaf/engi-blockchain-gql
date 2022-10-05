@@ -83,14 +83,7 @@ public class AuthMutations : ObjectGraphType
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var publicKey = Address.Parse(args.Address);
-
-        var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
-
-        if (!args.Signature.IsValid(publicKey, engiOptions.Value.SignatureSkew))
-        {
-            throw new AuthenticationError();
-        }
+        var crypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
 
         // find user
 
@@ -108,6 +101,8 @@ public class AuthMutations : ObjectGraphType
         {
             throw new AuthenticationError();
         }
+
+        crypto.ValidateOrThrow(user, args.Signature);
 
         var refreshToken = BuildRefreshToken(user, jwtOptions.Value);
 

@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Server.Types.Authentication;
+﻿using Engi.Substrate.Server.Types.Analysis;
+using Engi.Substrate.Server.Types.Authentication;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;
@@ -7,6 +8,9 @@ public class RootMutations : ObjectGraphType
 {
     public RootMutations()
     {
+        Field<AnalysisMutations>("analysis")
+            .Resolve(_ => new { });
+
         Field<AuthMutations>("auth")
             .Resolve(_ => new { });
 

@@ -5,11 +5,11 @@ using SimpleBase;
 
 namespace Engi.Substrate;
 
-public class Address : IScaleSerializable, IPublicKey
+public class Address : IScaleSerializable, IPublicKey, IEquatable<string>
 {
-    public string Id { get; set; }
+    public string Id { get; }
 
-    public byte[] Raw { get; set; }
+    public byte[] Raw { get; }
 
     byte[] IPublicKey.PublicKey => Raw;
 
@@ -60,6 +60,28 @@ public class Address : IScaleSerializable, IPublicKey
     }
 
     public static implicit operator Address(string s) => Parse(s);
+
+    public static implicit operator string(Address address) => address.Id;
+
+    public bool Equals(string? s)
+    {
+        return s != null && s == Id;
+    }
+    
+    public override bool Equals(object? o)
+    {
+        return o switch
+        {
+            Address address => address.Id == Id,
+            string s => s == Id,
+            _ => false
+        };
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
 
     // helpers
 

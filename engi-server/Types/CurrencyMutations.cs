@@ -44,7 +44,7 @@ public class CurrencyMutations : ObjectGraphType
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
-        var sender = crypto.DecodeKeypair(user);
+        var sender = crypto.DecryptKeypair(user);
 
         AccountInfo account;
 

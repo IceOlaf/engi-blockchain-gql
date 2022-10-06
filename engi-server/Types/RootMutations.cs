@@ -19,5 +19,8 @@ public class RootMutations : ObjectGraphType
 
         Field<JobMutations>("jobs")
             .Resolve(_ => new { });
+
+        Field<UserMutations>("user")
+            .Resolve(_ => new { });
     }
 }

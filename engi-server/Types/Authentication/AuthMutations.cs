@@ -1,11 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using Engi.Substrate.Identity;
-using Engi.Substrate.Keys;
 using Engi.Substrate.Server.Email;
 using GraphQL;
 using GraphQL.Types;
@@ -238,39 +234,17 @@ public class AuthMutations : ObjectGraphType
     private async Task<object?> RegisterAsync(IResolveFieldContext context)
     {
         var args = context.GetValidatedArgument<CreateUserArguments>("user");
+        var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var engiOptions = scope.ServiceProvider.GetRequiredService<IOptions<EngiOptions>>();
+        var userCrypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
         var applicationOptions = scope.ServiceProvider.GetRequiredService<IOptions<ApplicationOptions>>();
 
-        // make sure we can decode the key, if there is one
+        // verify signature
 
-        Keypair? keypair = null;
-
-        if (args.EncryptedPkcs8Key != null)
-        {
-            var privateKey = engiOptions.Value.EncryptionCertificateAsX509.GetRSAPrivateKey()!;
-
-            try
-            {
-                var encryptedData = Convert.FromBase64String(args.EncryptedPkcs8Key);
-
-                var decrypted = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
-
-                var keypairPkcs8 = Convert.FromBase64String(Encoding.UTF8.GetString(decrypted));
-
-                keypair = Keypair.FromPkcs8(keypairPkcs8);
-            }
-            catch (Exception)
-            {
-                throw new ExecutionError("Unable to decrypt and decode key.")
-                {
-                    Code = "INVALID_KEY"
-                };
-            }
-        }
-
+        userCrypto.ValidateOrThrow(args.Address, signature);
+        
         // create user
 
         var store = scope.ServiceProvider.GetRequiredService<IDocumentStore>();
@@ -286,14 +260,9 @@ public class AuthMutations : ObjectGraphType
         {
             Email = args.Email.ToLowerInvariant().Trim(),
             Display = args.Display,
-            Tokens = { emailConfirmationToken }
+            Tokens = { emailConfirmationToken },
+            Address = args.Address
         };
-
-        if (keypair != null)
-        {
-            user.Address = keypair.Address.Id;
-            user.KeypairPkcs8 = keypair.ExportToPkcs8(engiOptions.Value.EncryptionCertificateAsX509);
-        }
 
         await session.StoreAsync(user);
 
@@ -314,11 +283,19 @@ public class AuthMutations : ObjectGraphType
         {
             await session.SaveChangesAsync();
         }
-        catch (ConcurrencyException)
+        catch (ConcurrencyException ex)
         {
-            throw new ExecutionError("User already exists.")
+            if (ex.Id.Contains(args.Email, StringComparison.OrdinalIgnoreCase))
             {
-                Code = "DUPE_EMAIL"
+                throw new ExecutionError("User already exists.")
+                {
+                    Code = "DUPE_EMAIL"
+                };
+            }
+
+            throw new ExecutionError("Address already exists.")
+            {
+                Code = "DUPE_ADDRESS"
             };
         }
 

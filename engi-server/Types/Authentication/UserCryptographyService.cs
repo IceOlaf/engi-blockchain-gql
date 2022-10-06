@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
 using GraphQL;
@@ -15,18 +17,16 @@ public class UserCryptographyService
         this.options = options.Value;
     }
 
-    public bool IsValid(User user, SignatureArguments args)
+    public bool IsValid(Address address, SignatureArguments args)
     {
         string expectedSignatureContent =
-            $"{user.Address}|{new DateTimeOffset(args.SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}";
+            $"{address}|{new DateTimeOffset(args.SignedOn).ToUniversalTime().ToUnixTimeMilliseconds()}";
 
         string wrappedSignatureContent = $"<Bytes>{expectedSignatureContent}</Bytes>";
 
         byte[] valueBytes = Hex.GetBytes0X(args.Value);
 
         // first try to verify wrapped as most expected case, then raw
-
-        Address address = user.Address;
 
         bool valid = address.Verify(valueBytes,
             Encoding.UTF8.GetBytes(wrappedSignatureContent));
@@ -40,15 +40,45 @@ public class UserCryptographyService
         return valid && args.SignedOn < DateTime.UtcNow.Add(options.SignatureSkew);
     }
 
-    public void ValidateOrThrow(User user, SignatureArguments args)
+    public void ValidateOrThrow(Address address, SignatureArguments args)
     {
-        if (!IsValid(user, args))
+        if (address == null)
+        {
+            throw new ArgumentNullException(nameof(address));
+        }
+
+        if (args == null)
+        {
+            throw new ArgumentNullException(nameof(args));
+        }
+
+        if (!IsValid(address, args))
         {
             throw new AuthenticationError();
         }
     }
 
-    public Keypair DecodeKeypair(User user)
+    public void ValidateOrThrow(User user, SignatureArguments args) => ValidateOrThrow(user.Address, args);
+
+    public Keypair DecryptKeypair(string encryptedPkcs8Key)
+    {
+        var privateKey = options.EncryptionCertificateAsX509.GetRSAPrivateKey()!;
+
+        var encryptedData = Convert.FromBase64String(encryptedPkcs8Key);
+
+        var decrypted = privateKey.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
+
+        var keypairPkcs8 = Convert.FromBase64String(Encoding.UTF8.GetString(decrypted));
+
+        return Keypair.FromPkcs8(keypairPkcs8);
+    }
+
+    public byte[] EncryptKeypair(Keypair keypair)
+    {
+        return keypair.ExportToPkcs8(options.EncryptionCertificateAsX509);
+    }
+
+    public Keypair DecryptKeypair(User user)
     {
         if (user.KeypairPkcs8 == null)
         {

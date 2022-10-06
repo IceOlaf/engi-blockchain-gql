@@ -31,4 +31,6 @@ public class UserAddressReference
     {
         return $"UserAddressReferences/{address}";
     }
+
+    public static string KeyFrom(Address address) => KeyFrom((string) address);
 }

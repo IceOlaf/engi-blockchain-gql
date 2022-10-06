@@ -1,12 +1,10 @@
 ﻿using Engi.Substrate.Identity;
 using Engi.Substrate.Jobs;
-using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
-using Microsoft.Extensions.Options;
 using Raven.Client.Documents.Session;
 
 namespace Engi.Substrate.Server.Types;
@@ -51,7 +49,7 @@ public class JobMutations : ObjectGraphType
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
 
-        var sender = crypto.DecodeKeypair(user);
+        var sender = crypto.DecryptKeypair(user);
 
         AccountInfo account;
 
@@ -74,7 +72,6 @@ public class JobMutations : ObjectGraphType
                 sender, args, account, ExtrinsicEra.Immortal, chainState, tip), chainState.Metadata);
     }
 
-
     private async Task<object?> CreateJobAsync(IResolveFieldContext context)
     {
         var args = context.GetValidatedArgument<CreateJobArguments>("args");
@@ -82,13 +79,13 @@ public class JobMutations : ObjectGraphType
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var crypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
+        var userCrypto = scope.ServiceProvider.GetRequiredService<UserCryptographyService>();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        crypto.ValidateOrThrow(user, signature);
+        userCrypto.ValidateOrThrow(user, signature);
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
@@ -96,7 +93,7 @@ public class JobMutations : ObjectGraphType
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
 
-        var sender = crypto.DecodeKeypair(user);
+        var sender = userCrypto.DecryptKeypair(user);
 
         AccountInfo account;
 

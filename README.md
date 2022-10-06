@@ -64,6 +64,20 @@ mutation {
       user: {
         display: "georgiosd"
         email: "georgiosd@gmail.com"
+        address: "5G1GQ5bb1bjBUwjSBcArBkbK5gfrW9nTJLhnz3G3nLDo1g5n"
+      }
+    )
+  }
+}
+```
+
+Once the user is registered, you may use the `user.importKey` mutation to have ENGI manage their key so that they can invoke mutations through the API.
+
+```
+mutation {
+  user {
+    importKey(
+      args: {
         encryptedPkcs8Key: "dZWIrU5Bwj4vFFhoLzGHq0o/F4W0ItJf5+sKmaHaCDJdveMHRSP/HGo35yBQMvMl5+ST69dLYYKfy0nZgMIEhfpf5Hywfm0WJ6MoegwPiRNtZr72P3zFifnVODlCUGuH8X8w1mxLmQqpCqjmivswQ80eMZ76KEI3t5h7QTi4LrCUEXl5ICNbzavSpSFxowqkNj1RTyJTJ4pEUYRkIgefDhQmpu1N+AlzXNoTFtqZckzqMVdltV0dQJjJZprByQ7b/RdO6Rl72iKW8a03dyB6aRRRHCh+DJeO9auYtju7DjkOe77hPMh4dsynMbTzgy8NUvIlSNxPhxIXiMxNDy4pww=="
       }
     )
@@ -100,7 +114,6 @@ async function main() {
 
 main();
 ```
-The mutation's result is the created user's id, which is in the format `Users/<account address>`.
 
 ### Logging in
 
@@ -128,6 +141,56 @@ From the docs:
 
 ```
 The hex-formatted signature, calculated with the user's private key, for the string `{address}|{unixTimeMs}`, where 'address' is the address submitted and 'unixTimeMs' the current time, in milliseconds since the UNIX epoch.
+```
+
+Example in JS:
+```
+const axios = require("axios");
+const { Keyring } = require("@polkadot/keyring");
+const { waitReady } = require("@polkadot/wasm-crypto");
+const { u8aToHex, hexToU8a, stringToHex } = require("@polkadot/util");
+const { gql } = require('graphql-request');
+
+async function main() {
+  await waitReady();
+
+  const pair = new Keyring().addFromMnemonic(
+    "unlock romance holiday fruit prefer mail chuckle banner margin oval unusual keen",
+    undefined,
+    "sr25519"
+  );
+
+  const dt = new Date();
+
+  const payload = stringToHex(`${pair.address}|${dt.getTime()}`)
+  const signature = u8aToHex(pair.sign(hexToU8a(payload)));
+
+  const response = await axios.post("http://localhost:5000/api/graphql", {
+    query: gql`
+      mutation LoginUser($loginArgs: LoginArguments!) {
+        auth {
+          login(args: $loginArgs) {
+            accessToken
+          }
+        }
+      }
+    `,
+    operationName: "LoginUser",
+    variables: {
+      loginArgs: {
+        address: pair.address,
+        signature: {
+          signedOn: dt.toISOString(),
+          value: signature,
+        },
+      },
+    },
+  });
+
+  console.log(response.data.data.auth.login)
+}
+
+main();
 ```
 
 The validation runs as:

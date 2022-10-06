@@ -25,17 +25,40 @@ public class AuthMutations : ObjectGraphType
         this.AllowAnonymous();
 
         Field<AuthenticationTokenPairGraphType>("login")
+            .Description(@"
+                Login mutation to get access and refresh token. The access token is returned in 
+                the mutation response, while the refresh token is stored in a secure cookie.
+                If the user is not found, hasn't confirmed their email or the submitted signature
+                cannot be validated, code AUTHENTICATION_FAILED is returned as error.
+            ")
             .Argument<NonNullGraphType<LoginArgumentsGraphType>>("args")
             .ResolveAsync(LoginAsync);
 
         Field<IdGraphType>("refresh")
+            .Description(@"
+                This mutation will return a new access token for the user, if the transmitted
+                refresh token (secure cookie) is valid and hasn't expired. AUTHENTICATION_FAILED is
+                returned otherwise.
+            ")
             .ResolveAsync(RefreshAsync);
 
         Field<IdGraphType>("register")
+            .Description(@"
+                Create a new account on ENGI. A signature must be produced, to verify that the address,
+                submitted is owned by the user. If signature validation fails, code AUTHENTICATION_FAILED
+                is returned.
+                If the e-mail submitted already exists on the system, code DUPE_EMAIL is returned. 
+                Similarly, if the address submitted already exists, code DUPE_ADDRESS is returned. 
+            ")
             .Argument<NonNullGraphType<CreateUserArgumentsGraphType>>("user")
+            .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .ResolveAsync(RegisterAsync);
 
         Field<IdGraphType>("confirmEmail")
+            .Description(@"
+                Confirm a user's account with the token sent over e-mail. If the address and token match,
+                the user is activated. Otherwise, code AUTHENTICATION_FAILED is returned.
+            ")
             .Argument<NonNullGraphType<ConfirmEmailArgumentsGraphType>>("args")
             .ResolveAsync(ConfirmEmailAsync);
     }

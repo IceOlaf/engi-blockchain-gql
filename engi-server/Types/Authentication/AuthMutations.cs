@@ -30,7 +30,7 @@ public class AuthMutations : ObjectGraphType
             .Argument<NonNullGraphType<LoginArgumentsGraphType>>("args")
             .ResolveAsync(LoginAsync);
 
-        Field<IdGraphType>("refresh")
+        Field<AuthenticationTokenPairGraphType>("refresh")
             .Description(@"
                 This mutation will return a new access token for the user, if the transmitted
                 refresh token (secure cookie) is valid and hasn't expired. AUTHENTICATION_FAILED is
@@ -139,16 +139,38 @@ public class AuthMutations : ObjectGraphType
 
         var refreshToken = BuildRefreshToken(user, jwtOptions.Value);
 
-        session.Advanced.Patch(user,
-            x => x.Tokens,
-            tokens => tokens.Add(refreshToken));
+        // TODO: fix
+        //session.Advanced.Patch(user,
+        //    x => x.Tokens,
+        //    tokens => tokens.Add(refreshToken));
 
-        await session.SaveChangesAsync();
+        for(int i = 0; i < 10; ++i)
+        {
+            try
+            {
+                user.Tokens.Add(refreshToken);
+
+                user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
+
+                await session.SaveChangesAsync();
+
+                break;
+            }
+            catch (ConcurrencyException)
+            {
+                if (i == 9)
+                {
+                    throw;
+                }
+
+                await session.Advanced.RefreshAsync(user);
+            }
+        }
 
         return new AuthenticationTokenPair
         {
             AccessToken = BuildAccessToken(user, jwtOptions.Value),
-            RefreshToken = BuildRefreshToken(user, jwtOptions.Value)
+            RefreshToken = refreshToken
         };
     }
 
@@ -201,11 +223,21 @@ public class AuthMutations : ObjectGraphType
 
         if (refreshToken.ExpiresOn! < DateTime.UtcNow)
         {
-            session.Advanced.Patch(user,
-                x => x.Tokens,
-                tokens => tokens.RemoveAll(t => t.Id == refreshToken.Id));
+            //session.Advanced.Patch(user,
+            //    x => x.Tokens,
+            //    tokens => tokens
+            //        .RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow));
 
-            await session.SaveChangesAsync();
+            user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
+
+            try
+            {
+                await session.SaveChangesAsync();
+            }
+            catch (ConcurrencyException)
+            {
+                // this is just cleanup, dont need to retry
+            }
 
             throw new AuthenticationException();
         }
@@ -214,20 +246,41 @@ public class AuthMutations : ObjectGraphType
 
         var newRefreshToken = BuildRefreshToken(user, jwtOptions.Value);
 
-        session.Advanced.Patch(user,
-            x => x.Tokens,
-            tokens => tokens.RemoveAll(t => t.Id == refreshToken.Id));
+        //session.Advanced.Patch(user,
+        //    x => x.Tokens,
+        //    tokens => tokens.RemoveAll(t => t.Id == refreshToken.Id) || t.ExpiresOn <= DateTime.UtcNow));
 
-        session.Advanced.Patch(user,
-            x => x.Tokens,
-            tokens => tokens.Add(newRefreshToken));
+        //session.Advanced.Patch(user,
+        //    x => x.Tokens,
+        //    tokens => tokens.Add(newRefreshToken));
 
-        await session.SaveChangesAsync();
+        for (int i = 0; i < 10; ++i)
+        {
+            try
+            {
+                user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
 
+                user.Tokens.Add(newRefreshToken);
+
+                await session.SaveChangesAsync();
+
+                break;
+            }
+            catch (ConcurrencyException)
+            {
+                if (i == 9)
+                {
+                    throw;
+                }
+
+                await session.Advanced.RefreshAsync(user);
+            }
+        }
+        
         return new AuthenticationTokenPair
         {
             AccessToken = BuildAccessToken(user, jwtOptions.Value),
-            RefreshToken = BuildRefreshToken(user, jwtOptions.Value)
+            RefreshToken = newRefreshToken
         };
     }
 
@@ -299,7 +352,7 @@ public class AuthMutations : ObjectGraphType
             };
         }
 
-        return user.Id;
+        return null;
     }
 
     private string BuildAccessToken(User user, JwtOptions jwtOptions)

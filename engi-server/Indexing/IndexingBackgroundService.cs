@@ -49,6 +49,15 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () => 
             {
+                if (header.Number == 0)
+                {
+                    // this can only happen in a genesis, if that, but since it showed up once
+                    // (after a genesis), I've added this guard - the indexing code will fail
+                    // because block 0 doesn't have a timestamp set
+
+                    return;
+                }
+
                 try
                 {
                     using var session = Store.OpenAsyncSession();
@@ -351,8 +360,17 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         foreach (var key in missingKeys)
         {
-            await session.StoreAsync(
-                new ExpandedBlock(ulong.Parse(key.Split('/').Last())));
+            ulong number = ulong.Parse(key.Split('/').Last());
+
+            if (number == 0)
+            {
+                // this would indicate a bug in the parent code but since it's a cheap operation
+                // i've added this to prevent problems with indexing block 0 (lacks timestamp)
+
+                continue;
+            }
+
+            await session.StoreAsync(new ExpandedBlock(number));
         }
 
         await session.SaveChangesAsync();

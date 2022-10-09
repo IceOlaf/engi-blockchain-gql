@@ -39,7 +39,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 UpdatedOn = snapshot.SnapshotOn,
                 Query = new []
                 {
-                    snapshot.JobId.ToString(),
+                    snapshot.JobId.ToString().TrimStart('0'),
                     snapshot.Name,
                     snapshot.Repository.Url.Replace("https://github.com/", "")
                 },

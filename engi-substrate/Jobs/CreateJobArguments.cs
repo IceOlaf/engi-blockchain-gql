@@ -38,7 +38,7 @@ public class CreateJobArguments : IExtrinsic
         return new Func<Field, PortableType, PortableType?, bool>[]
         {
             (field, type, innerType) => field.Name == "funding" && type.Definition is CompactTypeDefinition && innerType!.FullName == "u128",
-            (field, type, _) => field.Name == "language" && type.Definition is VariantTypeDefinition v && v.Variants.Count == 1,
+            (field, type, _) => field.Name == "language" && type.Definition is VariantTypeDefinition,
             (field, _, _) => field.Name == "repository_url",
             (field, _, _) => field.Name == "branch_name",
             (field, _, _) => field.Name == "commit_hash",

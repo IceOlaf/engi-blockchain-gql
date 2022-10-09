@@ -22,7 +22,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         ILoggerFactory loggerFactory) 
         : base(store, serviceProvider, sentry, loggerFactory)
     {
-        ProcessConcurrently = env.IsProduction();
+        ProcessConcurrently = !env.IsDevelopment();
     }
 
     protected override string CreateQuery()

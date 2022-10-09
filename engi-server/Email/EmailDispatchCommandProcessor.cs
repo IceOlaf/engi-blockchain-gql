@@ -20,7 +20,7 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
         ILoggerFactory loggerFactory)
         : base(store, serviceProvider, sentry, loggerFactory)
     {
-        ProcessConcurrently = env.IsProduction();
+        ProcessConcurrently = !env.IsDevelopment();
     }
 
     protected override string CreateQuery()

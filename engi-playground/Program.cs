@@ -21,7 +21,7 @@ public static class Program
 {
     private static readonly string BaseUrl = "http://localhost:5000";
 
-    private static readonly Keypair AliceKeyPair = KeypairFactory.CreateFromAny("0xe5be9a5092b81bca64be81d212e7f2f9eba183bb7a90954f7b76361f6edb5c0a");
+    private static readonly Keypair SudoKeypair = KeypairFactory.CreateFromAny("0x868020ae0687dda7d57565093a69090211449845a7e11453612800b663307246");
     private static readonly Keypair GeorgiosdKeypair = KeypairFactory.CreateFromAny("ridge accuse cotton debate step theory fade bench flock liar seek day");
 
     private static readonly Keypair[] TestKeypairs =
@@ -133,12 +133,18 @@ public static class Program
 
         session.Advanced.MaxNumberOfRequestsPerSession = 100000;
 
+        // create a job
+
         await CreateJobAsync(GeorgiosdKeypair);
+
+        // wait while it is getting indexed
 
         var jobDocumentChange = await store.Changes()
             .ForDocumentsInCollection<JobSnapshot>().FirstAsync();
 
         var job = await session.LoadAsync<JobSnapshot>(jobDocumentChange.Id);
+
+        // create attempts
 
         var attemptIds = new ulong[TestKeypairs.Length];
 
@@ -165,7 +171,7 @@ public static class Program
         {
             var keypair = TestKeypairs[index];
 
-            await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), AliceKeyPair, keypair.Address, tests =>
+            await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), SudoKeypair, keypair.Address, tests =>
             {
                 tests[index].Result = TestResult.Passed;
                 tests[index].FailedResultMessage = null;
@@ -182,7 +188,7 @@ public static class Program
 
         var solver = TestKeypairs[RandomNumberGenerator.GetInt32(0, TestKeypairs.Length)];
 
-        await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), AliceKeyPair, solver.Address,
+        await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), SudoKeypair, solver.Address,
             tests =>
             {
                 foreach (var test in tests)
@@ -239,7 +245,7 @@ public static class Program
                     new()
                     {
                         Id = "test-4",
-                        Result = TestResult.Passed,
+                        Result = TestResult.Failed,
                         FailedResultMessage = "Failed 4"
                     }
                 }
@@ -257,7 +263,7 @@ public static class Program
 
         var result = await client.AuthorSubmitExtrinsicAsync(
             new SignedExtrinsicArguments<SudoCallArguments>(
-                AliceKeyPair, args, account, ExtrinsicEra.Immortal, chainState, 0), chainState.Metadata);
+                SudoKeypair, args, account, ExtrinsicEra.Immortal, chainState, 0), chainState.Metadata);
 
         return;
     }

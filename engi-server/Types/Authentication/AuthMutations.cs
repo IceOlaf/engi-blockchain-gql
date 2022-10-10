@@ -336,17 +336,17 @@ public class AuthMutations : ObjectGraphType
         {
             await session.SaveChangesAsync();
         }
-        catch (ConcurrencyException ex)
+        catch (ClusterTransactionConcurrencyException ex)
         {
-            if (ex.Id.Contains(args.Email, StringComparison.OrdinalIgnoreCase))
+            if (ex.ConcurrencyViolations.Any(x => x.Id.EndsWith(args.Email, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new ExecutionError("User already exists.")
+                throw new ExecutionError("User with e-mail already exists.")
                 {
                     Code = "DUPE_EMAIL"
                 };
             }
 
-            throw new ExecutionError("Address already exists.")
+            throw new ExecutionError("User with address already exists.")
             {
                 Code = "DUPE_ADDRESS"
             };

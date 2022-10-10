@@ -70,7 +70,8 @@ public class AnalysisMutations : ObjectGraphType
         {
             RepositoryUrl = args.Url,
             Branch = args.Branch,
-            Commit = commit.Sha
+            Commit = commit.Sha,
+            CreatedBy = context.User!.Identity!.Name!
         };
 
         await session.StoreAsync(analysis);

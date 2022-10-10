@@ -16,4 +16,6 @@ public class RepositoryAnalysis
     public string Commit { get; set; } = null!;
     public RepositoryAnalysisStatus Status { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+
+    public string CreatedBy { get; set; } = null!;
 }

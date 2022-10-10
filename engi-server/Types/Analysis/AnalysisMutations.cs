@@ -12,8 +12,6 @@ public class AnalysisMutations : ObjectGraphType
 {
     public AnalysisMutations()
     {
-        this.AuthorizeWithPolicy(PolicyNames.Sudo);
-
         Field<IdGraphType>("submit")
             .Description(@"
                 Submit an analysis request to the analysis engine. 
@@ -22,8 +20,8 @@ public class AnalysisMutations : ObjectGraphType
             ")
             .Argument<NonNullGraphType<SubmitAnalysisArgumentsGraphType>>("args")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
-            .ResolveAsync(SubmitAnalysisAsync)
-            .AuthorizeWithPolicy(PolicyNames.Authenticated);
+            .AuthorizeWithPolicy(PolicyNames.Authenticated)
+            .ResolveAsync(SubmitAnalysisAsync);
     }
 
     private async Task<object?> SubmitAnalysisAsync(IResolveFieldContext context)

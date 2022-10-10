@@ -16,7 +16,7 @@ public class AnalysisMutations : ObjectGraphType
 
         Field<IdGraphType>("submit")
             .Description(@"
-                Submit an analysis request to the analysis engine (Sudo). 
+                Submit an analysis request to the analysis engine. 
                 If the mutation completes successfully, it will return the id of the analysis document. 
                 If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
             ")

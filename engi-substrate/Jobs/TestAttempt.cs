@@ -3,7 +3,7 @@ using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate.Jobs;
 
-public class TestAttempt : IScaleSerializable
+public class TestAttempt : IScaleSerializable, IValidatableObject
 {
     [Required]
     public string Id { get; set; } = null!;
@@ -40,5 +40,14 @@ public class TestAttempt : IScaleSerializable
         }
         
         return attempt;
+    }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Result == TestResult.Failed && string.IsNullOrEmpty(FailedResultMessage))
+        {
+            yield return new ValidationResult("Error message is required for failing tests.",
+                new[] {nameof(Result), nameof(FailedResultMessage)});
+        }
     }
 }

@@ -26,7 +26,7 @@ public class EngiQuery : ObjectGraphType
             .ResolveAsync(GetHealthAsync);
 
         Field<JobGraphType>("job")
-            .Argument<NonNullGraphType<ULongGraphType>>("id")
+            .Argument<NonNullGraphType<UInt64GraphType>>("id")
             .ResolveAsync(GetJobAsync);
 
         Field<JobsQueryResultGraphType>("jobs")

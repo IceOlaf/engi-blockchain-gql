@@ -238,6 +238,14 @@ mutation {
 }
 ```
 
+### Elevated (Sudo) Authentication
+
+Elevated access is provided to other services that interact with the API by way of using API key authentication via a custom header.
+
+```
+X-API-KEY: <api key>
+```
+
 ## Off-chain indexing
 
 In order to facilitate queries that are not supported directly by the chain, it was decided to create an off-chain index.

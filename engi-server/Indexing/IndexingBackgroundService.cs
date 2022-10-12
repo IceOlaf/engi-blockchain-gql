@@ -156,7 +156,16 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 // if we didn't make it to the end, store the sentry error
 
-                block.SentryId = Sentry.CaptureException(ex).ToString();
+                void ConfigureScope(Scope scope)
+                {
+                    scope.SetExtras(new Dictionary<string, object?>
+                    {
+                        ["number"] = block.Number.ToString(), 
+                        ["hash"] = block.Hash ?? string.Empty
+                    });
+                }
+
+                block.SentryId = Sentry.CaptureException(ex, ConfigureScope).ToString();
             }
         }, maxDegreeOfParallelism: 64);
 
@@ -174,13 +183,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         RuntimeMetadata meta,
         SubstrateClient client)
     {
-        Sentry.AddBreadcrumb("Processing block",
-            data: new Dictionary<string, string>
-            {
-                ["number"] = block.Number.ToString(),
-                ["hash"] = block.Hash ?? string.Empty
-            });
-
         var results = new List<object>();
 
         string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);

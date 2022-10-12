@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Server.Types.Authentication;
+﻿using System.Text.Json;
+using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Execution;
 using GraphQL.Instrumentation;
@@ -9,7 +10,7 @@ using GraphQL.Types;
 using GraphQLParser.AST;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-
+using Sentry;
 using AllowAnonymousAttribute = Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
@@ -20,21 +21,33 @@ public class GraphQLController : ControllerBase
 {
     private readonly IDocumentExecuter documentExecuter;
     private readonly IWebHostEnvironment environment;
+    private readonly IHub sentry;
     private readonly ApplicationOptions apiOptions;
 
     public GraphQLController(
         IDocumentExecuter documentExecuter, 
         IWebHostEnvironment environment,
+        IHub sentry,
         IOptions<ApplicationOptions> apiOptions)
     {
         this.documentExecuter = documentExecuter;
         this.environment = environment;
+        this.sentry = sentry;
         this.apiOptions = apiOptions.Value;
     }
 
     [HttpPost, Authorize(AuthenticationSchemes = AuthenticationSchemes.ApiKey)]
     public async Task<IActionResult> Execute([FromBody] GraphQLRequest request)
     {
+        sentry.AddBreadcrumb("Processing GraphQL request",
+            data: new Dictionary<string, string>
+            {
+                ["OperationName"] = request.OperationName ?? string.Empty,
+                ["Query"] = request.Query ?? string.Empty,
+                ["Variables"] = JsonSerializer.Serialize(request.Variables),
+                ["Extensions"] = JsonSerializer.Serialize(request.Extensions)
+            });
+
         var startTime = DateTime.UtcNow;
 
         var result = await documentExecuter

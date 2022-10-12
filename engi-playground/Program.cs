@@ -323,7 +323,7 @@ public static class Program
                 .Select(offset => new Test
                 {
                     Id = $"test-{offset + 1}",
-                    AnalysisResult = TestResult.Passed,
+                    Result = TestResult.Passed,
                     Required = true
                 })
                 .ToArray(),

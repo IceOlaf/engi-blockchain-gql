@@ -158,7 +158,7 @@ public class JobPopulateSolutionsTests
         return new()
         {
             Id = $"test-{id}",
-            AnalysisResult = analysisResult,
+            Result = analysisResult,
             Required = required
         };
     }

@@ -11,7 +11,7 @@ public class JobTestInputGraphType : InputObjectGraphType<Test>
 
         Field(x => x.Id)
             .Description("The identifier of the test extracted in analysis.");
-        Field(x => x.AnalysisResult)
+        Field(x => x.Result)
             .Description("The result of the test at analysis.");
         Field(x => x.Required)
             .Description("Is a result required to complete the job?");

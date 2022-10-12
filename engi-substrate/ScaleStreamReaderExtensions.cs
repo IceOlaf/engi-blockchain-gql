@@ -28,6 +28,11 @@ public static class ScaleStreamReaderExtensions
             return byteArrayConverter(data);
         }
 
+        if (itemType.FullName == "u64")
+        {
+            return reader.ReadList(typeDef.Len, s => s.ReadUInt64());
+        }
+
         throw new NotImplementedException($"Reading arrays of typeId='{itemType.Id}' is not implemented.");
     }
 

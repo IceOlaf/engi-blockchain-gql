@@ -1,11 +1,9 @@
 ﻿using Engi.Substrate.Identity;
-using Engi.Substrate.Keys;
 using Engi.Substrate.Pallets;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
-using Microsoft.Extensions.Options;
 using Raven.Client.Documents.Session;
 
 namespace Engi.Substrate.Server.Types;

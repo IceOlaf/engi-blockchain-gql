@@ -24,6 +24,22 @@ public class EngiOptions
     /// </summary>
     public string SudoApiKey { get; set; } = null!;
 
+    /// <summary>
+    /// The ENGI Github app id.
+    /// </summary>
+    public int GithubAppId { get; set; }
+
+    /// <summary>
+    /// The private key generated for signing JWT tokens to authenticate
+    /// with Github for the ENGI app. PEM, base64 encoded.
+    /// </summary>
+    public string GithubAppPrivateKey { get; set; } = null!;
+
+    /// <summary>
+    /// The webhook secret for the ENGI app webhook deliveries.
+    /// </summary>
+    public string GithubAppWebhookSecret { get; set; } = null!;
+
     public X509Certificate2 EncryptionCertificateAsX509 =>
         X509CertificatesHelper.CertificateFromBase64String(EncryptionCertificate);
 }

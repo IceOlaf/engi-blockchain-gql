@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using Engi.Substrate;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Authentication;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Polly;
@@ -28,12 +29,11 @@ builder.WebHost.UseSentry();
 // services config
 
 builder.Services.AddCors();
-
 builder.Services.AddHealthChecks();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 builder.Services.Configure<SubstrateClientOptions>(substrateSection);
-
-builder.Services.AddHttpClient();
 builder.Services.AddHttpClient(nameof(SubstrateClient), http =>
     {
         var options = substrateSection
@@ -229,10 +229,33 @@ builder.Services.AddTransient<UserCryptographyService>();
 
 builder.Services.AddTransient(serviceProvider =>
 {
-    var octokit = new GitHubClient(
-        new ProductHeaderValue("engi-bot"));
+    var cache = serviceProvider.GetRequiredService<IMemoryCache>();
 
-    return octokit;
+    var jwtToken = cache.GetOrCreate("github-jwt", e =>
+    {
+        var generator = new GitHubJwt.GitHubJwtFactory(
+            new Base64PrivateKeySource(engiOptions.GithubAppPrivateKey),
+            new GitHubJwt.GitHubJwtFactoryOptions
+            {
+                AppIntegrationId = engiOptions.GithubAppId,
+                ExpirationSeconds = 600
+            }
+        );
+
+        var jwtToken = generator.CreateEncodedJwtToken();
+
+        var decoded = new JwtSecurityTokenHandler().ReadJwtToken(jwtToken);
+
+        e.AbsoluteExpiration = decoded.ValidTo;
+
+        return jwtToken;
+    });
+
+    return new GitHubClient(
+        new ProductHeaderValue("engi-bot"))
+    {
+        Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)
+    };
 });
 
 // pipeline

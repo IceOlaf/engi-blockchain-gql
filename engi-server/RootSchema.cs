@@ -7,7 +7,7 @@ public class RootSchema : Schema
 {
     public RootSchema()
     {
-        Query = new EngiQuery();
+        Query = new RootQuery();
         Mutation = new RootMutations();
         Subscription = new EngiSubscriptions();
     }

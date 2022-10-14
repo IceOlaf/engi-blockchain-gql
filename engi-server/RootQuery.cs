@@ -12,15 +12,18 @@ using Sentry;
 
 namespace Engi.Substrate.Server;
 
-public class EngiQuery : ObjectGraphType
+public class RootQuery : ObjectGraphType
 {
-    public EngiQuery()
+    public RootQuery()
     {
         this.AllowAnonymous();
 
         Field<AccountInfoGraphType>("account")
             .Argument<NonNullGraphType<StringGraphType>>("id")
             .ResolveAsync(GetAccountAsync);
+
+        Field<GithubQuery>("github")
+            .Resolve(_ => new { });
 
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);

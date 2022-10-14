@@ -17,4 +17,6 @@ public class User
     public List<UserToken> Tokens { get; } = new();
 
     public DateTime? EmailConfirmedOn { get; set; }
+
+    public Dictionary<long, UserGithubEnrollment>? GithubEnrollments { get; set; } = new();
 }

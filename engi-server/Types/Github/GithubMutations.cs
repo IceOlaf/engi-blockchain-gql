@@ -19,7 +19,7 @@ public class GithubMutations : ObjectGraphType
 
         Field<IdGraphType>("enroll")
             .Description("Finish enrollment after a user installs the ENGI app.")
-            .Argument<GithubEnrollmentArgumentsGraphType>("args")
+            .Argument<NonNullGraphType<GithubEnrollmentArgumentsGraphType>>("args")
             .ResolveAsync(EnrollAsync);
     }
 

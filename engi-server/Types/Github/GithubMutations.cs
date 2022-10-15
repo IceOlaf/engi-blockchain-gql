@@ -75,21 +75,12 @@ public class GithubMutations : ObjectGraphType
                     IsPrivate = x.Private,
                     OwnerAvatarUrl = installation.Account.AvatarUrl
                 })
-                .ToArray()
+                .ToList()
         };
 
-        session.Advanced.Defer(new PatchCommandData(user.Id, null, new PatchRequest
-        {
-            Script = @"
-    this.GithubEnrollments = this.GithubEnrollments || {}
-    this.GithubEnrollments[args.installationId] = args.enrollment
-",
-            Values = new()
-            {
-                ["installationId"] = installationId,
-                ["enrollment"] = enrollment
-            }
-        }));
+        session.Advanced.Defer(
+            new PatchCommandData(
+                user.Id, null, new UpdateGithubEnrollmentPatchRequest(enrollment)));
 
         var githubAppInstallationUserReference = new GithubAppInstallationUserReference(installation, user);
 

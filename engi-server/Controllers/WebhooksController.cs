@@ -37,21 +37,28 @@ public class WebhooksController : ControllerBase
             json = await JObject.LoadAsync(new JsonTextReader(reader));
         }
 
+        var octokitSerializer = new Octokit.Internal.SimpleJsonSerializer();
+
         if (json.ContainsKey("installation"))
         {
-            var serializer = new Octokit.Internal.SimpleJsonSerializer();
+            string action = (string) json["action"]!;
 
-            var payload = serializer.Deserialize<GithubAppInstallationPayload>(json.ToString());
-
-            if (payload.Action == "deleted")
+            if (action == "created")
             {
+                var payload = octokitSerializer.Deserialize<GithubAppInstallationCreatedPayload>(json.ToString());
+
+                var @event = new GithubAppInstallationWebhookEvent(payload, webhookId);
+
+                await session.StoreAsync(@event, null, @event.Id);
+            }
+            else if (action == "deleted")
+            {
+                var payload = octokitSerializer.Deserialize<GithubAppInstallationDeletedPayload>(json.ToString());
+
                 // find user and remove reference
 
-                var referenceId = GithubAppInstallationUserReference.KeyFrom(payload.Installation.Id);
-
                 var reference = await session
-                    .LoadAsync<GithubAppInstallationUserReference>(referenceId,
-                        include => include.IncludeDocuments(x => x.UserId));
+                    .LoadAsync<GithubAppInstallationUserReference>(GithubAppInstallationUserReference.KeyFrom(payload.Installation.Id));
 
                 if (reference != null)
                 {
@@ -66,13 +73,40 @@ public class WebhooksController : ControllerBase
                         }
                     }));
                 }
+
+                var @event = new GithubAppInstallationWebhookEvent(payload, webhookId);
+
+                await session.StoreAsync(@event, null, @event.Id);
             }
+            else if (action is "removed" or "added")
+            {
+                var payload = octokitSerializer.Deserialize<GithubAppInstallationRepositoriesChangedPayload>(json.ToString());
 
-            var @event = new GithubAppInstallationWebhookEvent(payload, webhookId);
+                // find user and update repositories
 
-            await session.StoreAsync(@event,
-                null, // overwrite if re-delivered
-                @event.Id);
+                var reference = await session
+                    .LoadAsync<GithubAppInstallationUserReference>(GithubAppInstallationUserReference.KeyFrom(payload.Installation.Id),
+                        include => include.IncludeDocuments(x => x.UserId));
+
+                if (reference != null)
+                {
+                    // in this case we don't use a patch because:
+                    // - we have to load the enrollment to make the changes
+                    // - two separate events (removed/added) arrive one after the other and would likely result in a race condition
+
+                    var user = await session.LoadAsync<User>(reference.UserId);
+
+                    if (user.GithubEnrollments?.TryGetValue(payload.Installation.Id, out var enrollment) == true)
+                    {
+                        enrollment.Add(payload.RepositoriesAdded);
+                        enrollment.Remove(payload.RepositoriesRemoved);
+                    }
+                }
+
+                var @event = new GithubAppInstallationWebhookEvent(payload, webhookId);
+
+                await session.StoreAsync(@event, null, @event.Id);
+            }
         }
         else
         {

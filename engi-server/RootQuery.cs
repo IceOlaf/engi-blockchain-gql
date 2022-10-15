@@ -1,6 +1,7 @@
 ﻿using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
+using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;

@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Jobs;
+﻿namespace Engi.Substrate;
 
 public static class RepositoryUrl
 {
@@ -32,5 +32,12 @@ public static class RepositoryUrl
         }
 
         return (parts[0].ToLowerInvariant(), parts[1].ToLowerInvariant());
+    }
+
+    public static string ParseFullName(string url)
+    {
+        var (organization, name) = Parse(url);
+
+        return $"{organization}/{name}";
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Engi.Substrate.Github;
 using GraphQL.Types;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Server.Types.Github;
 
 public class GithubRepositoryGraphType : ObjectGraphType<GithubRepository>
 {

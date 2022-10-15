@@ -3,6 +3,7 @@ using Engi.Substrate;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Authentication;
 using Engi.Substrate.Server.Email;
+using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;
@@ -227,36 +228,7 @@ builder.Services.AddHostedService<IndexingBackgroundService>();
 builder.Services.AddScoped<TransactionTipCalculator>();
 builder.Services.AddTransient<UserCryptographyService>();
 
-builder.Services.AddTransient(serviceProvider =>
-{
-    var cache = serviceProvider.GetRequiredService<IMemoryCache>();
-
-    var jwtToken = cache.GetOrCreate("github-jwt", e =>
-    {
-        var generator = new GitHubJwt.GitHubJwtFactory(
-            new Base64PrivateKeySource(engiOptions.GithubAppPrivateKey),
-            new GitHubJwt.GitHubJwtFactoryOptions
-            {
-                AppIntegrationId = engiOptions.GithubAppId,
-                ExpirationSeconds = 600
-            }
-        );
-
-        var jwtToken = generator.CreateEncodedJwtToken();
-
-        var decoded = new JwtSecurityTokenHandler().ReadJwtToken(jwtToken);
-
-        e.AbsoluteExpiration = decoded.ValidTo;
-
-        return jwtToken;
-    });
-
-    return new GitHubClient(
-        new ProductHeaderValue("engi-bot"))
-    {
-        Credentials = new Credentials(jwtToken, AuthenticationType.Bearer)
-    };
-});
+builder.Services.AddTransient<GithubClientFactory>();
 
 // pipeline
 

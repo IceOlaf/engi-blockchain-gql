@@ -1,5 +1,6 @@
 ﻿using Engi.Substrate.Github;
 using Engi.Substrate.Identity;
+using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Types;
@@ -33,16 +34,18 @@ public class GithubMutations : ObjectGraphType
 
         long installationId = long.Parse(args.InstallationId);
 
+        var octokitFactory = scope.ServiceProvider.GetRequiredService<GithubClientFactory>();
+
         Installation installation;
         GitHubClient octokit;
 
         try
         {
-            octokit = scope.ServiceProvider.GetRequiredService<GitHubClient>();
+            octokit = octokitFactory.Create();
 
             installation = await octokit.GitHubApps.GetInstallationForCurrent(installationId);
 
-            octokit = await octokit.CloneForAsync(installation);
+            octokit = await octokitFactory.SpecializeForAsync(octokit, installation.Id);
         }
         catch (Exception ex)
         {

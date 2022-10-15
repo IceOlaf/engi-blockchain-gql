@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using GitHubJwt;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Server.Github;
 
 public class Base64PrivateKeySource : IPrivateKeySource
 {

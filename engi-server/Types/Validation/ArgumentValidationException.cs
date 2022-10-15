@@ -28,4 +28,8 @@ internal class ArgumentValidationException : Exception
     public ArgumentValidationException(string argumentName, string propertyName, string message)
         : this(argumentName, new[] { new ValidationResult(message, new[] { propertyName }) })
     { }
+
+    public ArgumentValidationException(string argumentName, string message)
+        : this(argumentName, argumentName, message)
+    { }
 }

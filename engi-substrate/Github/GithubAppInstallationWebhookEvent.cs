@@ -13,7 +13,7 @@ public class GithubAppInstallationWebhookEvent
 
     public string Id { get; set; } = null!;
 
-    public string WebhookId { get; set; }
+    public string WebhookId { get; set; } = null!;
 
-    public GithubAppInstallationPayload Payload { get; set; }
+    public GithubAppInstallationPayload Payload { get; set; } = null!;
 }

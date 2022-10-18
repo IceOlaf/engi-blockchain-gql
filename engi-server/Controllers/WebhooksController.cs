@@ -1,13 +1,15 @@
-﻿using Engi.Substrate.Github;
-using Engi.Substrate.Identity;
+﻿using System.Security.Cryptography;
+using System.Text;
+using Engi.Substrate.Github;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Raven.Client.Documents.Commands.Batches;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Session;
+using Sentry;
+using User = Engi.Substrate.Identity.User;
 
 namespace Engi.Substrate.Server.Controllers;
 
@@ -15,27 +17,47 @@ namespace Engi.Substrate.Server.Controllers;
 public class WebhooksController : ControllerBase
 {
     private readonly IAsyncDocumentSession session;
+    private readonly IHub sentry;
     private readonly EngiOptions options;
 
     public WebhooksController(
         IAsyncDocumentSession session,
+        IHub sentry,
         IOptions<EngiOptions> options)
     {
         this.session = session;
+        this.sentry = sentry;
         this.options = options.Value;
     }
 
     [HttpPost("github")]
     public async Task<IActionResult> Github()
     {
-        string webhookId = Request.Headers["X-GitHub-Hook-ID"];
+        if (!Request.Headers.TryGetValue("x-hub-signature-256", out var expectedSignatureStringValues))
+        {
+            sentry.CaptureMessage("Github webhook received without a signature; is a webhook secret set?");
 
-        JObject json;
+            return BadRequest();
+        }
+
+        string jsonRaw;
 
         using (var reader = new StreamReader(Request.Body))
         {
-            json = await JObject.LoadAsync(new JsonTextReader(reader));
+            jsonRaw = await reader.ReadToEndAsync();
         }
+
+        var json = JObject.Parse(jsonRaw);
+
+        string expectedSignature = expectedSignatureStringValues;
+        string calculatedSignature = CalculateGithubSignature(jsonRaw, options.GithubAppWebhookSecret);
+
+        if (calculatedSignature != expectedSignature)
+        {
+            return BadRequest();
+        }
+
+        string webhookId = Request.Headers["X-GitHub-Hook-ID"];
 
         var octokitSerializer = new Octokit.Internal.SimpleJsonSerializer();
 
@@ -120,5 +142,17 @@ public class WebhooksController : ControllerBase
         await session.SaveChangesAsync();
 
         return Ok();
+    }
+
+    private static string CalculateGithubSignature(string payload, string secret)
+    {
+        var shaKeyBytes = Encoding.UTF8.GetBytes(secret);
+
+        using var sha = new HMACSHA256(shaKeyBytes);
+
+        var signatureHashBytes = sha.ComputeHash(
+            Encoding.UTF8.GetBytes(payload));
+
+        return "sha256=" + Hex.GetString(signatureHashBytes);
     }
 }

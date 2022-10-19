@@ -45,7 +45,7 @@ public class TransactionIndex : AbstractIndexCreationTask
                         Executor = extrinsic.Signature.Address.Value,
                         IsSuccessful = IndexUtils.GetIsSuccessful(extrinsic.PalletName, extrinsic.Events),
                         OtherParticipants = IndexUtils.GetOtherParticipants(type, extrinsic.Arguments),
-                        Amount = IndexUtils.GetAmount(type, extrinsic.Arguments),
+                        Amount = IndexUtils.GetAmount(type, extrinsic.Arguments, extrinsic.CallName),
                         JobId = IndexUtils.GetJobId(type, extrinsic.Arguments, extrinsic.Events)
                     }
                 "
@@ -132,8 +132,15 @@ namespace Engi.Substrate.Server.Indexing
             return new string[0];
         }
 
-        public static decimal GetAmount(TransactionType type, dynamic args)
+        public static decimal GetAmount(TransactionType type, dynamic args, string callName)
         {
+            if(type == TransactionType.Exchange)
+            {
+                decimal amount = decimal.Parse((string) args.amount);
+
+                return callName == ""sell"" ? -amount : amount;
+            }
+
             if(type == TransactionType.Transfer)
             {
                 return decimal.Parse((string) args.value);

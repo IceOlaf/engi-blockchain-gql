@@ -58,9 +58,18 @@ public class GithubMutations : ObjectGraphType
 
         var user = await session.LoadAsync<Identity.User>(context.User!.Identity!.Name);
 
-        var repositories = installation.TargetType.Value == AccountType.User
-            ? await octokit.Repository.GetAllForUser(installation.Account.Login)
-            : await octokit.Repository.GetAllForOrg(installation.Account.Login);
+        IReadOnlyList<Repository> repositories;
+
+        if (installation.TargetType.Value == AccountType.User)
+        {
+            var response = await octokit.GitHubApps.Installation.GetAllRepositoriesForCurrent();
+            
+            repositories = response.Repositories;
+        }
+        else
+        {
+            repositories = await octokit.Repository.GetAllForOrg(installation.Account.Login);
+        }
 
         var enrollment = new UserGithubEnrollment
         {

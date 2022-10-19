@@ -1,7 +1,24 @@
 ﻿@using RazorLight
 @inherits TemplatePage<Engi.Substrate.Server.Email.EmailModel>
-Hey @Model.User.Display
+Hey @Model.User.Display,
 
-Please confirm your e-mail address by visiting @Model.Data["Url"]
+Please verify your email address to finish setting up your Engi account, by clicking on the link below.
 
-ENGI
+@Model.Data["Url"]
+
+If you were not expecting this e-mail, someone else may have entered your e-mail address by accident. 
+
+Cheers,
+
+Team Engi!
+
+Questions? You can contact us at support@engi.network.
+
+Find us on
+
+Facebook: https://www.facebook.com/profile.php?id=100083261388564
+Twitter: https://twitter.com/engi_network
+LinkedIn: https://www.linkedin.com/company/engi-network
+Instagram: https://instagram.com/engi.network
+
+Accelerate your product teams and earn cash writing code today

@@ -1,14 +1,406 @@
 ﻿@using RazorLight
 @inherits TemplatePage<Engi.Substrate.Server.Email.EmailModel>
-<html>
-<title>Please confirm your e-mail</title>
-<body>
-    <p>
-        Hey @Model.User.Display
-    </p>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html data-editor-version="2" class="sg-campaigns" xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+      <!--[if !mso]><!-->
+      <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+      <!--<![endif]-->
+      <!--[if (gte mso 9)|(IE)]>
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG/>
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+      </xml>
+      <![endif]-->
+      <!--[if (gte mso 9)|(IE)]>
+  <style type="text/css">
+    body {width: 600px;margin: 0 auto;}
+    table {border-collapse: collapse;}
+    table, td {mso-table-lspace: 0pt;mso-table-rspace: 0pt;}
+    img {-ms-interpolation-mode: bicubic;}
+  </style>
+<![endif]-->
+      <style type="text/css">
+    body, p, div {
+      font-family: arial,helvetica,sans-serif;
+      font-size: 14px;
+    }
+    body {
+      color: #000000;
+    }
+    body a {
+      color: #000000;
+      text-decoration: none;
+    }
+    p { margin: 0; padding: 0; }
+    table.wrapper {
+      width:100% !important;
+      table-layout: fixed;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -moz-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    img.max-width {
+      max-width: 100% !important;
+    }
+    .column.of-2 {
+      width: 50%;
+    }
+    .column.of-3 {
+      width: 33.333%;
+    }
+    .column.of-4 {
+      width: 25%;
+    }
+    ul ul ul ul  {
+      list-style-type: disc !important;
+    }
+    ol ol {
+      list-style-type: lower-roman !important;
+    }
+    ol ol ol {
+      list-style-type: lower-latin !important;
+    }
+    ol ol ol ol {
+      list-style-type: decimal !important;
+    }
+    @@media screen and (max-width:480px) {
+      .preheader .rightColumnContent,
+      .footer .rightColumnContent {
+        text-align: left !important;
+      }
+      .preheader .rightColumnContent div,
+      .preheader .rightColumnContent span,
+      .footer .rightColumnContent div,
+      .footer .rightColumnContent span {
+        text-align: left !important;
+      }
+      .preheader .rightColumnContent,
+      .preheader .leftColumnContent {
+        font-size: 80% !important;
+        padding: 5px 0;
+      }
+      table.wrapper-mobile {
+        width: 100% !important;
+        table-layout: fixed;
+      }
+      img.max-width {
+        height: auto !important;
+        max-width: 100% !important;
+      }
+      a.bulletproof-button {
+        display: block !important;
+        width: auto !important;
+        font-size: 80%;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .columns {
+        width: 100% !important;
+      }
+      .column {
+        display: block !important;
+        width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+      .social-icon-column {
+        display: inline-block !important;
+      }
+    }
+  </style>
+    <style>
+      @@media screen and (max-width:480px) {
+        table\0 {
+          width: 480px !important;
+          }
+      }
+    </style>
+      <!--user entered Head Start-->
+      <link rel="stylesheet" href="https://engi-email-template.s3.us-west-2.amazonaws.com/fonts/test.css"><style type="text/css">
+ @@media (min-width: 480px) {
+     .md-text-left {
+         text-align: left !important;
+        }
+    }
+}
 
-    <p>Please confirm your e-mail address by visiting <a href="@Model.Data["Url"]">@Model.Data["Url"]</a>.</p>
+</style><!--End Head user entered-->
+    </head>
+    <body>
+      <center class="wrapper" data-link-color="#000000" data-body-style="font-size:14px; font-family:arial,helvetica,sans-serif; color:#000000; background-color:#f7f9fc;">
+        <div class="webkit">
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" class="wrapper" bgcolor="#f7f9fc">
+            <tr>
+              <td valign="top" bgcolor="#f7f9fc" width="100%">
+                <table width="100%" role="content-container" class="outer" align="center" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td width="100%">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td>
+                            <!--[if mso]>
+    <center>
+    <table><tr><td width="600">
+  <![endif]-->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px;" align="center">
+                                      <tr>
+                                        <td role="modules-container" style="padding:20px 0px 0px 0px; color:#000000; text-align:left;" bgcolor="#f7f9fc" width="100%" align="left"><table class="module preheader preheader-hide" role="module" data-type="preheader" border="0" cellpadding="0" cellspacing="0" width="100%" style="display: none !important; mso-hide: all; visibility: hidden; opacity: 0; color: transparent; height: 0; width: 0;">
+    <tr>
+      <td role="module-content">
+        <p>Verify your Email Address</p>
+      </td>
+    </tr>
+  </table><table class="wrapper" role="module" data-type="image" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="bb11603b-282c-4cf7-8a13-6f1df1827f69">
+    <tbody>
+      <tr>
+        <td style="font-size:6px; line-height:10px; padding:0px 0px 0px 0px;" valign="top" align="center">
+          <img class="max-width" border="0" style="display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px; max-width:100% !important; width:100%; height:auto !important;" width="600" alt="" data-proportionally-constrained="true" data-responsive="true" 
+          src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/logo.png">
+        </td>
+      </tr>
+    </tbody>
+  </table><table border="0" cellpadding="0" cellspacing="0" align="center" width="100%" role="module" data-type="columns" style="padding:40px 20px 40px 20px;" bgcolor="#fff" data-distribution="1">
+    <tbody>
+      <tr role="module-content">
+        <td height="100%" valign="top"><table width="540" style="width:540px; border-spacing:0; border-collapse:collapse; margin:0px 10px 0px 10px;" cellpadding="0" cellspacing="0" align="left" border="0" bgcolor="" class="column column-0">
+      <tbody>
+        <tr>
+          <td style="padding:0px;margin:0px;border-spacing:0;"><table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="ca60d856-5e73-4d2b-880a-a6f651feef3a" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 0px 0px; line-height:40px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><h1 style="text-align: center">Verify your Email Address</h1><div></div></div></td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="f7688757-4957-4d59-ba87-12a40757b2c8" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: center"><span style="color: rgba(35, 35, 35, 0.6)">Hey @Model.User.Display,</span></div>
+<div style="font-family: inherit; text-align: center"><span style="color: rgba(35, 35, 35, 0.6)"><br>
+Please verify your email address to finish setting up your Engi account.</span></div><div></div></div></td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="code" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="633308d1-71a8-4905-9de4-2a0decef0327">
+    <tbody>
+      <tr>
+        <td height="100%" valign="top" role="module-content"><a href="@Model.Data["Url"]" target="_blank" style="box-sizing: border-box;display: inline-block;font-family:helvetica,sans-serif;text-decoration: none;-webkit-text-size-adjust: none;text-align: center;color: white; background-color: #BA54EC;  width:100%; max-width:100%; overflow-wrap: break-word; word-break: break-word; word-wrap:break-word; mso-border-alt: none;">
+    <span style="display:block; padding-top:20px; padding-bottom: 20px; line-height:120%;">
+    <span style="font-family: helvetica, sans-serif; font-size: 16px; line-height: 19.2px; font-weight: 700;">Verify my Email</span></span>
+</a></td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 30px 0px;" role="module-content" bgcolor="">
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="code" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="a892132d-0327-4ffd-bb29-e84a711ef522">
+    <tbody>
+      <tr>
+        <td height="100%" valign="top" role="module-content"><div style="font-family: inherit; text-align: center; line-height: 20px;" class="md-text-left">
+<span style="color: #23232399; font-size: 11px">@Model.Data["Url"]</span>
+</div></td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 30px 0px;" role="module-content" bgcolor="">
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="code" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="a892132d-0327-4ffd-bb29-e84a711ef522">
+    <tbody>
+      <tr>
+        <td height="100%" valign="top" role="module-content"><div style="font-family: inherit; text-align: left; line-height: 24px;" class="md-text-left">
+<span style="color: #23232399">If you were not expecting this e-mail, someone else may have entered your e-mail address by accident. Questions? You can contact us at </span>
+<span style="font-size: 14px; line-height: 22.4px;">
+<a rel="noopener" href="mailto:support@engi.network?subject=I%20need%20support&body=" target="_blank" style="color: black;"><strong>support@engi.network</strong></a>.</span>
+</div></td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="8c1ba114-25e7-4115-b31d-b5e99e590cc0" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: left"><span style="color: rgba(35, 35, 35, 0.6)">Cheers,</span><br/></div>
+<div style="font-family: inherit; text-align: left"><span style="color: rgba(35, 35, 35, 0.6)">Team Engi!</span></div><div></div></div></td>
+      </tr>
+    </tbody>
+  </table></td>
+        </tr>
+      </tbody>
+    </table></td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="45c4b819-9504-4bd8-ac1f-208cb74fcadd">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 30px 0px;" role="module-content" bgcolor="">
+        </td>
+      </tr>
+    </tbody>
+  </table><table border="0" cellpadding="0" cellspacing="0" align="center" width="100%" role="module" data-type="columns" style="padding:0px 20px 20px 20px;" bgcolor="#f7f9fc" data-distribution="1">
+    <tbody>
+      <tr role="module-content">
+        <td height="100%" valign="top"><table width="540" style="width:540px; border-spacing:0; border-collapse:collapse; margin:0px 10px 0px 10px;" cellpadding="0" cellspacing="0" align="left" border="0" bgcolor="" class="column column-0">
+      <tbody>
+        <tr>
+          <td style="padding:0px;margin:0px;border-spacing:0;"><table class="wrapper" role="module" data-type="image" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="e1346f10-47e1-49df-8aaa-9201959f39d8">
+    <tbody>
+      <tr>
+        <td style="font-size:6px; line-height:10px; padding:0px 0px 0px 0px;" valign="top" align="center">
+          <img class="max-width" border="0" style="display:block; color:#000000; text-decoration:none; font-family:Helvetica, arial, sans-serif; font-size:16px;" width="81" alt="" data-proportionally-constrained="true" data-responsive="false" 
+            src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/logo-small.png" height="36">
+        </td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="6ce8acba-a981-4d41-8444-8e5e7fd22e1d">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 30px 0px;" role="module-content" bgcolor="">
+        </td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="code" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="596e7c93-8fd8-4dee-a04a-b5a4f7c86903">
+    <tbody>
+      <tr>
+        <td height="100%" valign="top" role="module-content">  
+            <div align="center">
+                                <div style="display: table; max-width:247px;">
+                                  <!--[if (mso)|(IE)]><table width="247" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-collapse:collapse;" align="center"><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; mso-table-lspace: 0pt;mso-table-rspace: 0pt; width:247px;"><tr><![endif]-->
 
-    <p>ENGI</p>
+
+                                  <!--[if (mso)|(IE)]><td width="20" style="width: 20px; padding-right: 30px;" valign="top"><![endif]-->
+                                  <table align="left" border="0" cellspacing="0" cellpadding="0" width="20" height="20" style="width: 20px !important;height: 20px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 30px">
+                                    <tbody>
+                                      <tr style="vertical-align: top">
+                                        <td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
+                                          <a href="https://www.facebook.com/profile.php?id=100083261388564" title="Facebook" target="_blank">
+                                            <img src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/facebook.png" alt="Facebook" title="Facebook" width="20" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 20px !important">
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <!--[if (mso)|(IE)]></td><![endif]-->
+
+                                  <!--[if (mso)|(IE)]><td width="20" style="width: 20px; padding-right: 30px;" valign="top"><![endif]-->
+                                  <table align="left" border="0" cellspacing="0" cellpadding="0" width="20" height="20" style="width: 20px !important;height: 20px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 30px">
+                                    <tbody>
+                                      <tr style="vertical-align: top">
+                                        <td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
+                                          <a href="https://twitter.com/engi_network" title="Twitter" target="_blank">
+                                            <img 20="" src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/twitter.png" alt="Twitter" title="Twitter" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 20px !important">
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <!--[if (mso)|(IE)]></td><![endif]-->
+
+                                  <!--[if (mso)|(IE)]><td width="20" style="width: 20px; padding-right: 30px;" valign="top"><![endif]-->
+                                  <table align="left" border="0" cellspacing="0" cellpadding="0" width="20" height="20" style="width: 20px !important;height: 20px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 30px">
+                                    <tbody>
+                                      <tr style="vertical-align: top">
+                                        <td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
+                                          <a href="https://www.linkedin.com/company/engi-network" title="LinkedIn" target="_blank">
+                                            <img src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/linkedin.png" alt="LinkedIn" title="LinkedIn" width="20" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 20px !important">
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <!--[if (mso)|(IE)]></td><![endif]-->
+
+                                  <!--[if (mso)|(IE)]><td width="20" style="width: 20px; padding-right: 0px;" valign="top"><![endif]-->
+                                  <table align="left" border="0" cellspacing="0" cellpadding="0" width="20" height="20" style="width: 20px !important;height: 20px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 0px">
+                                    <tbody>
+                                      <tr style="vertical-align: top">
+                                        <td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
+                                          <a href="https://instagram.com/engi.network" title="Instagram" target="_blank">
+                                            <img src="https://engi-email-template.s3.us-west-2.amazonaws.com/shared/instagram.png" alt="Instagram" title="Instagram" width="20" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 20px !important">
+                                          </a>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                  <!--[if (mso)|(IE)]></td><![endif]-->
+
+
+                                  <!--[if (mso)|(IE)]></tr></table></td></tr></table><![endif]-->
+                                </div>
+                              </div>
+</td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="spacer" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="4736a242-a702-4820-865e-c1804d1c88cf">
+    <tbody>
+      <tr>
+        <td style="padding:0px 0px 30px 0px;" role="module-content" bgcolor="">
+        </td>
+      </tr>
+    </tbody>
+  </table><table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="5437ca9d-492a-4835-aa22-89ea875f1447" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:18px 0px 18px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: center"><span style="color: rgba(35, 35, 35, 0.6); font-family: arial, helvetica, sans-serif; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline; background-color: rgb(247, 249, 252)">Accelerate your product teams and earn cash writing code today</span></div><div></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+  <!-- table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="1b9f9983-6207-4585-a7cb-bd2fd265b7d4" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:10px 0px 10px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: center"><a href="" title="&lt;span data-offset-key=&quot;d7rke-0-0&quot; style=&quot;box-sizing: border-box; padding: 0px; margin: 0px; font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border: 0px; outline: none; color: rgb(0, 0, 0); text-decoration: none; transition: color 0.3s ease 0s; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(243, 245, 249);&quot;&gt;&lt;span data-text=&quot;true&quot; style=&quot;box-sizing: border-box; padding: 0px; margin: 0px; font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border: 0px;&quot;&gt;Privacy Policy&lt;/span&gt;&lt;/span&gt;"><span style="box-sizing: border-box; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-style: inherit; font-variant-ligatures: inherit; font-variant-caps: inherit; font-variant-numeric: inherit; font-variant-east-asian: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-top-style: initial; border-right-style: initial; border-bottom-style: initial; border-left-style: initial; border-top-color: initial; border-right-color: initial; border-bottom-color: initial; border-left-color: initial; border-image-source: initial; border-image-slice: initial; border-image-width: initial; border-image-outset: initial; border-image-repeat: initial; outline-color: initial; outline-style: none; outline-width: initial; color: #000000; text-decoration-line: none; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; transition-duration: 0.3s; transition-timing-function: ease; transition-delay: 0s; transition-property: color; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(247, 249, 252)">Privacy Policy</span></a></div><div></div></div></td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="module" role="module" data-type="text" border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed;" data-muid="1b9f9983-6207-4585-a7cb-bd2fd265b7d4.1" data-mc-module-version="2019-10-22">
+    <tbody>
+      <tr>
+        <td style="padding:10px 0px 10px 0px; line-height:22px; text-align:inherit;" height="100%" valign="top" bgcolor="" role="module-content"><div><div style="font-family: inherit; text-align: center"><a href="" title="&lt;span data-offset-key=&quot;4343u-0-0&quot; style=&quot;box-sizing: border-box; padding: 0px; margin: 0px; font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border: 0px; outline: none; color: rgb(0, 0, 0); text-decoration: none; transition: color 0.3s ease 0s; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(243, 245, 249);&quot;&gt;&lt;span data-text=&quot;true&quot; style=&quot;box-sizing: border-box; padding: 0px; margin: 0px; font-style: inherit; font-variant: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border: 0px;&quot;&gt;Terms and Conditions&lt;/span&gt;&lt;/span&gt;"><span style="box-sizing: border-box; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 0px; margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; font-style: inherit; font-variant-ligatures: inherit; font-variant-caps: inherit; font-variant-numeric: inherit; font-variant-east-asian: inherit; font-weight: inherit; font-stretch: inherit; line-height: inherit; font-family: inherit; font-size: 14px; vertical-align: baseline; border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-top-style: initial; border-right-style: initial; border-bottom-style: initial; border-left-style: initial; border-top-color: initial; border-right-color: initial; border-bottom-color: initial; border-left-color: initial; border-image-source: initial; border-image-slice: initial; border-image-width: initial; border-image-outset: initial; border-image-repeat: initial; outline-color: initial; outline-style: none; outline-width: initial; color: #000000; text-decoration-line: none; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; transition-duration: 0.3s; transition-timing-function: ease; transition-delay: 0s; transition-property: color; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; white-space: pre-wrap; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: rgb(247, 249, 252)">Terms and Conditions</span></a></div><div></div></div></td>
+      </tr>
+    </tbody>
+  </table !-->
+  </td>
+        </tr>
+      </tbody>
+    </table>
+    </td>
+      </tr>
+    </tbody>
+  </table></td>
+                                      </tr>
+                                    </table>
+                                    <!--[if mso]>
+                                  </td>
+                                </tr>
+                              </table>
+                            </center>
+                            <![endif]-->
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </center>
 </body>
 </html>

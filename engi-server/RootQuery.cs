@@ -23,6 +23,9 @@ public class RootQuery : ObjectGraphType
             .Argument<NonNullGraphType<StringGraphType>>("id")
             .ResolveAsync(GetAccountAsync);
 
+        Field<AccountsQuery>("accounts")
+            .Resolve(_ => new { });
+
         Field<GithubQuery>("github")
             .Resolve(_ => new { });
 

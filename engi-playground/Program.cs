@@ -257,7 +257,7 @@ public static class Program
                 }
             },
             Author = solver,
-            PatchFileUrl = "https://test.com"
+            PatchFileUrl = "http://localhost:8081/solution.patch"
         };
 
         if (mutateTests != null)
@@ -299,7 +299,7 @@ public static class Program
         var args = new AttemptJobArguments
         {
             JobId = jobId,
-            SubmissionPatchFileUrl = $"https://wetransfer.com/{Guid.NewGuid()}"
+            SubmissionPatchFileUrl = $"https://localhost:8081/{Guid.NewGuid()}.patch"
         };
 
         string result = await client.AuthorSubmitExtrinsicAsync(
@@ -320,11 +320,11 @@ public static class Program
         var args = new CreateJobArguments
         {
             Funding = 5000,
-            RepositoryUrl = "https://github.com/ravendb/ravendb",
-            BranchName = "master",
-            CommitHash = "119158985933033e05de60533d353b7599b0bbab",
+            RepositoryUrl = "https://github.com/georgiosd/engi-test",
+            BranchName = "main",
+            CommitHash = "808ef04c00362c9d3b7800909fbe0e7672ac86ae",
             Language = Language.CSharp,
-            Name = "Test job",
+            Name = "README job",
             Tests = Enumerable.Range(0, numberOfTests)
                 .Select(offset => new Test
                 {

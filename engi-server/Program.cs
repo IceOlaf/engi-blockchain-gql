@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using Engi.Substrate;
 using Engi.Substrate.Server;
+using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Authentication;
 using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Github;
@@ -10,6 +11,8 @@ using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Instrumentation;
 using GraphQL.SystemTextJson;
+using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
@@ -18,6 +21,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using Octokit;
 using Polly;
+using Credentials = Octokit.Credentials;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -135,11 +139,12 @@ builder.Services.AddCors(cors =>
 
     cors.AddDefaultPolicy(policy => 
     {
-        policy.WithOrigins(application.Url)
+        policy//.WithOrigins(application.Url)
+            .AllowAnyOrigin()
             .AllowAnyMethod()
             .WithHeaders("Authorization", "Content-Type")
             .WithExposedHeaders("Token-Expired")
-            .AllowCredentials()
+            //.AllowCredentials()
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
     });
 });
@@ -235,6 +240,7 @@ builder.Services.AddScoped<TransactionTipCalculator>();
 builder.Services.AddTransient<UserCryptographyService>();
 
 builder.Services.AddTransient<GithubClientFactory>();
+builder.Services.AddHostedService<DistributeCodeService>();
 
 // pipeline
 

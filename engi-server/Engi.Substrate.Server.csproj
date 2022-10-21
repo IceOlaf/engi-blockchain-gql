@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\engi-substrate\Engi.Substrate.csproj" />
+    <ProjectReference Include="..\libgit2sharp\LibGit2Sharp\LibGit2Sharp.csproj" />
   </ItemGroup>
 
 </Project>

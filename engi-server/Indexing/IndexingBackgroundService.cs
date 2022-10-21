@@ -24,10 +24,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         IHub sentry, 
         IWebHostEnvironment env,
         ILoggerFactory loggerFactory) 
-        : base(store, serviceProvider, sentry, loggerFactory)
-    {
-        ProcessConcurrently = !env.IsDevelopment() && !env.IsEnvironment("CI");
-    }
+        : base(store, serviceProvider, env, sentry, loggerFactory)
+    { }
 
     protected override string CreateQuery()
     {

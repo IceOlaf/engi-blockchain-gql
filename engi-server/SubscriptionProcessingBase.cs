@@ -3,13 +3,14 @@ using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions.Documents.Subscriptions;
 using Sentry;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Server;
 
 public abstract class SubscriptionProcessingBase<T> : BackgroundService where T : class
 {
     protected SubscriptionProcessingBase(
         IDocumentStore store,
         IServiceProvider serviceProvider,
+        IWebHostEnvironment env,
         IHub sentry,
         ILoggerFactory loggerFactory)
     {
@@ -17,6 +18,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
         ServiceProvider = serviceProvider;
         Logger = loggerFactory.CreateLogger(GetType());
         Sentry = sentry;
+        ProcessConcurrently = !env.IsDevelopment() && !env.IsEnvironment("CI");
     }
 
     protected IDocumentStore Store { get; init; }

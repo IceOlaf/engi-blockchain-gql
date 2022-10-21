@@ -5,7 +5,6 @@ using System.Text;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
-using Engi.Substrate.Pallets;
 using Engi.Substrate.Server;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
@@ -21,14 +20,21 @@ public static class Program
 {
     private static readonly string BaseUrl = "http://localhost:5000";
 
+    // //Dave
     private static readonly Keypair SudoKeypair = KeypairFactory.CreateFromAny("0x868020ae0687dda7d57565093a69090211449845a7e11453612800b663307246");
+    
+    // 5G1GQ5bb1bjBUwjSBcArBkbK5gfrW9nTJLhnz3G3nLDo1g5n
     private static readonly Keypair GeorgiosdKeypair = KeypairFactory.CreateFromAny("ridge accuse cotton debate step theory fade bench flock liar seek day");
 
     private static readonly Keypair[] TestKeypairs =
     {
+        // 5EUJ3p7ds1436scqdA2n6ph9xVs6chshRP1ADjgK1Qj3Hqs2
         KeypairFactory.CreateFromAny("time treat merit corn crystal fiscal banner zoo jacket pulse frog long"),
+        // 5EyiGwuYPgGiEfwpPwXyH5TwXXEUFz6ZgPhzYik2fMCcbqMC
         KeypairFactory.CreateFromAny("shove matter cousin govern glare space survey congress torch easy girl profit"),
+        // 5GEtgDZonat7cjAr4EM7h5M1qsELjEXZ9EwWFiSb2jGAUKJa
         KeypairFactory.CreateFromAny("vocal awake scan share position often baby example segment skill perfect unique"),
+        // 5CUiNXkJjLnS7BpMYC6HLpsGQ9wnyNrZXHL45nDht1355CSp
         KeypairFactory.CreateFromAny("build genre people salute buddy trash polar hero purse hire caught tail")
     };
 

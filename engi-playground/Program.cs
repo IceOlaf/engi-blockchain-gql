@@ -390,22 +390,4 @@ public static class Program
 
         return; // set breakpoint here
     }
-
-    private static async Task ContractCallErc20BalanceOfExampleAsync()
-    {
-        var client = new SubstrateClient("http://localhost:9933");
-
-        ContractCall call = new ContractCall
-        {
-            ContractAddress = "5HjZeHL5MPeKRurbg3HuK6PH9L5uAw822EBBNRKr5Xd6GFy2", // comes from upload
-            Origin = "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
-            GasLimit = 4999999999999,
-            InputData0X = "0x0f755a56" // selector from metadata
-                          + Hex.GetString(Address.Parse("5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL").Raw)
-        };
-
-        var response = await client.RpcAsync<ContractCallResponse>("contracts_call", call);
-
-        return;
-    }
 }

@@ -20,7 +20,7 @@ public class AuthMutations : ObjectGraphType
     {
         this.AllowAnonymous();
 
-        Field<AuthenticationTokenPairGraphType>("login")
+        Field<LoginResultGraphType>("login")
             .Description(@"
                 Login mutation to get access and refresh token. The access token is returned in 
                 the mutation response, while the refresh token is stored in a secure cookie.
@@ -167,10 +167,11 @@ public class AuthMutations : ObjectGraphType
             }
         }
 
-        return new AuthenticationTokenPair
+        return new LoginResult
         {
             AccessToken = BuildAccessToken(user, jwtOptions.Value),
-            RefreshToken = refreshToken
+            RefreshToken = refreshToken,
+            User = user
         };
     }
 

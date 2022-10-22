@@ -11,4 +11,15 @@ public class CurrentUserInfo
     public DateTime CreatedOn { get; set; }
 
     public UserGithubEnrollment[] GithubEnrollments { get; set; } = null!;
+
+    public static implicit operator CurrentUserInfo(User user)
+    {
+        return new CurrentUserInfo
+        {
+            Display = user.Display,
+            Email = user.Email,
+            CreatedOn = user.CreatedOn,
+            GithubEnrollments = user.GithubEnrollments?.Values.ToArray() ?? Array.Empty<UserGithubEnrollment>()
+        };
+    }
 }

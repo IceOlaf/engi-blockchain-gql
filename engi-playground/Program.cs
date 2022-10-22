@@ -1,7 +1,10 @@
-﻿using System.Reactive.Linq;
+﻿using System.Net.Http.Json;
+using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
@@ -53,6 +56,9 @@ public static class Program
                             {CreateSignaturePayload(keypair)}
                         }}) {{ 
                             accessToken
+                            user {{
+                                display
+                            }}
                         }}
                     }}
                 }}"",
@@ -66,7 +72,9 @@ public static class Program
         var response = await http.PostAsync($"{BaseUrl}/api/graphql", 
             new StringContent(json.Replace("\r\n", string.Empty), Encoding.UTF8, "application/json"));
 
-        Console.WriteLine(await response.Content.ReadAsStringAsync());
+        var responseJson = await response.Content.ReadFromJsonAsync<JsonNode>();
+
+        Console.WriteLine(responseJson!.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
 
         return;
     }

@@ -24,12 +24,6 @@ public class AuthQuery : ObjectGraphType
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        return new CurrentUserInfo
-        {
-            Display = user.Display,
-            Email = user.Email,
-            CreatedOn = user.CreatedOn,
-            GithubEnrollments = user.GithubEnrollments?.Values.ToArray() ?? Array.Empty<UserGithubEnrollment>()
-        };
+        return (CurrentUserInfo) user;
     }
 }

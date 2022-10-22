@@ -16,6 +16,8 @@ public class User
 
     public List<UserToken> Tokens { get; } = new();
 
+    public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
+
     public DateTime? EmailConfirmedOn { get; set; }
 
     public UserGithubEnrollmentDictionary? GithubEnrollments { get; set; } = new();

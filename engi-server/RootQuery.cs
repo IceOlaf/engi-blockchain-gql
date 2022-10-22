@@ -26,6 +26,9 @@ public class RootQuery : ObjectGraphType
         Field<AccountsQuery>("accounts")
             .Resolve(_ => new { });
 
+        Field<AuthQuery>("auth")
+            .Resolve(_ => new { });
+
         Field<GithubQuery>("github")
             .Resolve(_ => new { });
 

@@ -1,6 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Blake2Core;
 using Chaos.NaCl;
 using CryptSharp.Core.Utility;
 
@@ -17,6 +18,12 @@ public class Keypair : IPublicKey
     public byte[] Sign(byte[] message)
     {
         byte[] signature = new byte[64];
+
+        if (message.Length > 256)
+        {
+            var config = new Blake2BConfig { OutputSizeInBits = 256 };
+            message = Blake2B.ComputeHash(message, config);
+        }
 
         SR25519.Sign(PublicKey, SecretKey, message, (uint)message.Length, signature);
 

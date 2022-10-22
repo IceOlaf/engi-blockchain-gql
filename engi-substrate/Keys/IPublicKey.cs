@@ -1,4 +1,6 @@
-﻿namespace Engi.Substrate.Keys;
+﻿using Blake2Core;
+
+namespace Engi.Substrate.Keys;
 
 public interface IPublicKey
 {
@@ -12,6 +14,12 @@ public static class PublicKeyExtensions
         byte[] signature, 
         byte[] message)
     {
+        if (message.Length > 256)
+        {
+            var config = new Blake2BConfig { OutputSizeInBits = 256 };
+            message = Blake2B.ComputeHash(message, config);
+        }
+
         return SR25519.Verify(signature, message, (uint)message.Length, key.PublicKey);
     }
 }

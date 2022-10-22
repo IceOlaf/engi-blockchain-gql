@@ -12,7 +12,7 @@ public class ExtrinsicEra : IScaleSerializable, IScaleCalculateLength
 
     private ExtrinsicEra() { }
 
-    public ExtrinsicEra(int period, int phase)
+    private ExtrinsicEra(int period, int phase)
     {
         IsMortal = true;
         Period = period;

@@ -10,8 +10,6 @@ public class GithubRepository
 
     public bool IsPrivate { get; set; }
 
-    public string? OwnerAvatarUrl { get; set; }
-
     public bool Equals(string owner, string name)
     {
         string fullName = owner + "/" + name;

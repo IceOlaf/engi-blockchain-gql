@@ -81,6 +81,11 @@ public class GithubMutations : ObjectGraphType
         var enrollment = new UserGithubEnrollment
         {
             InstallationId = installation.Id,
+            Owner = new()
+            {
+                Login = installation.Account.Login,
+                AvatarUrl = installation.Account.AvatarUrl,
+            },
             Repositories = repositories
                 .Where(x => !x.Archived)
                 .Select(x => new GithubRepository
@@ -88,8 +93,7 @@ public class GithubMutations : ObjectGraphType
                     Id = x.Id,
                     Name = x.Name,
                     FullName = x.FullName,
-                    IsPrivate = x.Private,
-                    OwnerAvatarUrl = installation.Account.AvatarUrl
+                    IsPrivate = x.Private
                 })
                 .ToList()
         };

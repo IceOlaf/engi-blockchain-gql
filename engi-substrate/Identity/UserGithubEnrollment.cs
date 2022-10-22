@@ -8,6 +8,8 @@ public class UserGithubEnrollment
 
     public DateTime CreatedOn { get; set; } = DateTime.UtcNow;
 
+    public GithubRepositoryOwner Owner { get; set; } = null!;
+
     public List<GithubRepository> Repositories { get; set; } = null!;
 
     public void Add(GithubRepository[] repositories)

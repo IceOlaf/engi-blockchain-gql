@@ -1,4 +1,5 @@
-﻿using Engi.Substrate.Server.Github;
+﻿using Engi.Substrate.Github;
+using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
@@ -14,7 +15,7 @@ public class GithubQuery : ObjectGraphType
     {
         this.AuthorizeWithPolicy(PolicyNames.Authenticated);
 
-        Field<ListGraphType<GithubRepositoryGraphType>>("repositories")
+        Field<ListGraphType<GithubRepositoryWithOwnerGraphType>>("repositories")
             .Description("Get all repositories that the app installation gives us access to.")
             .ResolveAsync(GetRepositoriesAsync);
 
@@ -168,7 +169,14 @@ public class GithubQuery : ObjectGraphType
 
         return user.GithubEnrollments!
             .Values
-            .SelectMany(x => x.Repositories);
+            .SelectMany(x => x.Repositories.Select(repo => new GithubRepositoryWithOwner
+            {
+                Id = repo.Id,
+                Name = repo.Name,
+                FullName = repo.FullName,
+                IsPrivate = repo.IsPrivate,
+                Owner = x.Owner
+            }));
     }
 
     private void ThrowIfUserNotEnrolled(User user)

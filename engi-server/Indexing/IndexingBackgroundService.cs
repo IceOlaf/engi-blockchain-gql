@@ -333,9 +333,16 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         var attempt = (Dictionary<string, object>) solveJob["attempt"];
                         var tests = (object[]) attempt["tests"];
 
+                        ulong jobId = (ulong)solveJob["job"];
+
+                        yield return new JobIndexable
+                        {
+                            JobId = jobId
+                        };
+
                         yield return new SolutionIndexable
                         {
-                            JobId = (ulong) solveJob["job"],
+                            JobId = jobId,
                             SolutionId = (ulong) solveJob["id"],
                             TestIds = tests
                                 .Cast<Dictionary<string, object>>()

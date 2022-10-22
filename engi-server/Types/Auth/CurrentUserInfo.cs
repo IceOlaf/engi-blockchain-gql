@@ -19,7 +19,7 @@ public class CurrentUserInfo
             Display = user.Display,
             Email = user.Email,
             CreatedOn = user.CreatedOn,
-            GithubEnrollments = user.GithubEnrollments?.Values.ToArray() ?? Array.Empty<UserGithubEnrollment>()
+            GithubEnrollments = user.GithubEnrollments.Values.ToArray()
         };
     }
 }

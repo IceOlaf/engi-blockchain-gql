@@ -48,7 +48,7 @@ public class GithubQuery : ObjectGraphType
 
         IReadOnlyList<Branch>? branches = null;
 
-        if (user.GithubEnrollments?.Any() == true)
+        if (user.GithubEnrollments.Any())
         {
             var (matchingEnrollment, matchingRepo) = user.GithubEnrollments.Find(repoOwner, repoName);
 
@@ -112,7 +112,7 @@ public class GithubQuery : ObjectGraphType
 
         IReadOnlyList<GitHubCommit>? commits = null;
 
-        if (user.GithubEnrollments?.Any() == true)
+        if (user.GithubEnrollments.Any())
         {
             var (matchingEnrollment, matchingRepo) = user.GithubEnrollments.Find(repoOwner, repoName);
 
@@ -167,7 +167,7 @@ public class GithubQuery : ObjectGraphType
 
         ThrowIfUserNotEnrolled(user);
 
-        return user.GithubEnrollments!
+        return user.GithubEnrollments
             .Values
             .SelectMany(x => x.Repositories.Select(repo => new GithubRepositoryWithOwner
             {
@@ -181,7 +181,7 @@ public class GithubQuery : ObjectGraphType
 
     private void ThrowIfUserNotEnrolled(User user)
     {
-        if (user.GithubEnrollments?.Any() != true)
+        if (!user.GithubEnrollments.Any())
         {
             throw new ExecutionError("User is not enrolled to Github")
             {

@@ -118,7 +118,7 @@ public class WebhooksController : ControllerBase
 
                     var user = await session.LoadAsync<User>(reference.UserId);
 
-                    if (user.GithubEnrollments?.TryGetValue(payload.Installation.Id, out var enrollment) == true)
+                    if (user.GithubEnrollments.TryGetValue(payload.Installation.Id, out var enrollment))
                     {
                         enrollment.Add(payload.RepositoriesAdded);
                         enrollment.Remove(payload.RepositoriesRemoved);

@@ -20,5 +20,5 @@ public class User
 
     public DateTime? EmailConfirmedOn { get; set; }
 
-    public UserGithubEnrollmentDictionary? GithubEnrollments { get; set; } = new();
+    public UserGithubEnrollmentDictionary GithubEnrollments { get; set; } = new();
 }

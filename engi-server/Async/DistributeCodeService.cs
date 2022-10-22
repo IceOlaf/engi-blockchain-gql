@@ -151,7 +151,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         string workBranchName = $"engi-solution/{job.Solution.SolutionId}";
         string workBranchRef = $"refs/heads/{workBranchName}";
 
-        var (enrollment, targetRepoReference) = creator.GithubEnrollments!
+        var (enrollment, targetRepoReference) = creator.GithubEnrollments
             .Find(job.Repository.Organization, job.Repository.Name);
 
         var octokit = await octokitFactory.CreateForAsync(enrollment!.InstallationId);

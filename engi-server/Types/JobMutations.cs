@@ -87,6 +87,26 @@ public class JobMutations : ObjectGraphType
 
         userCrypto.ValidateOrThrow(user, signature);
 
+        // validate the user owns this repo
+
+        string repositoryFullName;
+
+        try
+        {
+            repositoryFullName = RepositoryUrl.ParseFullName(args.RepositoryUrl);
+        }
+        catch (ArgumentException ex)
+        {
+            throw new ArgumentValidationException(ex);
+        }
+
+        if (!user.GithubEnrollments.ContainsRepositoryWithFullName(repositoryFullName))
+        {
+            throw new ExecutionError("User does not have access to repository.") { Code = "FORBIDDEN" };
+        }
+
+        // submit
+
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
         var chainStateProvider = scope.ServiceProvider.GetRequiredService<LatestChainStateProvider>();

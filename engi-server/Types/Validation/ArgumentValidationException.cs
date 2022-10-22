@@ -32,4 +32,8 @@ internal class ArgumentValidationException : Exception
     public ArgumentValidationException(string argumentName, string message)
         : this(argumentName, argumentName, message)
     { }
+
+    public ArgumentValidationException(ArgumentException ex)
+        : this(ex.ParamName ?? string.Empty, ex.Message)
+    { }
 }

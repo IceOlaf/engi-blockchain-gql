@@ -19,4 +19,11 @@ public class UserGithubEnrollmentDictionary : Dictionary<long, UserGithubEnrollm
 
         return (null, null);
     }
+
+    public bool ContainsRepositoryWithFullName(string fullName)
+    {
+        return Values
+            .SelectMany(x => x.Repositories)
+            .Any(x => string.Equals(x.FullName, fullName, StringComparison.OrdinalIgnoreCase));
+    }
 }

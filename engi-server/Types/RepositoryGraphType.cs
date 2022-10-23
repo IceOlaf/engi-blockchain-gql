@@ -35,10 +35,13 @@ public class RepositoryGraphType : ObjectGraphType<Repository>
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        string readmeId = GithubRepositoryReadme.KeyFrom(context.Source.FullName);
+        using (session.Advanced.DocumentStore.AggressivelyCacheFor(TimeSpan.FromMinutes(15)))
+        {
+            string readmeId = GithubRepositoryReadme.KeyFrom(context.Source.FullName);
 
-        var readme = await session.LoadAsync<GithubRepositoryReadme>(readmeId);
+            var readme = await session.LoadAsync<GithubRepositoryReadme>(readmeId);
 
-        return readme?.Content;
+            return readme?.Content;
+        }
     }
 }

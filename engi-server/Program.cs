@@ -241,6 +241,7 @@ builder.Services.AddTransient<UserCryptographyService>();
 
 builder.Services.AddTransient<GithubClientFactory>();
 builder.Services.AddHostedService<DistributeCodeService>();
+builder.Services.AddHostedService<RetrieveGithubReadmesService>();
 
 // pipeline
 

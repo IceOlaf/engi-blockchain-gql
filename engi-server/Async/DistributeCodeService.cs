@@ -67,7 +67,10 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
             }
             catch (Exception ex)
             {
-                command.SentryId = Sentry.CaptureException(ex).ToString();
+                command.SentryId = Sentry.CaptureException(ex, new()
+                {
+                    ["command"] = command.Id
+                }).ToString();
 
                 continue;
             }

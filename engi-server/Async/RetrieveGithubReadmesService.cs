@@ -46,7 +46,10 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
             }
             catch (Exception ex)
             {
-                Sentry.CaptureException(ex);
+                Sentry.CaptureException(ex, new()
+                {
+                    ["command"] = item.Result.Id
+                });
             }
         }
 

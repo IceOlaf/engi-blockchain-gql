@@ -2,6 +2,8 @@
 
 public class DistributeCodeCommand
 {
+    public string Id { get; set; } = null!;
+
     public ulong JobId { get; set; }
 
     public ulong SolutionId { get; set; }

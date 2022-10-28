@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Engi.Substrate.Jobs;
+using Engi.Substrate.Server.Async;
+using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Types;
@@ -53,16 +54,24 @@ public class AnalysisMutations : ObjectGraphType
 
         crypto.ValidateOrThrow(user, signature);
 
-        var octokit = scope.ServiceProvider.GetRequiredService<GitHubClient>();
+        string repositoryFullName = RepositoryUrl.ParseFullName(args.Url);
 
-        var (organization, name) = RepositoryUrl.Parse(args.Url);
+        var (enrollment, repoReference) = user.GithubEnrollments.Find(repositoryFullName);
+
+        if (enrollment == null)
+        {
+            throw new ExecutionError("User does not have access to repository.") { Code = "FORBIDDEN" };
+        }
 
         Repository repository;
         GitHubCommit commit;
 
+        var octokitFactory = scope.ServiceProvider.GetRequiredService<GithubClientFactory>();
+        var octokit = await octokitFactory.CreateForAsync(enrollment.InstallationId);
+
         try
         {
-            repository = await octokit.Repository.Get(organization, name);
+            repository = await octokit.Repository.Get(repoReference!.Id);
 
             await octokit.Repository.Branch.Get(repository.Id, args.Branch);
         }
@@ -85,10 +94,16 @@ public class AnalysisMutations : ObjectGraphType
             RepositoryUrl = args.Url,
             Branch = args.Branch,
             Commit = commit.Sha,
-            CreatedBy = context.User!.Identity!.Name!
+            CreatedBy = user.Address
         };
 
         await session.StoreAsync(analysis);
+
+        await session.StoreAsync(new QueueEngineRequestCommand
+        {
+            Identifier = analysis.Id,
+            CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}"
+        });
 
         await session.SaveChangesAsync();
 
@@ -125,21 +140,7 @@ public class AnalysisMutations : ObjectGraphType
         {
             try
             {
-                var payload = JsonSerializer
-                    .Deserialize<AnalysisPayload>(analysis.ExecutionResult.Stdout, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true,
-                        Converters =
-                        {
-                            new JsonStringEnumConverter(), 
-                            new TestConverter()
-                        }
-                    })!;
-
-                analysis.Language = payload.Language;
-                analysis.Files = payload.Files;
-                analysis.Complexity = payload.Complexity;
-                analysis.Tests = payload.Tests;
+                
             }
             catch (Exception ex)
             {
@@ -154,64 +155,5 @@ public class AnalysisMutations : ObjectGraphType
         return null;
     }
 
-    class AnalysisPayload
-    {
-        public Language Language { get; set; }
-
-        public string[]? Files { get; set; }
-
-        public RepositoryComplexity? Complexity { get; set; }
-
-        public TestAttempt[]? Tests { get; set; }
-    }
-
-    class TestConverter : JsonConverter<Test>
-    {
-        public override Test? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            TestResult result;
-            string? failedResultMessage = null;
-
-            var json = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
-
-            var resultProp = json.GetProperty("result");
-
-            if (resultProp.ValueKind == JsonValueKind.String)
-            {
-                result = Enum.Parse<TestResult>(resultProp.GetString()!);
-
-                if (result == TestResult.Failed)
-                {
-                    throw new InvalidOperationException("Invalid JSON; TestResult.Failed requires the error message.");
-                }
-            }
-            else if(resultProp.ValueKind == JsonValueKind.Object)
-            {
-                if (!resultProp.TryGetProperty("Failed", out var failedProp))
-                {
-                    throw new InvalidOperationException("Invalid JSON; TestResult.Failed requires the error message.");
-                }
-
-                result = TestResult.Failed;
-                failedResultMessage = failedProp.GetString()!;
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    "Invalid JSON; TestResult must be an object for TestResult.Failed or a string otherwise.");
-            }
-
-            bool required = json.TryGetProperty("required", out var requiredProp) && requiredProp.GetBoolean();
-
-            return new Test
-            {
-                Id = json.GetProperty("id").GetString()!,
-                Result = result,
-                FailedResultMessage = failedResultMessage,
-                Required = required
-            };
-        }
-
-        public override void Write(Utf8JsonWriter writer, Test value, JsonSerializerOptions options) => throw new NotImplementedException();
-    }
+    
 }

@@ -40,6 +40,22 @@ public class EngiOptions
     /// </summary>
     public string GithubAppWebhookSecret { get; set; } = null!;
 
+    /// <summary>
+    /// ARN of the topic that Engine requests will be posted to.
+    /// </summary>
+    public string EngineInputTopicArn { get; set; } = null!;
+
+    /// <summary>
+    /// URL of the queue that Engine responses will be received from.
+    /// </summary>
+    public string EngineOutputQueueUrl { get; set; } = null!;
+
+    /// <summary>
+    /// A mnemonic that can be used to invoke sudo commands on the chain
+    /// like solve_job.
+    /// </summary>
+    public string SudoChainMnemonic { get; set; } = null!;
+
     public X509Certificate2 EncryptionCertificateAsX509 =>
         X509CertificatesHelper.CertificateFromBase64String(EncryptionCertificate);
 }

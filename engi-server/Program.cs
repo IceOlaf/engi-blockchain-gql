@@ -133,13 +133,22 @@ builder.Services.AddCors(cors =>
 
     cors.AddDefaultPolicy(policy => 
     {
-        policy//.WithOrigins(application.Url)
-            .AllowAnyOrigin()
+        var corsBuilder = policy
             .AllowAnyMethod()
             .WithHeaders("Authorization", "Content-Type")
             .WithExposedHeaders("Token-Expired")
-            //.AllowCredentials()
             .SetPreflightMaxAge(TimeSpan.FromHours(1));
+
+        if (!builder.Environment.IsDevelopment())
+        {
+            corsBuilder
+                .WithOrigins(application.Url)
+                .AllowCredentials();
+        }
+        else
+        {
+            corsBuilder.AllowAnyOrigin();
+        }
     });
 });
 

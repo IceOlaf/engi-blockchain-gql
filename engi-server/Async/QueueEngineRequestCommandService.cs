@@ -14,17 +14,20 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
     public QueueEngineRequestCommandService(
         IDocumentStore store, 
         IServiceProvider serviceProvider,
         IWebHostEnvironment env, 
-        IHub sentry, 
+        IHub sentry,
+        IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory) 
         : base(store, serviceProvider, env, sentry, loggerFactory)
     {
+        this.awsOptions = awsOptions.Value;
         this.engiOptions = engiOptions.Value;
     }
 
@@ -43,7 +46,10 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
     {
         using var session = batch.OpenAsyncSession();
 
-        var client = new AmazonSimpleNotificationServiceClient();
+        var client = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
+        {
+            ServiceURL = awsOptions.ServiceUrl
+        });
 
         foreach (var item in batch.Items)
         {

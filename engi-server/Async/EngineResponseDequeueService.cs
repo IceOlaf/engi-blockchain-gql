@@ -14,7 +14,8 @@ public class EngineResponseDequeueService : BackgroundService
 {
     private readonly IDocumentStore store;
     private readonly IHub sentry;
-    private readonly EngiOptions options;
+    private readonly AwsOptions awsOptions;
+    private readonly EngiOptions engiOptions;
 
     private static readonly JsonSerializerOptions MessageSerializationOptions = new()
     {
@@ -34,15 +35,20 @@ public class EngineResponseDequeueService : BackgroundService
     public EngineResponseDequeueService(
         IDocumentStore store,
         IHub sentry,
-        IOptions<EngiOptions> options)
+        IOptions<AwsOptions> awsOptions,
+        IOptions<EngiOptions> engiOptions)
     {
         this.store = store;
         this.sentry = sentry;
-        this.options = options.Value;
+        this.awsOptions = awsOptions.Value;
+        this.engiOptions = engiOptions.Value;
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var sqs = new AmazonSQSClient();
+        var sqs = new AmazonSQSClient(new AmazonSQSConfig
+        {
+            ServiceURL = awsOptions.ServiceUrl
+        });
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -52,7 +58,7 @@ public class EngineResponseDequeueService : BackgroundService
             {
                 batch = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest
                 {
-                    QueueUrl = options.EngineOutputQueueUrl,
+                    QueueUrl = engiOptions.EngineOutputQueueUrl,
                     MaxNumberOfMessages = 10,
                     WaitTimeSeconds = 20 // max, apparently
                 }, stoppingToken);
@@ -82,7 +88,7 @@ public class EngineResponseDequeueService : BackgroundService
 
                     await sqs.DeleteMessageAsync(new()
                     {
-                        QueueUrl = options.EngineOutputQueueUrl,
+                        QueueUrl = engiOptions.EngineOutputQueueUrl,
                         ReceiptHandle = item.ReceiptHandle
                     });
                 }

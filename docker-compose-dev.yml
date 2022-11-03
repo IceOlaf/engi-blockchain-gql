@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - LOCALSTACK_HOSTNAME=localhost
+      - TEST_AWS_ACCOUNT_ID=000000000000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./localstack-up.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  ravendb:
+    extends:
+      file: docker-compose-services.yml
+      service: ravendb
+    ports:
+      - "8088:8080"
+  substrate:
+    extends:
+      file: docker-compose-services.yml
+      service: substrate
+    ports:
+      - "9933:9933"
+      - "9944:9944"
+  api:
+    extends:
+      file: docker-compose-services.yml
+      service: api
+    ports:
+      - "5000:5000"

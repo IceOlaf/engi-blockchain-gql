@@ -248,6 +248,19 @@ builder.Services.AddHostedService<EngineResponseDequeueService>();
 builder.Services.AddHostedService<QueueEngineRequestCommandService>();
 builder.Services.AddHostedService<RetrieveGithubReadmesService>();
 
+// localstack
+
+builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"))
+    .PostConfigure<AwsOptions>(aws =>
+    {
+        // just to be safe, override this if not running locally 
+
+        if (!builder.Environment.IsDevelopment())
+        {
+            aws.ServiceUrl = null;
+        }
+    });
+
 // pipeline
 
 var app = builder.Build();

@@ -72,6 +72,13 @@ public class GraphQLController : ControllerBase
 
         result.EnrichWithApolloTracing(startTime);
 
+        if (result.Errors?.OfType<AuthenticationError>().Any() == true)
+        {
+            sentry.CaptureMessage("Login failed.");
+
+            return Unauthorized();
+        }
+
         if (result.Errors?.OfType<AccessDeniedError>().Any() == true)
         {
             return Unauthorized();

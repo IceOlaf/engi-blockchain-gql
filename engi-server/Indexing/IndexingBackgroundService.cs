@@ -19,11 +19,11 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     private IDisposable? headerObservable;
 
     public IndexingBackgroundService(
-        IDocumentStore store, 
+        IDocumentStore store,
         IServiceProvider serviceProvider,
-        IHub sentry, 
+        IHub sentry,
         IWebHostEnvironment env,
-        ILoggerFactory loggerFactory) 
+        ILoggerFactory loggerFactory)
         : base(store, serviceProvider, env, sentry, loggerFactory)
     { }
 
@@ -49,7 +49,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         headerObservable = headObserver.FinalizedHeaders
             // this Rx sequence makes sure that each handler is awaited before continuing
-            .Select(header => Observable.FromAsync(async () => 
+            .Select(header => Observable.FromAsync(async () =>
             {
                 if (header.Number == 0)
                 {
@@ -121,7 +121,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         // account for jobs stored
 
-        session.Advanced.MaxNumberOfRequestsPerSession = batch.NumberOfItemsInBatch * 10; 
+        session.Advanced.MaxNumberOfRequestsPerSession = batch.NumberOfItemsInBatch * 10;
 
         var previousBlocks = await session
             .LoadAsync<ExpandedBlock>(batch.Items.Select(x => x.Result.PreviousId));
@@ -221,7 +221,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         var events = await client.GetSystemEventsAsync(hash, meta);
 
         block.Fill(signedBlock!.Block, events, meta);
-        
+
         // TODO: make this query in one storage call if possible?
 
         foreach (var indexable in GetIndexables(block))

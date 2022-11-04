@@ -13,11 +13,11 @@ namespace Engi.Substrate.Server.Async;
 public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapshot>
 {
     public RetrieveGithubReadmesService(
-        IDocumentStore store, 
+        IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env, 
-        IHub sentry, 
-        ILoggerFactory loggerFactory) 
+        IWebHostEnvironment env,
+        IHub sentry,
+        ILoggerFactory loggerFactory)
         : base(store, serviceProvider, env, sentry, loggerFactory)
     {
         MaxDocumentsPerBatch = 10;
@@ -30,7 +30,7 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
                 return snapshot.IsCreation === true
             }
 
-            from JobSnapshots as snapshot where filter(snapshot) 
+            from JobSnapshots as snapshot where filter(snapshot)
         ";
     }
 

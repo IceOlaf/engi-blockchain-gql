@@ -25,13 +25,13 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
     private readonly IOptionsMonitor<SubstrateClientOptions> substrateOptions;
 
     public DistributeCodeService(
-        IDocumentStore store, 
-        IServiceProvider serviceProvider, 
-        IWebHostEnvironment env, 
-        IHub sentry, 
+        IDocumentStore store,
+        IServiceProvider serviceProvider,
+        IWebHostEnvironment env,
+        IHub sentry,
         ILoggerFactory loggerFactory,
         IOptionsMonitor<ApplicationOptions> applicationOptions,
-        IOptionsMonitor<SubstrateClientOptions> substrateOptions) 
+        IOptionsMonitor<SubstrateClientOptions> substrateOptions)
         : base(store, serviceProvider, env, sentry, loggerFactory)
     {
         this.applicationOptions = applicationOptions;
@@ -47,7 +47,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
                 return b.ProcessedOn === null && b.SentryId === null
             }
 
-            from DistributeCodeCommands as c where filter(c) 
+            from DistributeCodeCommands as c where filter(c)
         ";
     }
 
@@ -72,6 +72,10 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
                     ["command"] = command.Id
                 }).ToString();
 
+                Logger.LogWarning(ex,
+                    "Processing command {command} failed; sentry id={sentryId}.",
+                    command.Id, command.SentryId);
+
                 continue;
             }
 
@@ -85,7 +89,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         await session.SaveChangesAsync();
     }
 
-    private async Task<string?> ProcessAsync(DistributeCodeCommand command, 
+    private async Task<string?> ProcessAsync(DistributeCodeCommand command,
         IAsyncDocumentSession session,
         IServiceProvider serviceProvider)
     {
@@ -117,11 +121,11 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
             command.FirstDeferredOn ??= DateTime.UtcNow;
 
             Logger.LogWarning(
-                "Job or solution was not found, deferring; job={jobId} solution={solutionId}", 
+                "Job or solution was not found, deferring; job={jobId} solution={solutionId}",
                 command.JobId, command.SolutionId);
 
             var meta = session.Advanced.GetMetadataFor(command);
-            
+
             meta[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddMinutes(1);
 
             return null;
@@ -161,7 +165,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
         var targetRepo = await octokit.Repository.Get(targetRepoReference!.Id);
 
-        // check if branch already exists and delete it 
+        // check if branch already exists and delete it
 
         try
         {
@@ -190,7 +194,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
             // good
         }
 
-        // clone repository 
+        // clone repository
 
         using var workDirectory = new DisposableRepositoryDirectory();
 

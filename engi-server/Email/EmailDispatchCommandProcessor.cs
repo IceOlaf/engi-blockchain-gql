@@ -1,5 +1,4 @@
-﻿using Engi.Substrate.Server.Indexing;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using RazorLight;
@@ -13,9 +12,9 @@ namespace Engi.Substrate.Server.Email;
 public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDispatchCommand>
 {
     public EmailDispatchCommandProcessor(
-        IDocumentStore store, 
-        IServiceProvider serviceProvider, 
-        IHub sentry, 
+        IDocumentStore store,
+        IServiceProvider serviceProvider,
+        IHub sentry,
         IWebHostEnvironment env,
         ILoggerFactory loggerFactory)
         : base(store, serviceProvider, env, sentry, loggerFactory)

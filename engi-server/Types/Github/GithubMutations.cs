@@ -37,7 +37,7 @@ public class GithubMutations : ObjectGraphType
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var sentry = scope.ServiceProvider.GetRequiredService<IHub>();
+        var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
 
         long installationId = long.Parse(args.InstallationId);
 
@@ -56,7 +56,9 @@ public class GithubMutations : ObjectGraphType
         }
         catch (Exception ex)
         {
-            sentry.CaptureException(ex);
+            var logger = loggerFactory.CreateLogger<GithubMutations>();
+
+            logger.LogError(ex, "Enrollment could not be verified.");
 
             throw new AuthenticationError();
         }

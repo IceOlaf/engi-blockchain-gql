@@ -40,16 +40,21 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
         foreach (var item in batch.Items)
         {
+            var command = item.Result;
             try
             {
-                await ProcessAsync(item.Result, session, serviceProvider);
+                await ProcessAsync(command, session, serviceProvider);
             }
             catch (Exception ex)
             {
-                Sentry.CaptureException(ex, new()
+                var sentryId = Sentry.CaptureException(ex, new()
                 {
-                    ["command"] = item.Result.Id
+                    ["command"] = command.Id
                 });
+
+                Logger.LogWarning(ex,
+                    "Processing command {command} failed; sentry id={sentryId}.",
+                    command.Id, sentryId.ToString());
             }
         }
 

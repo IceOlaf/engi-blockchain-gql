@@ -13,7 +13,7 @@ namespace Engi.Substrate.Server.Async;
 public class EngineResponseDequeueService : BackgroundService
 {
     private readonly IDocumentStore store;
-    private readonly IHub sentry;
+    private readonly ILogger logger;
     private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
@@ -34,12 +34,12 @@ public class EngineResponseDequeueService : BackgroundService
 
     public EngineResponseDequeueService(
         IDocumentStore store,
-        IHub sentry,
+        ILogger<EngineResponseDequeueService> logger,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions)
     {
         this.store = store;
-        this.sentry = sentry;
+        this.logger = logger;
         this.awsOptions = awsOptions.Value;
         this.engiOptions = engiOptions.Value;
     }
@@ -70,7 +70,7 @@ public class EngineResponseDequeueService : BackgroundService
                     return;
                 }
 
-                sentry.CaptureException(ex);
+                logger.LogError(ex, "Operation was cancelled unexpectedly.");
 
                 throw;
             }
@@ -99,7 +99,7 @@ public class EngineResponseDequeueService : BackgroundService
                 }
                 catch (Exception ex)
                 {
-                    sentry.CaptureException(ex);
+                    logger.LogError(ex, "Deleting message from queue failed.");
                 }
             }
         }
@@ -146,10 +146,7 @@ public class EngineResponseDequeueService : BackgroundService
             }
             catch (Exception ex)
             {
-                sentry.CaptureException(ex, new()
-                {
-                    ["messageId"] = item.MessageId
-                });
+                logger.LogError(ex, "Deserializing payload from queue failed; message id={messageId}", item.MessageId);
             }
         }
 

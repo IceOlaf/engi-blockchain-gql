@@ -22,17 +22,20 @@ public class GraphQLController : ControllerBase
     private readonly IDocumentExecuter documentExecuter;
     private readonly IWebHostEnvironment environment;
     private readonly IHub sentry;
+    private readonly ILogger logger;
     private readonly ApplicationOptions apiOptions;
 
     public GraphQLController(
         IDocumentExecuter documentExecuter, 
         IWebHostEnvironment environment,
         IHub sentry,
+        ILogger<GraphQLController> logger,
         IOptions<ApplicationOptions> apiOptions)
     {
         this.documentExecuter = documentExecuter;
         this.environment = environment;
         this.sentry = sentry;
+        this.logger = logger;
         this.apiOptions = apiOptions.Value;
     }
 
@@ -74,6 +77,8 @@ public class GraphQLController : ControllerBase
 
         if (result.Errors?.OfType<AuthenticationError>().Any() == true)
         {
+            logger.LogWarning("Login failed.");
+            
             sentry.CaptureMessage("Login failed.");
 
             return Unauthorized();

@@ -190,7 +190,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 // logged as debug so it's not picked by Sentry twice - we need to sentry id
                 // so we must rely on the native call
 
-                Logger.LogDebug(ex, "Indexing failed; block number={number}", block.Number);
+                Logger.LogWarning(ex, "Indexing failed; block number={number}", block.Number);
 
                 // if we didn't make it to the end, store the sentry error
 

@@ -73,6 +73,10 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 {
                     ["command"] = command.Id
                 }).ToString();
+
+                Logger.LogWarning(ex,
+                    "Processing command {command} failed; sentry id={sentryId}.",
+                    command.Id, command.SentryId);
             }
 
             await session.SaveChangesAsync();

@@ -66,6 +66,10 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
                     ["command"] = command.Id
                 }).ToString();
 
+                Logger.LogWarning(ex,
+                    "Processing command {command} failed; sentry id={sentryId}.",
+                    command.Id, command.SentryId);
+
                 continue;
             }
 
@@ -99,6 +103,10 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
                 {
                     ["command"] = command.Id
                 }).ToString();
+
+                Logger.LogWarning(ex,
+                    "Processing command {command} failed; sentry id={sentryId}.",
+                    command.Id, command.SentryId);
             }
         }
 

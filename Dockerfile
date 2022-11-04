@@ -1,5 +1,5 @@
 ARG DOTNET_CR=mcr.microsoft.com/dotnet
-ARG DOTNET_VERSION=6.0
+ARG DOTNET_VERSION=6.0-alpine
 ARG BIN_DIR=/usr/local/bin
 ARG SRC_DIR=/source
 
@@ -19,10 +19,11 @@ RUN dotnet restore
 WORKDIR $SRC_DIR
 COPY engi-substrate/ engi-substrate/
 COPY engi-server/ engi-server/
+COPY libgit2sharp/ libgit2sharp/
 RUN dotnet tool install -g dotnet-setversion
 RUN setversion -r $BUILD_VERSION
 WORKDIR $SRC_DIR/engi-server
-RUN dotnet build -c release --no-restore
+RUN dotnet build -c release
 
 FROM build AS test
 ARG BIN_DIR SRC_DIR

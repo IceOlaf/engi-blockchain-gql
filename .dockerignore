@@ -1,8 +1,6 @@
 # directories
 **/bin/
 **/obj/
-**/out/
 
 # files
 Dockerfile*
-**/*.md

@@ -8,6 +8,12 @@ ENV PATH="/root/.dotnet/tools:$PATH"
 ARG BUILD_VERSION=1
 ARG SRC_DIR
 
+# build libgit2sharp first
+WORKDIR $SRC_DIR
+COPY libgit2sharp/ libgit2sharp/
+WORKDIR $SRC_DIR/libgit2sharp/LibGit2Sharp
+RUN dotnet build -c release
+
 # copy csproj files
 WORKDIR $SRC_DIR
 COPY engi-substrate/*.csproj engi-substrate/
@@ -19,11 +25,10 @@ RUN dotnet restore
 WORKDIR $SRC_DIR
 COPY engi-substrate/ engi-substrate/
 COPY engi-server/ engi-server/
-COPY libgit2sharp/ libgit2sharp/
 RUN dotnet tool install -g dotnet-setversion
 RUN setversion -r $BUILD_VERSION
 WORKDIR $SRC_DIR/engi-server
-RUN dotnet build -c release
+RUN dotnet build -c release --no-restore
 
 FROM build AS test
 ARG BIN_DIR SRC_DIR

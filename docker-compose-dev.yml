@@ -32,3 +32,5 @@ services:
       service: api
     ports:
       - "5000:5000"
+    environment:
+      - WAIT_HOSTS=substrate:9933, substrate:9944, ravendb:8080, ravendb:38888, localstack:4566

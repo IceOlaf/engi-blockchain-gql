@@ -112,3 +112,23 @@ Once the tests complete, a `.trx` (XML) file with the results will be available 
 Executing only the unit tests is possible with the `dotnet test --filter` [command](https://learn.microsoft.com/en-us/dotnet/core/testing/selective-unit-tests?pivots=mstest).
 
 It is also possible to re-run the tests on every change with `dotnet watch test`, ran from the `engi-tests` directory.
+
+## Generating the GraphQL docs locally
+
+To review documentation on the GraphQL schema, you can run the API as above, and visit Altair at `http://localhost:5000/ui/altair`.
+
+Altair has a `Docs` right sidebar that contains information on the schema root types and its descendants.
+
+Alternatively, you can generate documentation with SpectaQL by doing:
+
+```
+docker-compose -f docker-compose-generate-docs.yml up --exit-code-from docs
+```
+
+The docs end up in `engi-server/wwwroot/docs`. One way to view them:
+
+```
+npm install -g http-server
+cd engi-server/wwwroot/docs/
+http-server
+```

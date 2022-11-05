@@ -19,6 +19,11 @@ public class EngiOptions
     /// </summary>
     public bool DisableChainObserver { get; set; }
 
+    ///
+    ///  Used to disable integration with Engine during testing.
+    /// </summary>
+    public bool DisableEngineIntegration { get; set; }
+
     /// <summary>
     /// The API key for sudo calls.
     /// </summary>

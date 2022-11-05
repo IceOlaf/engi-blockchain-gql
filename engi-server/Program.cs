@@ -131,7 +131,7 @@ builder.Services.AddCors(cors =>
 {
     var application = applicationSection.Get<ApplicationOptions>();
 
-    cors.AddDefaultPolicy(policy => 
+    cors.AddDefaultPolicy(policy =>
     {
         var corsBuilder = policy
             .AllowAnyMethod()
@@ -244,16 +244,20 @@ builder.Services.AddTransient<UserCryptographyService>();
 
 builder.Services.AddTransient<GithubClientFactory>();
 builder.Services.AddHostedService<DistributeCodeService>();
-builder.Services.AddHostedService<EngineResponseDequeueService>();
-builder.Services.AddHostedService<QueueEngineRequestCommandService>();
 builder.Services.AddHostedService<RetrieveGithubReadmesService>();
+
+if(engiOptions.DisableEngineIntegration == false)
+{
+    builder.Services.AddHostedService<EngineResponseDequeueService>();
+    builder.Services.AddHostedService<QueueEngineRequestCommandService>();
+}
 
 // localstack
 
 builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"))
     .PostConfigure<AwsOptions>(aws =>
     {
-        // just to be safe, override this if not running locally 
+        // just to be safe, override this if not running locally
 
         if (!builder.Environment.IsDevelopment())
         {

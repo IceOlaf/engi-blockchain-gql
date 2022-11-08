@@ -26,7 +26,7 @@ By default it will run:
 
 To run:
 ```
-docker-compose -f docker-compose-dev.yml up
+docker-compose -f docker-compose-dev.yml up --exit-code-from api
 ```
 
 To develop against another `engi-node`:

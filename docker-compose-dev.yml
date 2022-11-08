@@ -7,7 +7,7 @@ services:
     ports:
       - "4566:4566"
     environment:
-      - LOCALSTACK_HOSTNAME=localhost
+      - LOCALSTACK_HOST=localstack
       - TEST_AWS_ACCOUNT_ID=000000000000
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
@@ -34,4 +34,10 @@ services:
       - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_DEFAULT_REGION=us-west-2
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS__SERVICEURL=http://localstack:4566
+      - LOGGING__LOGLEVEL__DEFAULT=Information
+      - RAVEN__URLS=http://ravendb:8080
       - WAIT_HOSTS=substrate:9933, substrate:9944, ravendb:8080, ravendb:38888, localstack:4566

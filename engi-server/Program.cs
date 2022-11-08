@@ -1,3 +1,5 @@
+using Amazon.SimpleNotificationService;
+using Amazon.SQS;
 using Engi.Substrate;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Async;
@@ -254,7 +256,9 @@ if(engiOptions.DisableEngineIntegration == false)
 
 // localstack
 
-builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"))
+var awsSection = builder.Configuration.GetRequiredSection("Aws");
+
+builder.Services.Configure<AwsOptions>(awsSection)
     .PostConfigure<AwsOptions>(aws =>
     {
         // just to be safe, override this if not running locally
@@ -264,6 +268,58 @@ builder.Services.Configure<AwsOptions>(builder.Configuration.GetSection("Aws"))
             aws.ServiceUrl = null;
         }
     });
+
+if (builder.Environment.IsDevelopment())
+{
+    var awsOptions = awsSection.Get<AwsOptions>();
+
+    builder.Services.PostConfigure<EngiOptions>(engiOptions =>
+    {
+        var sns = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
+        {
+            ServiceURL = awsOptions.ServiceUrl
+        });
+
+        var sqs = new AmazonSQSClient(new AmazonSQSConfig
+        {
+            ServiceURL = awsOptions.ServiceUrl
+        });
+
+        while (true)
+        {
+            var topics = sns.ListTopicsAsync().GetAwaiter().GetResult();
+
+            if (topics.Topics.Count == 2)
+            {
+                break;
+            }
+
+            Console.WriteLine($"{topics.Topics.Count}/2 topics found, waiting for 5 sec.");
+            Thread.Sleep(5000);
+        }
+
+        while (true)
+        {
+            var queues = sqs.ListQueuesAsync("engine-").GetAwaiter().GetResult();
+
+            if (queues.QueueUrls.Count == 2)
+            {
+                break;
+            }
+
+            Console.WriteLine($"{queues.QueueUrls.Count}/2 queues found, waiting for 5 sec.");
+            Thread.Sleep(5000);
+        }
+
+        var inTopic = sns.FindTopicAsync("engine-in").GetAwaiter().GetResult();
+
+        engiOptions.EngineInputTopicArn = inTopic.TopicArn;
+        
+        var outQueue = sqs.GetQueueUrlAsync("engine-out").GetAwaiter().GetResult();
+
+        engiOptions.EngineOutputQueueUrl = outQueue.QueueUrl;
+    });
+}
 
 // pipeline
 

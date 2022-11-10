@@ -8,98 +8,149 @@ version: 2.1
 
 orbs:
   aws-ecr: circleci/aws-ecr@8.1.2
-  terraform: circleci/terraform@3.0.1
+  terraform: circleci/terraform@3.2.0
 
 parameters:
+  terraform-app:
+    type: string
+    default: graphql
   terraform-setup:
     type: string
     default: deploy/setup/graphql
+  terraform-version:
+    type: string
+    default: 1.2.2
+  primary_region:
+    type: string
+    default: "usw2"
+
+executors:
+  build:
+    machine:
+      image: ubuntu-2004:202201-01
 
 commands:
   terraform-deploy:
+    parameters:
+      terraform-workspace:
+        type: string
     steps:
-      - checkout
       - run:
           name: "Checkout Terraform sources"
           command: |
             git clone git@github.com:engi-network/deploy.git
-      - run:
-          name: "Display TF_WORKSPACE"
-          command: |
-            echo TF_WORKSPACE=$TF_WORKSPACE
       - run:
           name: Create .terraformrc file locally
           command: |
             echo "credentials \"app.terraform.io\" {token =
             \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
       - terraform/install:
-          arch: amd64
-          os: linux
-          terraform_version: 1.1.9
-      - terraform/init:
-          path: << pipeline.parameters.terraform-setup >>
+          terraform_version: << pipeline.parameters.terraform-version >>
       - run:
-          # the terraform/apply command built into the official orb unsets TF_WORKSPACE that won't work here
-          name: "terraform apply"
           command: |
-            terraform -chdir="<< pipeline.parameters.terraform-setup >>" apply -auto-approve
+            echo 'TF_WORKSPACE="<< parameters.terraform-workspace >>" /usr/local/bin/terraform $*' > ~/bin/terraform
+            chmod +x ~/bin/terraform
+      - terraform/plan:
+          path: << pipeline.parameters.terraform-setup >>
+          out: /tmp/terraform.plan
+      - terraform/apply:
+          path: << pipeline.parameters.terraform-setup >>
+          plan: /tmp/terraform.plan
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  deploy-staging:
-    machine:
-      image: ubuntu-2004:202201-01
-    environment:
-      TF_WORKSPACE: "graphql-staging"
+  deploy:
+    executor: build
+    parameters:
+      environment:
+        type: string
+      region:
+        type: string
     steps:
-      - terraform-deploy
-  deploy-production:
-    machine:
-      image: ubuntu-2004:202201-01
-    environment:
-      TF_WORKSPACE: "graphql-production"
+      - when:
+          condition:
+            equal: [ << pipeline.parameters.primary_region >>, << parameters.region >> ]
+          steps:
+            - terraform-deploy:
+                terraform-workspace: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>'
+      - unless:
+          condition:
+            equal: [ << pipeline.parameters.primary_region >>, << parameters.region >> ]
+          steps:
+            - terraform-deploy:
+                terraform-workspace: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>-<< parameters.region >>'
+  build:
+    executor: build
+    parameters:
+      environment:
+        type: string
     steps:
-      - terraform-deploy
+      - checkout
+      - aws-ecr/build-and-push-image:
+          repo: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>'
+          create-repo: true
+          tag: latest
+          registry-id: AWS_ID
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   build-test-push-workflow:
     jobs:
-      - aws-ecr/build-and-push-image:
-          name: "build-and-push-staging"
-          repo: "graphql-staging"
-          create-repo: true
-          tag: latest
-          registry-id: AWS_ID
+      - build:
+          name: build-staging
+          environment: staging
           context:
             - aws
-      - aws-ecr/build-and-push-image:
           filters:
-            &filters-production # this yaml anchor is setting these values to filters-production
+            tags:
+              only: ""
+      - deploy:
+          name: deploy-staging-<< matrix.region >>
+          environment: staging
+          requires:
+            - build-staging
+          matrix:
+            parameters:
+              region:
+                - use1
+                - use2
+                - usw1
+                - usw2
+          context:
+            - terraform
+            - aws
+          filters:
+            branches:
+              only: main
+      - build:
+          name: build-production
+          environment: production
+          context:
+            - aws
+          filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
-          name: "build-and-push-production"
-          repo: "graphql-production"
-          create-repo: true
-          tag: latest
-          registry-id: AWS_ID
+      - deploy:
+          name: deploy-production-<< matrix.region >>
+          environment: production
+          requires:
+            - build-production
           context:
+            - terraform
             - aws
-      - deploy-staging:
-          requires:
-            - build-and-push-staging
-          context:
-            - github
-            - terraform
-      - deploy-production:
+          matrix:
+            parameters:
+              region:
+                - use1
+                - use2
+                - usw1
+                - usw2
           filters:
-            <<: *filters-production # this is calling the previously set yaml anchor
-          requires:
-            - build-and-push-production
-          context:
-            - github
-            - terraform
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

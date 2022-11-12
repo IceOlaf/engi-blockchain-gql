@@ -31,7 +31,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     {
         return @"
             declare function filter(b) {
-                return b.IndexedOn === null && b.SentryId === null
+                return b.IndexedOn === null && b.SentryId === null && !c['@metadata'].hasOwnProperty('@refresh');
             }
 
             from ExpandedBlocks as b where filter(b) include PreviousId

@@ -314,6 +314,7 @@ if (builder.Environment.IsDevelopment())
         var inTopic = sns.FindTopicAsync("engine-in").GetAwaiter().GetResult();
 
         engiOptions.EngineInputTopicArn = inTopic.TopicArn;
+        engiOptions.EngineOutputTopicName = "engine-out";
         
         var outQueue = sqs.GetQueueUrlAsync("engine-out").GetAwaiter().GetResult();
 

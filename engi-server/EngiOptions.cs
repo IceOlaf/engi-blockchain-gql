@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Engi.Substrate.Server;
 
@@ -54,6 +54,12 @@ public class EngiOptions
     /// URL of the queue that Engine responses will be received from.
     /// </summary>
     public string EngineOutputQueueUrl { get; set; } = null!;
+
+    /// <summary>
+    /// The SNS topic name that the engine will post responses to
+    /// before they are queued to <see cref="EngineOutputQueueUrl"/>.
+    /// </summary>
+    public string EngineOutputTopicName { get; set; } = null!;
 
     /// <summary>
     /// A mnemonic that can be used to invoke sudo commands on the chain

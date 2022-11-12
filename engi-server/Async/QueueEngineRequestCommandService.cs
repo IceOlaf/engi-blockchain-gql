@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Amazon.SimpleNotificationService;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
@@ -60,7 +60,8 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 string json = JsonSerializer.Serialize(new
                 {
                     command.Identifier,
-                    Command = command.CommandString
+                    Command = command.CommandString,
+                    sns_sqs_return_channel = engiOptions.EngineOutputTopicName
                 }, SerializerOptions);
 
                 await client.PublishAsync(engiOptions.EngineInputTopicArn, json);

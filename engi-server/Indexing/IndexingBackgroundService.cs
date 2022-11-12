@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Text;
 using Dasync.Collections;
@@ -188,6 +188,11 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);
 
         var signedBlock = await client.GetChainBlockAsync(hash);
+
+        if (signedBlock == null)
+        {
+            throw new IndexingException(hash, $"{nameof(client.GetChainBlockAsync)} returned null.");
+        }
 
         var events = await client.GetSystemEventsAsync(hash, meta);
 

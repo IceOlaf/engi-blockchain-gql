@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate.Server.Indexing;
 
@@ -50,9 +50,24 @@ public class ExpandedBlock
         EventRecord[] events,
         RuntimeMetadata meta)
     {
+        if (block == null)
+        {
+            throw new ArgumentNullException(nameof(block));
+        }
+
         if (block.Header.Number != Number)
         {
             throw new ArgumentException("Block number doesn't match.", nameof(block));
+        }
+
+        if (block.Extrinsics == null)
+        {
+            throw new ArgumentNullException(nameof(Block.Extrinsics));
+        }
+
+        if (events == null)
+        {
+            throw new ArgumentNullException(nameof(events));
         }
 
         Hash = block.Header.Hash.Value;

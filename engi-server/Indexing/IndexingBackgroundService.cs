@@ -8,6 +8,8 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Sentry;
 
+using Constants = Raven.Client.Constants;
+
 namespace Engi.Substrate.Server.Indexing;
 
 public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBlock>
@@ -131,12 +133,24 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         var resultBag = new ConcurrentBag<object>();
 
+        var metadataById = batch.Items
+            .ToDictionary(x => x.Id, x => session.Advanced.GetMetadataFor(x.Result));
+
         await batch.Items.ParallelForEachAsync(async doc =>
         {
             var client = new SubstrateClient(httpClientFactory);
 
             var block = doc.Result;
             var previous = block.PreviousId != null ? previousBlocks[block.PreviousId] : null;
+
+            void ConfigureScope(Scope scope)
+            {
+                scope.SetExtras(new Dictionary<string, object?>
+                {
+                    ["number"] = block.Number.ToString(),
+                    ["hash"] = block.Hash ?? string.Empty
+                });
+            }
 
             try
             {
@@ -147,6 +161,18 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                     resultBag.Add(result);
                 }
             }
+            catch (BlockHeaderNotFoundException ex)
+            {
+                // this shouldn't happen so until we figure it out, keep posting the error to sentry
+
+                Sentry.CaptureException(ex, ConfigureScope);
+
+                // then reschedule a try in 2 seconds
+
+                var metadata = metadataById[doc.Id];
+
+                metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
+            }
             catch (Exception ex)
             {
                 // logged as debug so it's not picked by Sentry twice - we need to sentry id
@@ -155,15 +181,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 Logger.LogDebug(ex, "Indexing failed; block number={number}", block.Number);
 
                 // if we didn't make it to the end, store the sentry error
-
-                void ConfigureScope(Scope scope)
-                {
-                    scope.SetExtras(new Dictionary<string, object?>
-                    {
-                        ["number"] = block.Number.ToString(), 
-                        ["hash"] = block.Hash ?? string.Empty
-                    });
-                }
 
                 block.SentryId = Sentry.CaptureException(ex, ConfigureScope).ToString();
             }
@@ -188,11 +205,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         string hash = block.Hash ?? await client.GetChainBlockHashAsync(block.Number);
 
         var signedBlock = await client.GetChainBlockAsync(hash);
-
-        if (signedBlock == null)
-        {
-            throw new IndexingException(hash, $"{nameof(client.GetChainBlockAsync)} returned null.");
-        }
 
         var events = await client.GetSystemEventsAsync(hash, meta);
 

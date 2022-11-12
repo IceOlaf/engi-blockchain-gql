@@ -179,7 +179,18 @@ public class SubstrateClient
 
     // chain_
 
-    public Task<SignedBlock?> GetChainBlockAsync(string hash) => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock, hash);
+    public async Task<SignedBlock> GetChainBlockAsync(string hash)
+    {
+        var block = await RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock, hash);
+
+        if (block == null)
+        {
+            throw new BlockHeaderNotFoundException(hash, "unknown", $"Block with hash {hash} was not found.", null);
+        }
+
+        return block;
+    }
+
     public Task<SignedBlock> GetChainBlockAsync() => RpcAsync<SignedBlock>(ChainKeys.ChainGetBlock)!;
     public Task<string> GetChainBlockHashAsync(ulong number) => RpcAsync(ChainKeys.ChainGetBlockHash, number);
     public Task<string> GetChainFinalizedHeadAsync() => RpcAsync(ChainKeys.ChainGetFinalizedHead);

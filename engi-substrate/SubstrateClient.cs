@@ -1,6 +1,7 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Pallets;
 
@@ -52,8 +53,28 @@ public class SubstrateClient
         {
             error.TryGetProperty("data", out var data);
 
+            string code = error.GetProperty("code").GetString()!;
+            string message = error.GetProperty("message").GetString()!;
+
+            if (code == "-32000")
+            {
+                string? hash = null;
+
+                try
+                {
+                    hash = Regex.Match(message, @"0x([a-z\d]{64})")
+                        .Captures[0].Value;
+                }
+                catch (Exception)
+                {
+                    // ignore
+                }
+
+                throw new BlockHeaderNotFoundException(hash ?? "unknown", code, message, data);
+            }
+
             throw new InvalidOperationException(
-                $"Substrate error {error.GetProperty("code")}; {error.GetProperty("message")}: {data}");
+                $"Substrate error {code}; {message}: {data}");
         }
 
         T? result = json.GetProperty("result").Deserialize<T>(SubstrateJsonSerializerOptions.Default);
@@ -167,14 +188,14 @@ public class SubstrateClient
 
     // author_
 
-    public Task<string> AuthorSubmitExtrinsicAsync<TExtrinsic>(SignedExtrinsicArguments<TExtrinsic> args, RuntimeMetadata meta) 
+    public Task<string> AuthorSubmitExtrinsicAsync<TExtrinsic>(SignedExtrinsicArguments<TExtrinsic> args, RuntimeMetadata meta)
         where TExtrinsic : IExtrinsic
     {
         var payload = Hex.GetString0X(args.Serialize(meta));
 
         return RpcAsync(ChainKeys.AuthorSubmitExtrinsic, payload);
     }
-    
+
     // composite
 
     public async Task<AccountInfo> GetSystemAccountAsync(Address address)

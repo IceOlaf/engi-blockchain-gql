@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+function load_aws_credentials() {
+  set AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+  export $*
+  read $* < <(
+    curl -s http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI |
+    jq -r '[.AccessKeyId,.SecretAccessKey,.Token]|join(" ")'
+  )
+}
+
+# Load AWS credentials in ECS Fargate environment
+[ -n "$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI" ] && load_aws_credentials
+
+eval exec -a "ecs-start" bash <<<$*

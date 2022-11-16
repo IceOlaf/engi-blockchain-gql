@@ -92,6 +92,7 @@ jobs:
           create-repo: true
           tag: latest
           registry-id: AWS_ID
+          extra-build-args: "--build-arg BUILD_VERSION=$CIRCLE_BUILD_NUM"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

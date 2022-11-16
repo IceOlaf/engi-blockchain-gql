@@ -4,6 +4,8 @@ ARG BIN_DIR=/usr/local/bin
 ARG SRC_DIR=/source
 
 FROM $DOTNET_CR/sdk:$DOTNET_VERSION AS build
+ENV PATH="/root/.dotnet/tools:$PATH"
+ARG BUILD_VERSION=1
 ARG SRC_DIR
 
 # copy csproj files
@@ -17,6 +19,8 @@ RUN dotnet restore
 WORKDIR $SRC_DIR
 COPY engi-substrate/ engi-substrate/
 COPY engi-server/ engi-server/
+RUN dotnet tool install -g dotnet-setversion
+RUN setversion -r $BUILD_VERSION
 WORKDIR $SRC_DIR/engi-server
 RUN dotnet build -c release --no-restore
 

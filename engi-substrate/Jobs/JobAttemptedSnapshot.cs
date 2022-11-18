@@ -10,9 +10,12 @@ public class JobAttemptedSnapshot : IBlockSnapshot
 
     public string Attempter { get; set; } = null!;
 
+    public string PatchFileUrl { get; set; } = null!;
+
     public BlockReference SnapshotOn { get; init; } = null!;
 
     public static JobAttemptedSnapshot From(
+        Dictionary<string, object> arguments,
         Dictionary<int, object> eventData,
         BlockReference reference)
     {
@@ -24,6 +27,7 @@ public class JobAttemptedSnapshot : IBlockSnapshot
             AttemptId = attemptId,
             JobId = (ulong) eventData[1],
             Attempter = (string) eventData[2],
+            PatchFileUrl = (string) arguments["submission_patch_file_url"],
             SnapshotOn = reference
         };
     }

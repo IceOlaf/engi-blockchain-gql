@@ -5,6 +5,7 @@ using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Server.Async;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
@@ -236,7 +237,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             }
             else if (indexable is AttemptIndexable attemptIndexable)
             {
-                results.Add(JobAttemptedSnapshot.From(attemptIndexable.Data, block));
+                results.Add(JobAttemptedSnapshot.From(attemptIndexable.Arguments, attemptIndexable.EventData, block));
             }
             else if (indexable is SolutionIndexable solutionIndexable)
             {
@@ -306,11 +307,10 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                     var jobAttemptedEvent = extrinsic.Events
                         .Find(ChainKeys.Jobs.Name, ChainKeys.Jobs.Events.JobAttempted);
 
-                    var data = (Dictionary<int, object>) jobAttemptedEvent.Data;
-
                     yield return new AttemptIndexable
                     {
-                        Data = data
+                        Arguments = (Dictionary<string, object>) extrinsic.Arguments,
+                        EventData = (Dictionary<int, object>) jobAttemptedEvent.Data
                     };
                 }
 
@@ -381,7 +381,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
     class AttemptIndexable : Indexable
     {
-        public Dictionary<int, object> Data { get; init; } = null!;
+        public Dictionary<string, object> Arguments { get; init; } = null!;
+        public Dictionary<int, object> EventData { get; init; } = null!;
     }
 
     class SolutionIndexable : Indexable

@@ -6,7 +6,6 @@ using Engi.Substrate.Jobs;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Exceptions;
-using Sentry;
 
 namespace Engi.Substrate.Server.Async;
 
@@ -20,16 +19,6 @@ public class EngineResponseDequeueService : BackgroundService
     private static readonly JsonSerializerOptions MessageSerializationOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
-    private static readonly JsonSerializerOptions PayloadSerializationOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters =
-        {
-            new JsonStringEnumConverter(),
-            new TestConverter()
-        }
     };
 
     public EngineResponseDequeueService(
@@ -80,16 +69,65 @@ public class EngineResponseDequeueService : BackgroundService
                 continue;
             }
 
-            foreach (var item in batch.Messages)
+            foreach (var message in batch.Messages)
             {
+                using var session = store.OpenAsyncSession();
+
+                session.Advanced.UseOptimisticConcurrency = true;
+
                 try
                 {
-                    await ProcessMessageAsync(item);
+                    // deserialize message, nested in SNS wrapper
+
+                    var snsMessage = JsonSerializer.Deserialize<JsonElement>(message.Body);
+
+                    string snsMessageBody = snsMessage.GetProperty("Message").GetString()!;
+
+                    var executionResult = JsonSerializer
+                        .Deserialize<CommandLineExecutionResult>(snsMessageBody, MessageSerializationOptions)!;
+
+                    // load the object referenced by the identifier and see what it is
+
+                    var identifiedObject = await session
+                        .LoadAsync<object>(executionResult.Identifier);
+
+                    if (identifiedObject == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Identified object with identifier={executionResult.Identifier} was not found on the return path from the engine.");
+                    }
+
+                    if(identifiedObject is RepositoryAnalysis analysis)
+                    {
+                        ProcessAnalysis(analysis, executionResult, message);
+                    }
+                    else if(identifiedObject is JobAttemptedSnapshot attempt)
+                    {
+                        if(executionResult.ReturnCode != 0)
+                        {
+                            throw new InvalidOperationException("Engine returned non-zero return code, not sure how to proceed.");
+                        }
+
+                        await session.StoreAsync(new SolveJobCommand
+                        {
+                            JobAttemptedSnapshotId = attempt.Id,
+                            EngineResult = EngineExecutionResult.Deserialize(executionResult.Stdout)
+                        });
+                    }
+                    else
+                    {
+                        throw new NotImplementedException(
+                            $"Identified object is not something we know how to process; type={identifiedObject.GetType()}.");
+                    }
+
+                    // save changes and delete
+
+                    await session.SaveChangesAsync();
 
                     await sqs.DeleteMessageAsync(new()
                     {
                         QueueUrl = engiOptions.EngineOutputQueueUrl,
-                        ReceiptHandle = item.ReceiptHandle
+                        ReceiptHandle = message.ReceiptHandle
                     });
                 }
                 catch (ConcurrencyException)
@@ -105,27 +143,11 @@ public class EngineResponseDequeueService : BackgroundService
         }
     }
 
-    private async Task ProcessMessageAsync(Message item)
+    private void ProcessAnalysis(
+        RepositoryAnalysis analysis,
+        CommandLineExecutionResult executionResult,
+        Message message)
     {
-        using var session = store.OpenAsyncSession();
-
-        session.Advanced.UseOptimisticConcurrency = true;
-
-        var snsMessage = JsonSerializer.Deserialize<JsonElement>(item.Body);
-        string snsMessageBody = snsMessage.GetProperty("Message").GetString()!;
-
-        var executionResult = JsonSerializer
-            .Deserialize<CommandLineExecutionResult>(snsMessageBody, MessageSerializationOptions)!;
-
-        var analysis = await session
-            .LoadAsync<RepositoryAnalysis>(executionResult.Identifier);
-
-        if (analysis == null)
-        {
-            throw new InvalidOperationException(
-                $"Analysis with identifier={executionResult.Identifier} was not found");
-        }
-
         analysis.ExecutionResult = executionResult;
 
         analysis.Status = analysis.ExecutionResult.ReturnCode == 0
@@ -134,83 +156,12 @@ public class EngineResponseDequeueService : BackgroundService
 
         if (analysis.Status == RepositoryAnalysisStatus.Completed)
         {
-            try
-            {
-                var payload = JsonSerializer
-                    .Deserialize<AnalysisPayload>(executionResult.Stdout, PayloadSerializationOptions)!;
+            var result = EngineExecutionResult.Deserialize(executionResult.Stdout);
 
-                analysis.Language = payload.Language;
-                analysis.Files = payload.Files;
-                analysis.Complexity = payload.Complexity;
-                analysis.Tests = payload.Tests;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Deserializing payload from queue failed; message id={messageId}", item.MessageId);
-            }
+            analysis.Language = result.Language;
+            analysis.Files = result.Files;
+            analysis.Complexity = result.Complexity;
+            analysis.Tests = result.Tests;
         }
-
-        await session.SaveChangesAsync();
-    }
-
-    class AnalysisPayload
-    {
-        public Language Language { get; set; }
-
-        public string[]? Files { get; set; }
-
-        public RepositoryComplexity? Complexity { get; set; }
-
-        public TestAttempt[]? Tests { get; set; }
-    }
-
-    class TestConverter : JsonConverter<Test>
-    {
-        public override Test? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            TestResult result;
-            string? failedResultMessage = null;
-
-            var json = JsonSerializer.Deserialize<JsonElement>(ref reader, options);
-
-            var resultProp = json.GetProperty("result");
-
-            if (resultProp.ValueKind == JsonValueKind.String)
-            {
-                result = Enum.Parse<TestResult>(resultProp.GetString()!);
-
-                if (result == TestResult.Failed)
-                {
-                    throw new InvalidOperationException("Invalid JSON; TestResult.Failed requires the error message.");
-                }
-            }
-            else if (resultProp.ValueKind == JsonValueKind.Object)
-            {
-                if (!resultProp.TryGetProperty("Failed", out var failedProp))
-                {
-                    throw new InvalidOperationException("Invalid JSON; TestResult.Failed requires the error message.");
-                }
-
-                result = TestResult.Failed;
-                failedResultMessage = failedProp.GetString()!;
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    "Invalid JSON; TestResult must be an object for TestResult.Failed or a string otherwise.");
-            }
-
-            bool required = json.TryGetProperty("required", out var requiredProp) && requiredProp.GetBoolean();
-
-            return new Test
-            {
-                Id = json.GetProperty("id").GetString()!,
-                Result = result,
-                FailedResultMessage = failedResultMessage,
-                Required = required
-            };
-        }
-
-        public override void Write(Utf8JsonWriter writer, Test value, JsonSerializerOptions options) => throw new NotImplementedException();
     }
 }

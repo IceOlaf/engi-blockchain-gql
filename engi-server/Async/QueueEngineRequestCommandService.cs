@@ -38,7 +38,7 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 return b.ProcessedOn === null && b.SentryId === null
             }
 
-            from QueueEngineProcessCommands as c where filter(c) 
+            from QueueEngineRequestCommands as c where filter(c) 
         ";
     }
 

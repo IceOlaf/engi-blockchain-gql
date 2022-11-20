@@ -251,7 +251,9 @@ builder.Services.AddHostedService<RetrieveGithubReadmesService>();
 if(engiOptions.DisableEngineIntegration == false)
 {
     builder.Services.AddHostedService<EngineResponseDequeueService>();
+    builder.Services.AddHostedService<JobAttemptQueueingService>();
     builder.Services.AddHostedService<QueueEngineRequestCommandService>();
+    builder.Services.AddHostedService<SolveJobService>();
 }
 
 // localstack

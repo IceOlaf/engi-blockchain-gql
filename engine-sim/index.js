@@ -4,9 +4,9 @@ const sqs = new AWS.SQS();
 const sns = new AWS.SNS();
 
 const incomingQueueUrl =
-  "https://sqs.us-west-2.amazonaws.com/181573251321/poc-engine-in";
+  "http://localhost:4566/000000000000/engine-in";
 
-const outgoingTopicArn = "arn:aws:sns:us-west-2:181573251321:poc-engine-out";
+const outgoingTopicArn = "arn:aws:sns:us-east-1:000000000000:engine-out";
 
 const exampleAnalysisResult = {
   repo: "https://github.com/engi-network/demo-csharp.git",

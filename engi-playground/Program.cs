@@ -277,7 +277,7 @@ public static class Program
 
         var result = await client.AuthorSubmitExtrinsicAsync(
             new SignedExtrinsicArguments<SudoCallArguments>(
-                SudoKeypair, args, account, ExtrinsicEra.Immortal, chainState, 0), chainState.Metadata);
+                sudoer, args, account, ExtrinsicEra.Immortal, chainState, 0), chainState.Metadata);
 
         return;
     }

@@ -44,7 +44,7 @@ public class JobMutations : ObjectGraphType
         crypto.ValidateOrThrow(user, signature);
 
         var client = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
-        
+
         var chainStateProvider = scope.ServiceProvider.GetRequiredService<LatestChainStateProvider>();
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
@@ -63,7 +63,7 @@ public class JobMutations : ObjectGraphType
                 nameof(args), nameof(sender), "Account not found.");
         }
 
-        var chainState = await chainStateProvider.GetLatestChainState();
+        var chainState = await chainStateProvider.GetLatestChainStateAsync();
 
         var tip = await tipCalculator.CalculateTipAsync(user);
 
@@ -127,7 +127,7 @@ public class JobMutations : ObjectGraphType
                 nameof(args), nameof(sender), "Account not found.");
         }
 
-        var chainState = await chainStateProvider.GetLatestChainState();
+        var chainState = await chainStateProvider.GetLatestChainStateAsync();
 
         var tip = await tipCalculator.CalculateTipAsync(user);
 

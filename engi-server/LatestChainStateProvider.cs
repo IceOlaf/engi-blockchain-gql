@@ -9,7 +9,7 @@ public class LatestChainStateProvider
         this.serviceProvider = serviceProvider;
     }
 
-    public async Task<ChainState> GetLatestChainState()
+    public async Task<ChainState> GetLatestChainStateAsync()
     {
         var observers = serviceProvider
             .GetServices<IChainObserver>()

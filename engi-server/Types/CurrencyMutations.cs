@@ -35,7 +35,7 @@ public class CurrencyMutations : ObjectGraphType
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
         crypto.ValidateOrThrow(user, signature);
-        
+
         var chainStateProvider = scope.ServiceProvider.GetRequiredService<LatestChainStateProvider>();
 
         var tipCalculator = scope.ServiceProvider.GetRequiredService<TransactionTipCalculator>();
@@ -56,7 +56,7 @@ public class CurrencyMutations : ObjectGraphType
                 nameof(args), nameof(sender), "Account not found.");
         }
 
-        var chainState = await chainStateProvider.GetLatestChainState();
+        var chainState = await chainStateProvider.GetLatestChainStateAsync();
 
         var tip = await tipCalculator.CalculateTipAsync(user);
 

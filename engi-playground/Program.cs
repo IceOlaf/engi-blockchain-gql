@@ -25,7 +25,7 @@ public static class Program
 
     // //Dave
     private static readonly Keypair SudoKeypair = KeypairFactory.CreateFromAny("0x868020ae0687dda7d57565093a69090211449845a7e11453612800b663307246");
-    
+
     // 5G1GQ5bb1bjBUwjSBcArBkbK5gfrW9nTJLhnz3G3nLDo1g5n
     private static readonly Keypair GeorgiosdKeypair = KeypairFactory.CreateFromAny("ridge accuse cotton debate step theory fade bench flock liar seek day");
 
@@ -54,7 +54,7 @@ public static class Program
                         login(args: {{
                             address: \""{keypair.Address}\"",
                             {CreateSignaturePayload(keypair)}
-                        }}) {{ 
+                        }}) {{
                             accessToken
                             user {{
                                 display
@@ -69,7 +69,7 @@ public static class Program
 
         var http = new HttpClient();
 
-        var response = await http.PostAsync($"{BaseUrl}/api/graphql", 
+        var response = await http.PostAsync($"{BaseUrl}/api/graphql",
             new StringContent(json.Replace("\r\n", string.Empty), Encoding.UTF8, "application/json"));
 
         var responseJson = await response.Content.ReadFromJsonAsync<JsonNode>();
@@ -116,10 +116,10 @@ public static class Program
         var engiPublicKeyData = await http.GetStringAsync($"{BaseUrl}/api/engi/public-key");
 
         using var stringReader = new StringReader(engiPublicKeyData);
-        
+
         var pemReader = new PemReader(stringReader);
         var publicKeyParameters = (RsaKeyParameters) pemReader.ReadObject();
-        
+
         var e = new Pkcs1Encoding(new RsaEngine());
 
         e.Init(true, publicKeyParameters);
@@ -218,7 +218,7 @@ public static class Program
     private static async Task SolveJobAsync(
         ulong jobId,
         ulong solutionId,
-        Keypair sudoer, 
+        Keypair sudoer,
         Address solver,
         Action<TestAttempt[]>? mutateTests = null)
     {
@@ -311,9 +311,9 @@ public static class Program
         };
 
         string result = await client.AuthorSubmitExtrinsicAsync(
-            new SignedExtrinsicArguments<AttemptJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0), 
+            new SignedExtrinsicArguments<AttemptJobArguments>(sender, args, account, ExtrinsicEra.Immortal, chainState, 0),
             chainState.Metadata);
-        
+
         return;
     }
 

@@ -1,6 +1,6 @@
 ﻿namespace Engi.Substrate.Jobs;
 
-public class JobAttemptedSnapshot : IBlockSnapshot
+public class JobAttemptedSnapshot : IBlockSnapshot, IDispatched
 {
     public string Id { get; init; } = null!;
 
@@ -13,6 +13,8 @@ public class JobAttemptedSnapshot : IBlockSnapshot
     public string PatchFileUrl { get; set; } = null!;
 
     public BlockReference SnapshotOn { get; init; } = null!;
+
+    public DateTime? DispatchedOn { get; set; }
 
     public static JobAttemptedSnapshot From(
         Dictionary<string, object> arguments,

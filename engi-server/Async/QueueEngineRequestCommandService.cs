@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Amazon.SimpleNotificationService;
+using Engi.Substrate.Jobs;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
@@ -18,13 +19,13 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
     private readonly EngiOptions engiOptions;
 
     public QueueEngineRequestCommandService(
-        IDocumentStore store, 
+        IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env, 
+        IWebHostEnvironment env,
         IHub sentry,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions,
-        ILoggerFactory loggerFactory) 
+        ILoggerFactory loggerFactory)
         : base(store, serviceProvider, env, sentry, loggerFactory)
     {
         this.awsOptions = awsOptions.Value;
@@ -38,7 +39,7 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 return b.ProcessedOn === null && b.SentryId === null
             }
 
-            from QueueEngineRequestCommands as c where filter(c) 
+            from QueueEngineRequestCommands as c where filter(c) include c.SourceId
         ";
     }
 
@@ -55,6 +56,15 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
         {
             var command = item.Result;
 
+            IDispatched? dispatched = null;
+
+            if(command.SourceId != null)
+            {
+                var source = await session.LoadAsync<object>(command.SourceId);
+
+                dispatched = source as IDispatched;
+            }
+
             try
             {
                 string json = JsonSerializer.Serialize(new
@@ -65,6 +75,11 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 }, SerializerOptions);
 
                 await client.PublishAsync(engiOptions.EngineInputTopicArn, json);
+
+                if(dispatched != null)
+                {
+                    dispatched.DispatchedOn = DateTime.UtcNow;
+                }
 
                 command.ProcessedOn = DateTime.UtcNow;
             }

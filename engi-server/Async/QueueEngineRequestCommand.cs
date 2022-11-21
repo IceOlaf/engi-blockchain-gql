@@ -8,6 +8,8 @@ public class QueueEngineRequestCommand
 
     public string CommandString { get; set; } = null!;
 
+    public string? SourceId { get; set; }
+
     public DateTime? ProcessedOn { get; set; }
 
     public string? SentryId { get; set; }

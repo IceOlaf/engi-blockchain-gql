@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -163,5 +162,7 @@ public class EngineResponseDequeueService : BackgroundService
             analysis.Complexity = result.Complexity;
             analysis.Tests = result.Tests;
         }
+
+        analysis.ProcessedOn = DateTime.UtcNow;
     }
 }

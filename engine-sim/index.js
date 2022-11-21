@@ -1,7 +1,9 @@
 const AWS = require("aws-sdk");
 
-const sqs = new AWS.SQS();
-const sns = new AWS.SNS();
+const endpoint = "http://localhost:4566"
+
+const sqs = new AWS.SQS({ endpoint });
+const sns = new AWS.SNS({ endpoint });
 
 const incomingQueueUrl =
   "http://localhost:4566/000000000000/engine-in";

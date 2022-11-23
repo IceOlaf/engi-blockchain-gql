@@ -70,16 +70,24 @@ jobs:
     steps:
       - when:
           condition:
-            equal: [ << pipeline.parameters.primary_region >>, << parameters.region >> ]
+            equal:
+              [
+                << pipeline.parameters.primary_region >>,
+                << parameters.region >>,
+              ]
           steps:
             - terraform-deploy:
-                terraform-workspace: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>'
+                terraform-workspace: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>"
       - unless:
           condition:
-            equal: [ << pipeline.parameters.primary_region >>, << parameters.region >> ]
+            equal:
+              [
+                << pipeline.parameters.primary_region >>,
+                << parameters.region >>,
+              ]
           steps:
             - terraform-deploy:
-                terraform-workspace: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>-<< parameters.region >>'
+                terraform-workspace: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>-<< parameters.region >>"
   build:
     executor: build
     parameters:
@@ -88,11 +96,12 @@ jobs:
     steps:
       - checkout
       - aws-ecr/build-and-push-image:
-          repo: '<< pipeline.parameters.terraform-app >>-<< parameters.environment >>'
+          repo: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>"
           create-repo: true
           tag: latest
           registry-id: AWS_ID
           extra-build-args: "--build-arg BUILD_VERSION=$CIRCLE_BUILD_NUM"
+          platform: "linux/amd64,linux/arm64"
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

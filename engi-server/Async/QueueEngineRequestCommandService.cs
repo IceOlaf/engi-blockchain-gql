@@ -45,12 +45,16 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<QueueEngineRequestCommand> batch, IServiceProvider serviceProvider)
     {
-        using var session = batch.OpenAsyncSession();
+        var config = new AmazonSimpleNotificationServiceConfig();
 
-        var client = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
+        if(awsOptions.ServiceUrl != null)
         {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+            config.ServiceURL = awsOptions.ServiceUrl;
+        }
+
+        var client = new AmazonSimpleNotificationServiceClient(config);
+
+        using var session = batch.OpenAsyncSession();
 
         foreach (var item in batch.Items)
         {

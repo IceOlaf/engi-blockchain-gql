@@ -33,10 +33,14 @@ public class EngineResponseDequeueService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var sqs = new AmazonSQSClient(new AmazonSQSConfig
+        var config = new AmazonSQSConfig();
+
+        if(awsOptions.ServiceUrl != null)
         {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+            config.ServiceURL = awsOptions.ServiceUrl;
+        }
+
+        var sqs = new AmazonSQSClient(config);
 
         while (!stoppingToken.IsCancellationRequested)
         {

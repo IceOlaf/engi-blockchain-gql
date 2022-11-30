@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 using Engi.Substrate.Jobs;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
@@ -78,7 +79,12 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                     sns_sqs_return_channel = engiOptions.EngineOutputTopicName
                 }, SerializerOptions);
 
-                await client.PublishAsync(engiOptions.EngineInputTopicArn, json);
+                await client.PublishAsync(new PublishRequest
+                {
+                    TopicArn = engiOptions.EngineInputTopicArn,
+                    Message = json,
+                    MessageGroupId = command.Identifier
+                });
 
                 if(dispatched != null)
                 {

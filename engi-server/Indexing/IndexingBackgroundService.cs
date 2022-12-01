@@ -309,7 +309,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                     yield return new AttemptIndexable
                     {
-                        Arguments = (Dictionary<string, object>) extrinsic.Arguments,
+                        Arguments = extrinsic.Arguments,
                         EventData = (Dictionary<int, object>) jobAttemptedEvent.Data
                     };
                 }

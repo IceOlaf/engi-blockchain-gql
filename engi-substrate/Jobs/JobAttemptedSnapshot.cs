@@ -1,4 +1,6 @@
-﻿namespace Engi.Substrate.Jobs;
+using System.Text;
+
+namespace Engi.Substrate.Jobs;
 
 public class JobAttemptedSnapshot : IBlockSnapshot, IDispatched
 {
@@ -29,7 +31,7 @@ public class JobAttemptedSnapshot : IBlockSnapshot, IDispatched
             AttemptId = attemptId,
             JobId = (ulong) eventData[1],
             Attempter = (string) eventData[2],
-            PatchFileUrl = (string) arguments["submission_patch_file_url"],
+            PatchFileUrl = Encoding.UTF8.GetString(Hex.GetBytes((string) arguments["submission_patch_file_url"])),
             SnapshotOn = reference
         };
     }

@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -114,7 +114,7 @@ public class EngineResponseDequeueService : BackgroundService
                         await session.StoreAsync(new SolveJobCommand
                         {
                             JobAttemptedSnapshotId = attempt.Id,
-                            EngineResult = EngineExecutionResult.Deserialize(executionResult.Stdout)
+                            EngineResult = EngineJson.Deserialize<EngineAttemptResult>(executionResult.Stdout)
                         });
                     }
                     else
@@ -159,7 +159,7 @@ public class EngineResponseDequeueService : BackgroundService
 
         if (analysis.Status == RepositoryAnalysisStatus.Completed)
         {
-            var result = EngineExecutionResult.Deserialize(executionResult.Stdout);
+            var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
 
             analysis.Language = result.Language;
             analysis.Files = result.Files;

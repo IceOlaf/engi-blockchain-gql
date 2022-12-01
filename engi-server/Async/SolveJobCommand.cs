@@ -8,7 +8,7 @@ public class SolveJobCommand
     
     public string JobAttemptedSnapshotId { get; set; } = null!;
 
-    public EngineExecutionResult EngineResult { get; set; } = null!;
+    public EngineAttemptResult EngineResult { get; set; } = null!;
 
     public ulong? SolutionId { get; set; }
 

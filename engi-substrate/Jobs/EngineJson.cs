@@ -3,20 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace Engi.Substrate.Jobs;
 
-public class EngineExecutionResult
+public static class EngineJson
 {
-    public Language Language { get; set; }
-
-    public string[]? Files { get; set; }
-
-    public RepositoryComplexity? Complexity { get; set; }
-
-    public TestAttempt[]? Tests { get; set; }
-
-    public static EngineExecutionResult Deserialize(string stdout)
+    public static T Deserialize<T>(string json)
     {
-        return JsonSerializer.Deserialize<EngineExecutionResult>(
-            stdout, PayloadSerializationOptions)!;
+        return JsonSerializer.Deserialize<T>(json, PayloadSerializationOptions)!;
     }
 
     private static readonly JsonSerializerOptions PayloadSerializationOptions = new()
@@ -31,7 +22,7 @@ public class EngineExecutionResult
 
     class TestConverter : JsonConverter<Test>
     {
-        public override Test? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Test Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             TestResult result;
             string? failedResultMessage = null;

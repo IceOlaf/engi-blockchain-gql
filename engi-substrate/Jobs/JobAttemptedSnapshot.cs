@@ -31,7 +31,7 @@ public class JobAttemptedSnapshot : IBlockSnapshot, IDispatched
             AttemptId = attemptId,
             JobId = (ulong) eventData[1],
             Attempter = (string) eventData[2],
-            PatchFileUrl = Encoding.UTF8.GetString(Hex.GetBytes((string) arguments["submission_patch_file_url"])),
+            PatchFileUrl = Encoding.UTF8.GetString(Hex.GetBytes((string) arguments["submission_patch_file_url"])).Trim(),
             SnapshotOn = reference
         };
     }

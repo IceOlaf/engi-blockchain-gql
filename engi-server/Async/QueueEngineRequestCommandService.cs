@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
@@ -83,7 +85,8 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 {
                     TopicArn = engiOptions.EngineInputTopicArn,
                     Message = json,
-                    MessageGroupId = command.Identifier
+                    MessageGroupId = command.Identifier,
+                    MessageDeduplicationId = CalculateSha256(json)
                 });
 
                 if(dispatched != null)
@@ -107,5 +110,14 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
             await session.SaveChangesAsync();
         }
+    }
+
+    private static string CalculateSha256(string s)
+    {
+        using var hash = SHA256.Create();
+
+        byte[] result = hash.ComputeHash(Encoding.UTF8.GetBytes(s));
+
+        return Hex.GetString(result);
     }
 }

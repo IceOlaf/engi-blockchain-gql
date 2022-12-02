@@ -46,10 +46,29 @@ Make sure you have installed:
 - [Rust toolchain](https://www.rust-lang.org/tools/install) if you're going to build `engi-node` from source.
 - [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install) if you are on Windows and want to build `engi-node`.
 
-Then, create the AWS resources using `localstack`:
+Then, create the AWS resources using `localstack`.
+
+First set the relevant env vars:
 
 ```
+# Linux/MacOS
+export AWS_ACCESS_KEY_ID="test"
+export AWS_SECRET_ACCESS_KEY="test"
+export AWS_DEFAULT_REGION="us-west-2"
+
+# Windows Powershell
+$env:AWS_ACCESS_KEY_ID="test"
+$env:AWS_SECRET_ACCESS_KEY="test"
+$env:AWS_DEFAULT_REGION="us-west-2"
+```
+
+Start localstack:
+```
 localstack start
+```
+
+In another terminal run the scripts that creates the resources:
+```
 sh ./localstack-up.sh
 ```
 
@@ -112,6 +131,20 @@ Once the tests complete, a `.trx` (XML) file with the results will be available 
 Executing only the unit tests is possible with the `dotnet test --filter` [command](https://learn.microsoft.com/en-us/dotnet/core/testing/selective-unit-tests?pivots=mstest).
 
 It is also possible to re-run the tests on every change with `dotnet watch test`, ran from the `engi-tests` directory.
+
+## Debugging the API
+
+The `.vscode/launch.json` configuration allows you to attach a debugger to the API process easily.
+
+In vscode:
+
+- Press `F5`; alternatively go to the `Run and Debug` and press the "play" button.
+- A list of processed will come up - type "engi" to find the API process and press `Enter`.
+
+Important notes: 
+- If you going to make modifications make sure you're running `dotnet watch run`, not `dotnet run`.
+- Since .NET 6.0 the watch process supports hot reload but the debugger will detach if you make changes since the code running doesn't match the source code any more. You won't be able to re-attached for the same reason. To fix, on the terminal where the API is running, press Ctrl/Cmd+R to reload the process and then re-attach the debugger.
+- Some edits (rude edits) cannot be hot reloaded but the .NET SDK will prompt you on what to do - if you're not looking at the console you can miss it. To avoid this, set the environment variable `DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true`.
 
 ## Generating the GraphQL docs locally
 

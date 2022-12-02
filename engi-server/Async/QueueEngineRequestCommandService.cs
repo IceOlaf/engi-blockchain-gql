@@ -95,6 +95,9 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                 }
 
                 command.ProcessedOn = DateTime.UtcNow;
+
+                Logger.LogInformation("Successfully published message to engine topic.");
+                Logger.LogTrace("Published message={message} topic={topic}", json, engiOptions.EngineInputTopicArn);
             }
             catch (Exception ex)
             {

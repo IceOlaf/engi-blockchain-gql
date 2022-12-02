@@ -80,6 +80,9 @@ public class EngineResponseDequeueService : BackgroundService
 
                 try
                 {
+                    logger.LogInformation("Processing queue message from engine.");
+                    logger.LogTrace("Processing message={message} queue={queue}", message.Body, engiOptions.EngineOutputQueueUrl);
+
                     // deserialize message, nested in SNS wrapper
 
                     var snsMessage = JsonSerializer.Deserialize<JsonElement>(message.Body);

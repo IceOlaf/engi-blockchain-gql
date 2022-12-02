@@ -21,6 +21,7 @@ namespace Engi.Substrate.Playground;
 
 public static class Program
 {
+    private static readonly string ChainUrl = "http://localhost:9933";
     private static readonly string BaseUrl = "http://localhost:5000";
 
     // //Dave
@@ -222,7 +223,7 @@ public static class Program
         Address solver,
         Action<TestAttempt[]>? mutateTests = null)
     {
-        var client = new SubstrateClient("http://localhost:9933");
+        var client = new SubstrateClient(ChainUrl);
 
         var chainState = await client.GetChainStateAsync();
 
@@ -284,7 +285,7 @@ public static class Program
 
     private static async Task ReadJobFromChainStorageAsync()
     {
-        var client = new SubstrateClient("http://localhost:9933");
+        var client = new SubstrateClient(ChainUrl);
 
         ulong jobId = 13575614961675953037;
 
@@ -298,7 +299,7 @@ public static class Program
 
     private static async Task AttemptJobAsync(ulong jobId, Keypair sender)
     {
-        var client = new SubstrateClient("http://localhost:9933");
+        var client = new SubstrateClient(ChainUrl);
 
         var chainState = await client.GetChainStateAsync();
 
@@ -319,7 +320,7 @@ public static class Program
 
     private static async Task CreateJobAsync(Keypair sender, int numberOfTests = 4)
     {
-        var client = new SubstrateClient("http://localhost:9933");
+        var client = new SubstrateClient(ChainUrl);
 
         var chainState = await client.GetChainStateAsync();
 
@@ -383,7 +384,7 @@ public static class Program
 
     private static async Task InspectMetadataAsync()
     {
-        var client = new SubstrateClient("http://localhost:9933");
+        var client = new SubstrateClient(ChainUrl);
 
         var metadata = await client.GetStateMetadataAsync();
 

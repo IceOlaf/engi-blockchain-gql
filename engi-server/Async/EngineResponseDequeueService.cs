@@ -105,19 +105,22 @@ public class EngineResponseDequeueService : BackgroundService
 
                     if(identifiedObject is RepositoryAnalysis analysis)
                     {
-                        ProcessAnalysis(analysis, executionResult, message);
+                        ProcessAnalysis(analysis, executionResult);
                     }
-                    else if(identifiedObject is JobAttemptedSnapshot attempt)
+                    else if(identifiedObject is JobAttemptedSnapshot attemptSnapshot)
                     {
                         if(executionResult.ReturnCode != 0)
                         {
                             throw new InvalidOperationException("Engine returned non-zero return code, not sure how to proceed.");
                         }
 
+                        var rawResult = JsonSerializer.Deserialize<JsonElement>(executionResult.Stdout);
+                        var attempt = rawResult.GetProperty("attempt");
+
                         await session.StoreAsync(new SolveJobCommand
                         {
-                            JobAttemptedSnapshotId = attempt.Id,
-                            EngineResult = EngineJson.Deserialize<EngineAttemptResult>(executionResult.Stdout)
+                            JobAttemptedSnapshotId = attemptSnapshot.Id,
+                            EngineResult = attempt.Deserialize<EngineAttemptResult>()!
                         });
                     }
                     else
@@ -160,8 +163,7 @@ public class EngineResponseDequeueService : BackgroundService
 
     private void ProcessAnalysis(
         RepositoryAnalysis analysis,
-        CommandLineExecutionResult executionResult,
-        Message message)
+        CommandLineExecutionResult executionResult)
     {
         analysis.ExecutionResult = executionResult;
 

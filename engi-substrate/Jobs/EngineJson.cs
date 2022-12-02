@@ -16,11 +16,11 @@ public static class EngineJson
         Converters =
         {
             new JsonStringEnumConverter(),
-            new TestConverter()
+            new TestAttemptConverter()
         }
     };
 
-    class TestConverter : JsonConverter<TestAttempt>
+    class TestAttemptConverter : JsonConverter<TestAttempt>
     {
         public override TestAttempt Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

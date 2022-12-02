@@ -120,7 +120,7 @@ public class EngineResponseDequeueService : BackgroundService
                         await session.StoreAsync(new SolveJobCommand
                         {
                             JobAttemptedSnapshotId = attemptSnapshot.Id,
-                            EngineResult = attempt.Deserialize<EngineAttemptResult>()!
+                            EngineResult = EngineJson.Deserialize<EngineAttemptResult>(attempt)
                         });
                     }
                     else

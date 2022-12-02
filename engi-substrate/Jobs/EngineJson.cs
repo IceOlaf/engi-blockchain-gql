@@ -10,6 +10,11 @@ public static class EngineJson
         return JsonSerializer.Deserialize<T>(json, PayloadSerializationOptions)!;
     }
 
+    public static T Deserialize<T>(JsonElement json)
+    {
+        return json.Deserialize<T>(PayloadSerializationOptions)!;
+    }
+
     private static readonly JsonSerializerOptions PayloadSerializationOptions = new()
     {
         PropertyNameCaseInsensitive = true,

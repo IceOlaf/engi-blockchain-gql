@@ -20,7 +20,7 @@ public class JobSnapshot : IBlockSnapshot
 
     public Test[] Tests { get; init; } = null!;
 
-    public FilesRequirement Requirements { get; init; } = null!;
+    public FilesRequirement? Requirements { get; init; }
 
     public Solution? Solution { get; init; }
 
@@ -49,7 +49,7 @@ public class JobSnapshot : IBlockSnapshot
             Language = reader.ReadEnum<Language>(),
             Name = reader.ReadString()!,
             Tests = reader.ReadList(Test.Parse),
-            Requirements = FilesRequirement.Parse(reader),
+            Requirements = reader.ReadOptional(FilesRequirement.Parse),
             Solution = reader.ReadOptional(Solution.Parse),
 
             // non chain

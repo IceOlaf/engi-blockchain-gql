@@ -23,7 +23,7 @@ public class CreateJobArgumentsGraphType : InputObjectGraphType<CreateJobArgumen
             .Description("The tests that participate in this job.");
         Field(x => x.Name)
             .Description("The job name.");
-        Field(x => x.FilesRequirement, type: typeof(FilesRequirementArgumentsGraphType))
+        Field(x => x.FilesRequirement, type: typeof(FilesRequirementArgumentsGraphType), nullable: true)
             .Description("Regex or glob patterns files that define files as requirements for this job.");
     }
 }

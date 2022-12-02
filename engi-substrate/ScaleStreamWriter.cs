@@ -99,6 +99,19 @@ public class ScaleStreamWriter : IDisposable
         serializable.Serialize(this, meta);
     }
 
+    public void WriteOptional(bool option, Action<ScaleStreamWriter> writeFunc)
+    {
+        if (!option)
+        {
+            Write(false);
+        }
+        else
+        {
+            Write(true);
+            writeFunc(this);
+        }
+    }
+
     public void Write<T>(IList<T> items, Action<ScaleStreamWriter, T> writeItemFunc)
     {
         WriteCompact(items.Count);

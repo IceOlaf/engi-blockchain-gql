@@ -30,8 +30,7 @@ public class CreateJobArguments : IExtrinsic
     [Required, StringLength(50, MinimumLength = 4)]
     public string Name { get; init; } = null!;
 
-    [Required]
-    public FilesRequirement FilesRequirement { get; init; } = null!;
+    public FilesRequirement? FilesRequirement { get; init; }
 
     public IEnumerable<Func<Field, PortableType, PortableType?, bool>> GetVariantAssertions()
     {
@@ -57,6 +56,7 @@ public class CreateJobArguments : IExtrinsic
         writer.Write(CommitHash);
         writer.Write(Tests, meta);
         writer.Write(Name);
-        writer.Write(FilesRequirement, meta);
+        writer.WriteOptional(FilesRequirement != null,
+            writer => writer.Write(FilesRequirement!, meta));
     }
 }

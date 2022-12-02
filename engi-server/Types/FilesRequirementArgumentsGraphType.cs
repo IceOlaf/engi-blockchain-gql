@@ -9,11 +9,11 @@ public class FilesRequirementArgumentsGraphType : InputObjectGraphType<FilesRequ
     {
         Description = "Job file requirements";
 
-        Field(x => x.IsEditable)
+        Field(x => x.IsEditable, nullable: true)
             .Description("Regex or glob pattern that defines the files that can be edited.");
-        Field(x => x.IsAddable)
+        Field(x => x.IsAddable, nullable: true)
             .Description("Regex or glob pattern that defines the files that can be added.");
-        Field(x => x.IsDeletable)
+        Field(x => x.IsDeletable, nullable: true)
             .Description("Regex or glob pattern that defines the files that can be deleted.");
     }
 }

@@ -5,29 +5,29 @@ namespace Engi.Substrate.Jobs;
 
 public class FilesRequirement : IScaleSerializable
 {
-    [Required(AllowEmptyStrings = true), MaxLength(64)]
-    public string IsEditable { get; set; } = null!;
+    [MaxLength(64)]
+    public string? IsEditable { get; set; }
 
-    [Required(AllowEmptyStrings = true), MaxLength(64)]
-    public string IsAddable { get; set; } = null!;
+    [MaxLength(64)]
+    public string? IsAddable { get; set; }
 
-    [Required(AllowEmptyStrings = true), MaxLength(64)]
-    public string IsDeletable { get; set; } = null!;
+    [MaxLength(64)]
+    public string? IsDeletable { get; set; }
 
     public void Serialize(ScaleStreamWriter writer, RuntimeMetadata _)
     {
-        writer.Write(IsEditable);
-        writer.Write(IsAddable);
-        writer.Write(IsDeletable);
+        writer.WriteOptional(IsEditable != null, writer => writer.Write(IsEditable!));
+        writer.WriteOptional(IsAddable != null, writer => writer.Write(IsAddable!));
+        writer.WriteOptional(IsDeletable != null, writer => writer.Write(IsDeletable!));
     }
 
     public static FilesRequirement Parse(ScaleStreamReader reader)
     {
         return new()
         {
-            IsEditable = reader.ReadString()!,
-            IsAddable = reader.ReadString()!,
-            IsDeletable = reader.ReadString()!
+            IsEditable = reader.ReadOptional(reader => reader.ReadString()),
+            IsAddable = reader.ReadOptional(reader => reader.ReadString()),
+            IsDeletable = reader.ReadOptional(reader => reader.ReadString())
         };
     }
 }

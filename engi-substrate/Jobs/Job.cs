@@ -16,7 +16,7 @@ public class Job
 
     public Test[] Tests { get; init; } = null!;
 
-    public FilesRequirement Requirements { get; init; } = null!;
+    public FilesRequirement? Requirements { get; init; }
 
     public Solution? Solution { get; init; }
 

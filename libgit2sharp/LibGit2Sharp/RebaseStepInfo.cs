@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp
+namespace LibGit2Sharp
 {
     /// <summary>
     /// Information on a particular step of a rebase operation.

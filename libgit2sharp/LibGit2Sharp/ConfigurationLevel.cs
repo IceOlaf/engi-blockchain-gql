@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp
+namespace LibGit2Sharp
 {
     /// <summary>
     /// Specifies the level of configuration to use.

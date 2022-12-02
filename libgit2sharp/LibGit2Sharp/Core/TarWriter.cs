@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Source: http://code.google.com/p/tar-cs/
  *
  * BSD License

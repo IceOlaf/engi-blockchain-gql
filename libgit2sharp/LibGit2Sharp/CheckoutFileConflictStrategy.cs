@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp
+namespace LibGit2Sharp
 {
     /// <summary>
     /// Enum specifying what content checkout should write to disk

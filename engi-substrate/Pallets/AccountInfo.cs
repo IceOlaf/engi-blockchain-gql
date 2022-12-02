@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Pallets
+namespace Engi.Substrate.Pallets
 {
     /// <see cref="https://crates.parity.io/frame_system/struct.AccountInfo.html"/>
     public class AccountInfo

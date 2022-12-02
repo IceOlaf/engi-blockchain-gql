@@ -1,4 +1,4 @@
-﻿using GraphQL;
+using GraphQL;
 using GraphQL.Instrumentation;
 
 namespace Engi.Substrate.Server.Types.Authentication;

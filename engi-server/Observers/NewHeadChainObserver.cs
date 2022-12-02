@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Reactive.Subjects;
 using System.Text.Json;
 using Engi.Substrate.WebSockets;

@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Types;
+namespace Engi.Substrate.Server.Types;
 
 public abstract class OrderedQueryArgumentsGraphType<TArguments, TOrderByProperty> : PagedQueryArgumentsGraphType<TArguments> 
     where TArguments : OrderedQueryArguments<TOrderByProperty> 

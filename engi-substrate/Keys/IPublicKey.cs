@@ -1,4 +1,4 @@
-﻿using Blake2Core;
+using Blake2Core;
 
 namespace Engi.Substrate.Keys;
 

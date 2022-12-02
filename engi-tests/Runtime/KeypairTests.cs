@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Engi.Substrate.Keys;
 using Xunit;
 

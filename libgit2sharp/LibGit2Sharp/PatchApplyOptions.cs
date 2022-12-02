@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp
+namespace LibGit2Sharp
 {
     /// <summary>
     /// The options to be used for patch application.

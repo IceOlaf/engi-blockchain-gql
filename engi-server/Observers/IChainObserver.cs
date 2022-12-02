@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.WebSockets;
+using Engi.Substrate.WebSockets;
 
 namespace Engi.Substrate.Server;
 

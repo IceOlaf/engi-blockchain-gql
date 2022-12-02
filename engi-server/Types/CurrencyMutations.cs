@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Identity;
+using Engi.Substrate.Identity;
 using Engi.Substrate.Pallets;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;

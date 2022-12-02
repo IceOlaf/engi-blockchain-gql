@@ -1,4 +1,4 @@
-﻿using GraphQL;
+using GraphQL;
 using GraphQL.Builders;
 
 namespace Engi.Substrate.Server;

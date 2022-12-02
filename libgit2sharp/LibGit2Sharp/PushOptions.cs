@@ -1,4 +1,4 @@
-﻿using LibGit2Sharp.Handlers;
+using LibGit2Sharp.Handlers;
 
 namespace LibGit2Sharp
 {

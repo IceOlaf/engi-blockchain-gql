@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Types.Github;
+namespace Engi.Substrate.Server.Types.Github;
 
 public class Commit
 {

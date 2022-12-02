@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;

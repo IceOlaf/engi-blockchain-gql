@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Server.Indexing;
 
 public class IndexingException : Exception
 {

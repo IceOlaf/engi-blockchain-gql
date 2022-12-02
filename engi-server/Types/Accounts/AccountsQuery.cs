@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Identity;
+using Engi.Substrate.Identity;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;

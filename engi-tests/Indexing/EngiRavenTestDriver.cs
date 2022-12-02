@@ -1,4 +1,4 @@
-﻿using Raven.Client.Documents;
+using Raven.Client.Documents;
 using Raven.TestDriver;
 
 namespace Engi.Substrate.Indexing;

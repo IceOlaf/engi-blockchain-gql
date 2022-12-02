@@ -1,4 +1,4 @@
-﻿using RazorLight;
+using RazorLight;
 
 namespace Engi.Substrate.Server.Email;
 

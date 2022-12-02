@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Server.Authentication;
+using Engi.Substrate.Server.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Engi.Substrate.Server;

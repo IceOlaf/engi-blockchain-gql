@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Server.Authentication;
+using Engi.Substrate.Server.Authentication;
 
 namespace Engi.Substrate.Server;
 

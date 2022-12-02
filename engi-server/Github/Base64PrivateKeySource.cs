@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using GitHubJwt;
 
 namespace Engi.Substrate.Server.Github;

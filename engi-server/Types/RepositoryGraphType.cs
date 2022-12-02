@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Github;
+using Engi.Substrate.Github;
 using Engi.Substrate.Jobs;
 using GraphQL;
 using GraphQL.Types;

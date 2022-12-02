@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Keys;
+namespace Engi.Substrate.Keys;
 
 public static class Wordlists
 {

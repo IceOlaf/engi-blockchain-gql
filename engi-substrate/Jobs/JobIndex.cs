@@ -1,4 +1,4 @@
-﻿using Raven.Client.Documents.Indexes;
+using Raven.Client.Documents.Indexes;
 
 namespace Engi.Substrate.Jobs;
 

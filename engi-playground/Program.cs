@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Json;
+using System.Net.Http.Json;
 using System.Reactive.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;

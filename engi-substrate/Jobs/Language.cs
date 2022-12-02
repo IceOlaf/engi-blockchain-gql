@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Jobs;
+namespace Engi.Substrate.Jobs;
 
 public enum Language
 {

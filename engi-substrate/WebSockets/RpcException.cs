@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.WebSockets;
+namespace Engi.Substrate.WebSockets;
 
 public class RpcException : Exception
 {

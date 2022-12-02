@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using LibGit2Sharp.Core;
 
 namespace LibGit2Sharp

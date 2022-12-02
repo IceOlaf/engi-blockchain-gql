@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Engi.Substrate.Metadata.V14;
 
 namespace Engi.Substrate.Jobs;

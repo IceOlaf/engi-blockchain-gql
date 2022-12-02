@@ -1,4 +1,4 @@
-﻿using Blake2Core;
+using Blake2Core;
 using Engi.Substrate.Keys;
 using Engi.Substrate.Metadata.V14;
 using SimpleBase;

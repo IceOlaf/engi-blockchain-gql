@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;

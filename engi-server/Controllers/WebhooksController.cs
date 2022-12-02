@@ -1,4 +1,4 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using Engi.Substrate.Github;
 using Microsoft.AspNetCore.Authorization;

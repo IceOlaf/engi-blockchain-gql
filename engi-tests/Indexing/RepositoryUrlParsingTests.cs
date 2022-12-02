@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Jobs;
+using Engi.Substrate.Jobs;
 using Xunit;
 
 namespace Engi.Substrate.Indexing;

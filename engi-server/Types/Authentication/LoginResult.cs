@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Types.Authentication;
+namespace Engi.Substrate.Server.Types.Authentication;
 
 public class LoginResult : AuthenticationTokenPair
 {

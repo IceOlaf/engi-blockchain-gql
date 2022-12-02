@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Newtonsoft.Json;
 
 namespace Engi.Substrate.Indexing;

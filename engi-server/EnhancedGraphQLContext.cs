@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Server;
 
 public class EnhancedGraphQLContext : Dictionary<string, object?>
 {

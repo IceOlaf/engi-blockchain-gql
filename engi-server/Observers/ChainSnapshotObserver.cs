@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.WebSockets;
 

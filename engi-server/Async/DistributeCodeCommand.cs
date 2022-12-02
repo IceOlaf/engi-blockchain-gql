@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Async;
+namespace Engi.Substrate.Server.Async;
 
 public class DistributeCodeCommand
 {

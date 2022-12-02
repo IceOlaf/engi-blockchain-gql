@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Server.Email;
+namespace Engi.Substrate.Server.Email;
 
 public class SendgridOptions
 {

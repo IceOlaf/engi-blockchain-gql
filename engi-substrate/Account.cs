@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Keys;
+using Engi.Substrate.Keys;
 
 namespace Engi.Substrate;
 

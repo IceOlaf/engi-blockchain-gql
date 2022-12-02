@@ -1,4 +1,4 @@
-﻿using LibGit2Sharp.Core;
+using LibGit2Sharp.Core;
 using LibGit2Sharp.Core.Handles;
 using System;
 using System.Collections;

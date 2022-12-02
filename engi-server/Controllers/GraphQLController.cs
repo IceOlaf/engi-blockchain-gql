@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Execution;

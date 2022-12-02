@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp.Core
+namespace LibGit2Sharp.Core
 {
     internal enum GitDirection
     {

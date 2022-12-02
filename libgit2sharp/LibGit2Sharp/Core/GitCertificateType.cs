@@ -1,4 +1,4 @@
-﻿namespace LibGit2Sharp.Core
+namespace LibGit2Sharp.Core
 {
     /// <summary>
     /// Git certificate types to present to the user

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Raven.Client.Json.Serialization.NewtonsoftJson;
 
 namespace Engi.Substrate.Indexing;

@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Jobs;
+using Engi.Substrate.Jobs;
 
 namespace Engi.Substrate.Server.Types;
 

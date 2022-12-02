@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Identity;
+using Engi.Substrate.Identity;
 using Raven.Client.Documents.Operations;
 
 namespace Engi.Substrate.Server.Github;

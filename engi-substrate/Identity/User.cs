@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Identity;
+namespace Engi.Substrate.Identity;
 
 public class User
 {

@@ -1,4 +1,4 @@
-﻿using Sentry;
+using Sentry;
 
 namespace Engi.Substrate.Server;
 

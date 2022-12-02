@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Github;
+using Engi.Substrate.Github;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types.Github;

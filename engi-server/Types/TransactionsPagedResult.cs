@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Server.Indexing;
+using Engi.Substrate.Server.Indexing;
 
 namespace Engi.Substrate.Server.Types;
 

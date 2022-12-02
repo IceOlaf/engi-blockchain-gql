@@ -1,4 +1,4 @@
-﻿using RazorLight;
+using RazorLight;
 using RazorLight.Extensions;
 using SendGrid;
 

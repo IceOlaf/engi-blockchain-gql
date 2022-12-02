@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Metadata.V14;
 using System.Numerics;
 using System.Text;
 

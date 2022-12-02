@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate;
+namespace Engi.Substrate;
 
 public class OrderedQueryArguments<T> : PagedQueryArguments
     where T : Enum

@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Identity;
+using Engi.Substrate.Identity;
 using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents.Session;

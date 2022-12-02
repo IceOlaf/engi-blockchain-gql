@@ -1,4 +1,4 @@
-﻿using Raven.Client.Documents.Queries;
+using Raven.Client.Documents.Queries;
 using Raven.Client.Documents.Session;
 
 namespace Engi.Substrate.Jobs;

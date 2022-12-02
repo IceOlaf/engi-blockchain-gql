@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using LibGit2Sharp;
 using LibGit2Sharp.Core;
 

@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Github;
+using Engi.Substrate.Github;
 
 namespace Engi.Substrate.Identity;
 

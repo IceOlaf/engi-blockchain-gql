@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Engi.Substrate.Server.Types.Validation;
 using ValidationContext = System.ComponentModel.DataAnnotations.ValidationContext;
 using ValidationResult = System.ComponentModel.DataAnnotations.ValidationResult;

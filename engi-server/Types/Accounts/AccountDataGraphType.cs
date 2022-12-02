@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Pallets;
+using Engi.Substrate.Pallets;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;

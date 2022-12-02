@@ -1,4 +1,4 @@
-﻿namespace Engi.Substrate.Github;
+namespace Engi.Substrate.Github;
 
 public class GithubRepository
 {

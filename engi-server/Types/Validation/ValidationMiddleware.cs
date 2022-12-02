@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using GraphQL;
 using GraphQL.Instrumentation;

@@ -123,20 +123,29 @@ public class EngineResponseDequeueService : BackgroundService
                             $"Identified object is not something we know how to process; type={identifiedObject.GetType()}.");
                     }
 
-                    // save changes and delete
+                    // save changes
 
                     await session.SaveChangesAsync();
-
-                    await sqs.DeleteMessageAsync(new()
-                    {
-                        QueueUrl = engiOptions.EngineOutputQueueUrl,
-                        ReceiptHandle = message.ReceiptHandle
-                    });
                 }
                 catch (ConcurrencyException)
                 {
                     // someone else was modifying the analysis
                     // ignore, so we can reprocess
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Processing response from engine failed.");
+                }
+
+                // finally delete
+
+                try
+                {
+                    await sqs.DeleteMessageAsync(new()
+                    {
+                        QueueUrl = engiOptions.EngineOutputQueueUrl,
+                        ReceiptHandle = message.ReceiptHandle
+                    });
                 }
                 catch (Exception ex)
                 {

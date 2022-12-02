@@ -44,7 +44,8 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
             {
                 Id = $"QueueEngineRequestCommand/for/{attempt.AttemptId}",
                 Identifier = attempt.Id,
-                CommandString = $"job attempt {attempt.PatchFileUrl} --job-id {attempt.JobId} --dry-run"
+                CommandString = $"job attempt {attempt.PatchFileUrl} --job-id {attempt.JobId} --dry-run",
+                SourceId = attempt.Id
             };
 
             await session.StoreAsync(command);

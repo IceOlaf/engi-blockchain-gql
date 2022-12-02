@@ -1,4 +1,4 @@
-﻿using Engi.Substrate.Jobs;
+using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
@@ -89,7 +89,8 @@ public class AnalysisMutations : ObjectGraphType
         await session.StoreAsync(new QueueEngineRequestCommand
         {
             Identifier = analysis.Id,
-            CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}"
+            CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}",
+            SourceId = analysis.Id
         });
 
         await session.SaveChangesAsync();

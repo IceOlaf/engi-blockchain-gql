@@ -20,9 +20,9 @@ public static class EngineJson
         }
     };
 
-    class TestConverter : JsonConverter<Test>
+    class TestConverter : JsonConverter<TestAttempt>
     {
-        public override Test Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override TestAttempt Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             TestResult result;
             string? failedResultMessage = null;
@@ -56,17 +56,14 @@ public static class EngineJson
                     "Invalid JSON; TestResult must be an object for TestResult.Failed or a string otherwise.");
             }
 
-            bool required = json.TryGetProperty("required", out var requiredProp) && requiredProp.GetBoolean();
-
-            return new Test
+            return new TestAttempt
             {
                 Id = json.GetProperty("id").GetString()!,
                 Result = result,
-                FailedResultMessage = failedResultMessage,
-                Required = required
+                FailedResultMessage = failedResultMessage
             };
         }
 
-        public override void Write(Utf8JsonWriter writer, Test value, JsonSerializerOptions options) => throw new NotImplementedException();
+        public override void Write(Utf8JsonWriter writer, TestAttempt value, JsonSerializerOptions options) => throw new NotImplementedException();
     }
 }

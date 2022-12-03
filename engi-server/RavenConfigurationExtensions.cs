@@ -8,6 +8,7 @@ using Raven.Client.Documents.Operations.Expiration;
 using Raven.Client.Documents.Operations.Refresh;
 using Raven.Client.ServerWide;
 using Raven.Client.ServerWide.Operations;
+using Raven.Migrations;
 
 namespace Engi.Substrate.Server;
 
@@ -76,6 +77,9 @@ public static class RavenConfigurationExtensions
             asyncSession.Advanced.UseOptimisticConcurrency = true;
             return asyncSession;
         });
+
+        services.AddRavenDbMigrations();
+        services.AddHostedService<RavenMigrationService>();
 
         return services;
     }

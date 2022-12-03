@@ -91,17 +91,9 @@ public class SubstrateClient
 
             return result;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            SentrySdk.AddBreadcrumb("Failed to deserialize RPC response",
-                data: new Dictionary<string, string>
-                {
-                    [nameof(method)] = method,
-                    [nameof(T)] = typeof(T).Name,
-                    [nameof(json)] = json.ToString()
-                });
-
-            throw;
+            throw new SubstrateRpcJsonException(method, typeof(T), json, ex);
         }
     }
 

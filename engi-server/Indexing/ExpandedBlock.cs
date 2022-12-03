@@ -59,7 +59,8 @@ public class ExpandedBlock
 
         if (block.Header.Number != Number)
         {
-            throw new ArgumentException("Block number doesn't match.", nameof(block));
+            throw new ArgumentException(
+                $"Block number doesn't match; expected={Number} actual={block.Header.Number}.", nameof(block));
         }
 
         if (block.Extrinsics == null)

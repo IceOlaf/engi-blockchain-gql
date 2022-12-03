@@ -175,6 +175,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
             }
+            catch (Exception ex) when (ex is TimeoutException or TaskCanceledException { InnerException: TimeoutException })
+            {
+                // then reschedule a try immediately
+
+                var metadata = metadataById[doc.Id];
+
+                metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(0);
+            }
             catch (Exception ex)
             {
                 // logged as debug so it's not picked by Sentry twice - we need to sentry id

@@ -86,8 +86,6 @@ public class ExpandedBlock
         }
 
         DateTime = CalculateDateTime(Extrinsics);
-
-        IndexedOn = DateTime.UtcNow;
     }
 
     public static string KeyFrom(ulong number)

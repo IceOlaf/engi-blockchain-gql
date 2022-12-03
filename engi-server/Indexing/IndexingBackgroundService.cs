@@ -160,6 +160,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 {
                     resultBag.Add(result);
                 }
+
+                block.IndexedOn = DateTime.UtcNow;
             }
             catch (BlockHeaderNotFoundException ex)
             {

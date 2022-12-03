@@ -1,16 +1,13 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Reactive.Linq;
 using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
 using Raven.Client.Documents;
-using Raven.Client.Documents.Commands.Batches;
-using Raven.Client.Documents.Operations;
-using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
-using Raven.Client.Json;
 using Sentry;
 
 using Constants = Raven.Client.Constants;
@@ -175,13 +172,20 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
             }
-            catch (Exception ex) when (ex is TimeoutException or TaskCanceledException { InnerException: TimeoutException })
+            catch (Exception ex) when (IsTransient(ex))
             {
-                // then reschedule a try immediately
+                // then reschedule a try
 
                 var metadata = metadataById[doc.Id];
 
-                metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(0);
+                metadata.TryGetValue("attempt", out object? attemptObject);
+
+                int attempt = (int?) attemptObject ?? 1;
+
+                int delaySec = Math.Min(attempt * 3, 60); // max 60 sec
+
+                metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(delaySec);
+                metadata["attempt"] = attempt + 1;
             }
             catch (Exception ex)
             {
@@ -344,6 +348,21 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 continue;
             }
         }
+    }
+
+    private bool IsTransient(Exception ex)
+    {
+        if (ex is TimeoutException or TaskCanceledException { InnerException: TimeoutException })
+        {
+            return true;
+        }
+
+        if (ex is HttpRequestException { StatusCode: HttpStatusCode.BadGateway or HttpStatusCode.GatewayTimeout })
+        {
+            return true;
+        }
+
+        return false;
     }
 
     interface Indexable { }

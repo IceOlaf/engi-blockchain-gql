@@ -66,6 +66,11 @@ public class EngineResponseDequeueService : BackgroundService
 
                 throw;
             }
+            catch (Exception ex)
+            {
+                logger.LogCritical(ex, "Stopping engine response dequeueing service due to a failure.");
+                return;
+            }
 
             if (!batch.Messages.Any())
             {

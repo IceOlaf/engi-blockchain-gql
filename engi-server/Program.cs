@@ -230,6 +230,7 @@ builder.Services.AddSingleton<IChainObserver, NewHeadChainObserver>();
 builder.Services.AddSingleton<IChainObserver, ChainSnapshotObserver>();
 builder.Services.AddScoped<LatestChainStateProvider>();
 builder.Services.AddHostedService<IndexingBackgroundService>();
+builder.Services.AddHostedService<ConsistencyCheckService>();
 builder.Services.AddScoped<TransactionTipCalculator>();
 builder.Services.AddTransient<UserCryptographyService>();
 

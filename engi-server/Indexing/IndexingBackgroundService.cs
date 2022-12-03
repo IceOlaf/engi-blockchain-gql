@@ -84,18 +84,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         // we can ignore this, someone else stored it
                     }
 
-                    // if we don't have a successful previous header,
-                    // check whether the last block actually exists in the db 
-                    // otherwise trigger an index
-
-                    if (previousHeader == null && currentBlock.PreviousId != null)
-                    {
-                        // fire and forget
-#pragma warning disable CS4014
-                        EnsureIndexingConsistencyAsync(header.Number - 1);
-#pragma warning restore CS4014
-                    }
-
                     previousHeader = header;
                 }
                 catch (Exception ex)
@@ -356,99 +344,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 continue;
             }
         }
-    }
-
-    private async Task EnsureIndexingConsistencyAsync(ulong toInclusive)
-    {
-        try
-        {
-            const int walkSize = 256;
-
-            for (ulong number = 1; number <= toInclusive; number += walkSize)
-            {
-                await EnsureIndexingConsistencyAsync(number,
-                    number + walkSize <= toInclusive ? number + walkSize : toInclusive);
-            }
-        }
-        catch (Exception ex)
-        {
-            Sentry.CaptureException(ex);
-        }
-    }
-
-    private async Task EnsureIndexingConsistencyAsync(ulong fromInclusive, ulong toInclusive)
-    {
-        var indexes = Enumerable.Range(0, (int) (toInclusive - fromInclusive))
-            .Select(offset => fromInclusive + (ulong) offset)
-            .ToArray();
-
-        if (!indexes.Any())
-        {
-            return;
-        }
-
-        string[] keys = indexes
-            .Select(ExpandedBlock.KeyFrom)
-            .ToArray();
-
-        using var session = Store.OpenAsyncSession();
-
-        var loadedBlocks = await session.LoadAsync<ExpandedBlock>(keys);
-
-        var missingKeys = loadedBlocks
-            .Where(x => x.Value == null)
-            .Select(x => x.Key)
-            .OrderByDescending(x => x)
-            .ToArray();
-
-        if (!missingKeys.Any())
-        {
-            return;
-        }
-
-        foreach (var key in missingKeys)
-        {
-            ulong number = ulong.Parse(key.Split('/').Last());
-
-            if (number == 0)
-            {
-                // this would indicate a bug in the parent code but since it's a cheap operation
-                // i've added this to prevent problems with indexing block 0 (lacks timestamp)
-
-                continue;
-            }
-
-            var block = new ExpandedBlock(number);
-
-            var documentInfo = new DocumentInfo
-            {
-                MetadataInstance = new MetadataAsDictionary
-                {
-                    { Constants.Documents.Metadata.Collection, Store.Conventions.GetCollectionName(typeof(ExpandedBlock)) },
-                    { Constants.Documents.Metadata.RavenClrType, Store.Conventions.FindClrTypeName(typeof(ExpandedBlock)) }
-                }
-            };
-
-            session.Advanced.Defer(new PatchCommandData(block.Id, changeVector: null,
-                // intentionally left blank - we only want to modify it if it doesn't exist
-                // essentially doing an insert-if-doesn't-exist without concurrency concerns
-                new PatchRequest { Script = string.Empty }, 
-                new PatchRequest
-                {
-                    Script =
-    @"
-        for(var key in args.Block) {
-            this[key] = args.Block[key];
-        }
-    ",
-                    Values = new Dictionary<string, object>
-                    {
-                        { "Block", session.Advanced.JsonConverter.ToBlittable(block, documentInfo) }
-                    }
-                }));
-        }
-
-        await session.SaveChangesAsync();
     }
 
     interface Indexable { }

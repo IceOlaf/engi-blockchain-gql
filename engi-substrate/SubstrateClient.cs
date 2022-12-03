@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Pallets;
+using Sentry;
 
 namespace Engi.Substrate;
 
@@ -68,6 +69,13 @@ public class SubstrateClient
                 catch (Exception)
                 {
                     // ignore
+
+                    SentrySdk.CaptureMessage("Failed to extract hash from block not found error",
+                        scope =>
+                        {
+                            scope.SetExtra(nameof(code), code);
+                            scope.SetExtra(nameof(message), message);
+                        });
                 }
 
                 throw new BlockHeaderNotFoundException(hash ?? "unknown", code, message, data);
@@ -77,9 +85,24 @@ public class SubstrateClient
                 $"Substrate error {code}; {message}: {data}");
         }
 
-        T? result = json.GetProperty("result").Deserialize<T>(SubstrateJsonSerializerOptions.Default);
+        try
+        {
+            T? result = json.GetProperty("result").Deserialize<T>(SubstrateJsonSerializerOptions.Default);
 
-        return result;
+            return result;
+        }
+        catch (Exception)
+        {
+            SentrySdk.AddBreadcrumb("Failed to deserialize RPC response",
+                data: new Dictionary<string, string>
+                {
+                    [nameof(method)] = method,
+                    [nameof(T)] = typeof(T).Name,
+                    [nameof(json)] = json.ToString()
+                });
+
+            throw;
+        }
     }
 
     public async Task<string> RpcAsync(string method, params object[] @params)

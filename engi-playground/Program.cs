@@ -342,6 +342,31 @@ public static class Program
         return; // set breakpoint here
     }
 
+    private static async Task<JobSnapshot> GetJobSnapshotAsync(ulong jobId, string blockHash)
+    {
+        var client = new SubstrateClient(ChainUrl);
+
+        var block = await client.GetChainBlockAsync(blockHash);
+
+        var blockRef = new BlockReference { Number = block.Block.Header.Number };
+
+        string snapshotStorageKey = StorageKeys.Jobs.ForJobId(jobId);
+
+        return (await client.GetStateStorageAsync(snapshotStorageKey,
+            reader => JobSnapshot.Parse(reader, blockRef), blockHash))!;
+    }
+
+    private static async Task<EventRecord[]> GetSystemEventsAsync(string blockHash)
+    {
+        var client = new SubstrateClient(ChainUrl);
+
+        var meta = await client.GetStateMetadataAsync();
+
+        var events = await client.GetSystemEventsAsync(blockHash, meta);
+
+        return events;
+    }
+
     private static async Task InspectMetadataAsync()
     {
         var client = new SubstrateClient("http://localhost:9933");

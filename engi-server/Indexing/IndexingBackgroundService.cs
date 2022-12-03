@@ -348,12 +348,19 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
     private async Task EnsureIndexingConsistencyAsync(ulong toInclusive)
     {
-        const int walkSize = 256;
-
-        for (ulong number = 1; number <= toInclusive; number += walkSize)
+        try
         {
-            await EnsureIndexingConsistencyAsync(number,
-                number + walkSize <= toInclusive ? number + walkSize : toInclusive);
+            const int walkSize = 256;
+
+            for (ulong number = 1; number <= toInclusive; number += walkSize)
+            {
+                await EnsureIndexingConsistencyAsync(number,
+                    number + walkSize <= toInclusive ? number + walkSize : toInclusive);
+            }
+        }
+        catch (Exception ex)
+        {
+            Sentry.CaptureException(ex);
         }
     }
 

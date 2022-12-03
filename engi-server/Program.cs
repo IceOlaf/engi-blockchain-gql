@@ -169,6 +169,11 @@ builder.Services.AddControllers(options =>
     options.Filters.Add(new AuthorizeFilter(authenticatedPolicy));
 });
 
+builder.Host.ConfigureHostOptions(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 // GraphQL
 
 builder.Services.AddGraphQL(graphql => graphql

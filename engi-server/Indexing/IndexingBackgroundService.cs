@@ -64,11 +64,20 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 {
                     using var session = Store.OpenAsyncSession();
 
-                    session.Advanced.MaxNumberOfRequestsPerSession = 100000;
+                    session.Advanced.UseOptimisticConcurrency = true;
 
                     var currentBlock = new ExpandedBlock(header);
 
                     await session.StoreAsync(currentBlock);
+
+                    try
+                    {
+                        await session.SaveChangesAsync();
+                    }
+                    catch (ConcurrencyException)
+                    {
+                        // we can ignore this, someone else stored it
+                    }
 
                     // if we don't have a successful previous header,
                     // check whether the last block actually exists in the db 
@@ -81,8 +90,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         EnsureIndexingConsistencyAsync(header.Number - 1);
 #pragma warning restore CS4014
                     }
-
-                    await session.SaveChangesAsync();
 
                     previousHeader = header;
                 }

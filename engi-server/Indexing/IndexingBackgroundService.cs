@@ -5,7 +5,12 @@ using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Commands.Batches;
+using Raven.Client.Documents.Operations;
+using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
+using Raven.Client.Exceptions;
+using Raven.Client.Json;
 using Sentry;
 
 using Constants = Raven.Client.Constants;
@@ -373,8 +378,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
     private async Task EnsureIndexingConsistencyAsync(ulong fromInclusive, ulong toInclusive)
     {
-        using var session = Store.OpenAsyncSession();
-
         var indexes = Enumerable.Range(0, (int) (toInclusive - fromInclusive))
             .Select(offset => fromInclusive + (ulong) offset)
             .ToArray();
@@ -387,6 +390,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         string[] keys = indexes
             .Select(ExpandedBlock.KeyFrom)
             .ToArray();
+
+        using var session = Store.OpenAsyncSession();
 
         var loadedBlocks = await session.LoadAsync<ExpandedBlock>(keys);
 
@@ -413,7 +418,34 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 continue;
             }
 
-            await session.StoreAsync(new ExpandedBlock(number));
+            var block = new ExpandedBlock(number);
+
+            var documentInfo = new DocumentInfo
+            {
+                MetadataInstance = new MetadataAsDictionary
+                {
+                    { Constants.Documents.Metadata.Collection, Store.Conventions.GetCollectionName(typeof(ExpandedBlock)) },
+                    { Constants.Documents.Metadata.RavenClrType, Store.Conventions.FindClrTypeName(typeof(ExpandedBlock)) }
+                }
+            };
+
+            session.Advanced.Defer(new PatchCommandData(block.Id, changeVector: null,
+                // intentionally left blank - we only want to modify it if it doesn't exist
+                // essentially doing an insert-if-doesn't-exist without concurrency concerns
+                new PatchRequest { Script = string.Empty }, 
+                new PatchRequest
+                {
+                    Script =
+    @"
+        for(var key in args.Block) {
+            this[key] = args.Block[key];
+        }
+    ",
+                    Values = new Dictionary<string, object>
+                    {
+                        { "Block", session.Advanced.JsonConverter.ToBlittable(block, documentInfo) }
+                    }
+                }));
         }
 
         await session.SaveChangesAsync();

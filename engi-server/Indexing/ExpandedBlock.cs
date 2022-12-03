@@ -16,6 +16,8 @@ public class ExpandedBlock
 
     public Extrinsic[] Extrinsics { get; set; } = null!;
 
+    public EventRecordCollection Events { get; set; } = null!;
+
     public DateTime DateTime { get; set; }
 
     public string? PreviousId { get; set; }
@@ -75,13 +77,16 @@ public class ExpandedBlock
         Extrinsics = block.Extrinsics
             .Select(extrinsic => Extrinsic.Parse(extrinsic, meta))
             .ToArray();
+        Events = new EventRecordCollection(events
+            .Where(x => x.Phase.Value != PhaseType.ApplyExtrinsic)
+            .ToArray());
 
         for (var index = 0; index < Extrinsics.Length; index++)
         {
             var extrinsic = Extrinsics[index];
 
             extrinsic.Events = new EventRecordCollection(events
-                .Where(x => x.Phase.Data == index)
+                .Where(x => x.Phase.Value == PhaseType.ApplyExtrinsic && x.Phase.Data == index)
                 .ToArray());
         }
 

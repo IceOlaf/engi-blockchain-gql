@@ -12,13 +12,16 @@ public class EventRecord
 
     public static EventRecord Parse(ScaleStreamReader reader, RuntimeMetadata meta)
     {
-        return new()
+        var phase = new Phase
         {
-            Phase = new()
-            {
-                Value = reader.ReadEnum<PhaseType>(),
-                Data = reader.ReadUInt32()
-            },
+            Value = reader.ReadEnum<PhaseType>()
+        };
+
+        phase.Data = phase.Value == PhaseType.ApplyExtrinsic ? reader.ReadUInt32() : null;
+
+        return new EventRecord
+        {
+            Phase = phase,
             Event = GenericEvent.Parse(reader, meta),
             Topics = reader.ReadList(s => s.ReadString())!
         };

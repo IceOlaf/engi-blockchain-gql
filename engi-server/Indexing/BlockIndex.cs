@@ -8,7 +8,7 @@ public class BlockIndex : AbstractIndexCreationTask<ExpandedBlock>
     {
         public ulong Number { get; set; }
 
-        public string Hash { get; set; } = null!;
+        public string?Hash { get; set; }
 
         public DateTime? IndexedOn { get; set; }
 

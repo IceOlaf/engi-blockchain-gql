@@ -1,10 +1,14 @@
 using Engi.Substrate.Github;
+using Engi.Substrate.Identity;
+using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
 using GraphQL.Types;
 using Octokit;
 using Raven.Client.Documents.Session;
+
+using Repository = Octokit.Repository;
 using User = Engi.Substrate.Identity.User;
 
 namespace Engi.Substrate.Server.Types.Github;
@@ -13,22 +17,29 @@ public class GithubQuery : ObjectGraphType
 {
     public GithubQuery()
     {
-        this.AuthorizeWithPolicy(PolicyNames.Authenticated);
-
         Field<ListGraphType<GithubRepositoryWithOwnerGraphType>>("repositories")
             .Description("Get all repositories that the app installation gives us access to.")
-            .ResolveAsync(GetRepositoriesAsync);
+            .ResolveAsync(GetRepositoriesAsync)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
 
         Field<ListGraphType<StringGraphType>>("branches")
             .Description("Get branches for a repository the user has access to.")
             .Argument<NonNullGraphType<StringGraphType>>("repositoryUrl")
-            .ResolveAsync(GetBranchesAsync);
+            .ResolveAsync(GetBranchesAsync)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
 
         Field<ListGraphType<CommitGraphType>>("commits")
             .Description("Get commits for a repository/branch the user has access to.")
             .Argument<NonNullGraphType<StringGraphType>>("repositoryUrl")
             .Argument<NonNullGraphType<StringGraphType>>("branch")
-            .ResolveAsync(GetCommitsAsync);
+            .ResolveAsync(GetCommitsAsync)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
+
+        Field<UserGithubEnrollmentGraphType>("jobAuthorization")
+            .Description("Get GitHub authorization for a particular job.")
+            .Argument<NonNullGraphType<StringGraphType>>("jobId")
+            .ResolveAsync(GetAuthorizationForJobAsync)
+            .AuthorizeWithPolicy(PolicyNames.Sudo);
     }
 
     private async Task<object?> GetBranchesAsync(IResolveFieldContext<object?> context)
@@ -177,6 +188,52 @@ public class GithubQuery : ObjectGraphType
                 IsPrivate = repo.IsPrivate,
                 Owner = x.Owner
             }));
+    }
+
+    private async Task<object?> GetAuthorizationForJobAsync(IResolveFieldContext<object?> context)
+    {
+        ulong jobId = context.GetArgument<ulong>("jobId");
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var reference = await session
+            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
+                include => include.IncludeDocuments<ReduceOutputReference>(x => x.ReduceOutputs));
+
+        if (reference == null)
+        {
+            return null;
+        }
+
+        var job = await session.LoadAsync<Job>(reference.ReduceOutputs.First());
+
+        if(job == null)
+        {
+            throw new ExecutionError("Job was not found.")
+            {
+                Code = "NOT_FOUND"
+            };
+        }
+
+        var creatorReference = await session
+            .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(job.Creator),
+                include => include.IncludeDocuments(x => x.UserId));
+
+        if(creatorReference == null)
+        {
+            throw new ExecutionError("Creator account was not found.")
+            {
+                Code = "NOT_FOUND"
+            };
+        }
+
+        var creator = await session.LoadAsync<User>(creatorReference.UserId);
+
+        var (enrollment, _) = creator.GithubEnrollments.Find(job.Repository.FullName);
+
+        return enrollment;
     }
 
     private void ThrowIfUserNotEnrolled(User user)

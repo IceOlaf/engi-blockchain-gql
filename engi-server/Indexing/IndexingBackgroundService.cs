@@ -179,9 +179,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 metadata.TryGetValue("attempt", out object? attemptObject);
 
-                int attempt = (int?) attemptObject ?? 1;
+                long attempt = (long?) attemptObject ?? 1;
 
-                int delaySec = Math.Min(attempt * 3, 60); // max 60 sec
+                if (attempt > 1440)
+                {
+                    throw;
+                }
+
+                long delaySec = Math.Min(attempt * 3, 60); // max 60 sec
 
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(delaySec);
                 metadata["attempt"] = attempt + 1;

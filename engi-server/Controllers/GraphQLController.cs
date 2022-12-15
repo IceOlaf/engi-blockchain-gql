@@ -77,10 +77,6 @@ public class GraphQLController : ControllerBase
 
         if (result.Errors?.OfType<AuthenticationError>().Any() == true)
         {
-            logger.LogWarning("Login failed.");
-            
-            sentry.CaptureMessage("Login failed.");
-
             return Unauthorized();
         }
 

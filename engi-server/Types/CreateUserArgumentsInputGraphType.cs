@@ -12,7 +12,7 @@ public class CreateUserArgumentsGraphType : InputObjectGraphType<CreateUserArgum
             .Description("The user's display name.");
         Field(x => x.Email)
             .Description("The user's email.");
-        Field(x => x.Address)
+        Field(x => x.Address, type: typeof(AddressGraphType))
             .Description("The user's chain account address.");
     }
 }

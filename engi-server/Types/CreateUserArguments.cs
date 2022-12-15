@@ -11,5 +11,5 @@ public class CreateUserArguments
     public string Display { get; set; } = null!;
 
     [Required]
-    public string Address { get; set; } = null!;
+    public Address Address { get; set; } = null!;
 }

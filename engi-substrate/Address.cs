@@ -98,9 +98,10 @@ public class Address : IScaleSerializable, IPublicKey, IEquatable<string>
         {
             decoded = Base58.Bitcoin.Decode(address);
         }
-        catch (ArgumentException ex)
+        catch (ArgumentException)
         {
-            throw new ArgumentException("Invalid address", nameof(address), ex);
+            throw new ArgumentOutOfRangeException(
+                nameof(address), address, "Unable to parse address as base58.");
         }
 
         int ss58Length = (decoded[0] & 0b0100_0000) == 1 ? 2 : 1;

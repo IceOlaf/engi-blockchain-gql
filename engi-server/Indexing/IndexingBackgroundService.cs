@@ -226,7 +226,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         var events = await client.GetSystemEventsAsync(hash, meta);
 
-        block.Fill(signedBlock!.Block, events, meta);
+        block.Fill(signedBlock.Block, events, meta);
 
         // TODO: make this query in one storage call if possible?
 

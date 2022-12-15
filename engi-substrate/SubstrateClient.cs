@@ -54,10 +54,28 @@ public class SubstrateClient
         {
             error.TryGetProperty("data", out var data);
 
-            string code = error.GetProperty("code").GetString()!;
-            string message = error.GetProperty("message").GetString()!;
+            string? code = null;
+            string? message = null;
 
-            if (code == "-32000")
+            try
+            {
+                code = error.GetProperty("code").GetString()!;
+            }
+            catch
+            {
+                // ignored
+            }
+           
+            try
+            {
+                message = error.GetProperty("message").GetString()!;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            if (code == "-32000" && message != null)
             {
                 string? hash = null;
 
@@ -82,7 +100,13 @@ public class SubstrateClient
             }
 
             throw new InvalidOperationException(
-                $"Substrate error {code}; {message}: {data}");
+                $"Substrate error code={code ?? "unknown"}; message={message ?? "unknown"}: {data}")
+            {
+                Data =
+                {
+                    ["json"] = json
+                }
+            };
         }
 
         try

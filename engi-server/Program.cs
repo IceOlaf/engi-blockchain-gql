@@ -271,7 +271,7 @@ builder.Services.Configure<AwsOptions>(awsSection)
         }
     });
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration == false)
 {
     var awsOptions = awsSection.Get<AwsOptions>();
 

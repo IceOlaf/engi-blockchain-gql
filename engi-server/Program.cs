@@ -25,7 +25,10 @@ var applicationSection = builder.Configuration.GetRequiredSection("Application")
 var engiSection = builder.Configuration.GetRequiredSection("Engi");
 var substrateSection = builder.Configuration.GetRequiredSection("Substrate");
 
-builder.WebHost.UseSentry();
+builder.WebHost.UseSentry(options =>
+{
+    options.SampleRate = 0.25f;
+});
 
 // services config
 

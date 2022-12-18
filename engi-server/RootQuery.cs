@@ -100,7 +100,10 @@ public class RootQuery : ObjectGraphType
         }
         catch (Exception ex)
         {
-            sentry.CaptureException(ex);
+            if (!ExceptionUtils.IsTransient(ex))
+            {
+                sentry.CaptureException(ex);
+            }
 
             return new EngiHealth
             {

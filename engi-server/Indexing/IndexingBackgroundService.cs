@@ -171,7 +171,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
             }
-            catch (Exception ex) when (IsTransient(ex))
+            catch (Exception ex) when (ExceptionUtils.IsTransient(ex))
             {
                 // then reschedule a try
 
@@ -358,21 +358,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 continue;
             }
         }
-    }
-
-    private bool IsTransient(Exception ex)
-    {
-        if (ex is TimeoutException or TaskCanceledException { InnerException: TimeoutException })
-        {
-            return true;
-        }
-
-        if (ex is HttpRequestException { StatusCode: HttpStatusCode.BadGateway or HttpStatusCode.GatewayTimeout })
-        {
-            return true;
-        }
-
-        return false;
     }
 
     interface Indexable { }

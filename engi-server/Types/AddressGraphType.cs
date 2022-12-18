@@ -6,13 +6,16 @@ public class AddressGraphType : ScalarGraphType
 {
     public override object? ParseValue(object? value)
     {
-        string? s = (string?)value;
-
-        if (s == null)
+        if (value is Address address)
         {
-            return null;
+            return address;
         }
 
-        return Address.Parse(s);
+        if(value is string s)
+        {
+            return Address.Parse(s);
+        }
+
+        return null;
     }
 }

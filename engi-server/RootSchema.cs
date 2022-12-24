@@ -12,7 +12,7 @@ public class RootSchema : Schema
     {
         Query = new RootQuery();
         Mutation = new RootMutations();
-        Subscription = new EngiSubscriptions();
+        Subscription = new RootSubscriptions();
 
         FieldMiddleware.Use(new NoMultipleAuthMutationsMiddleware());
         FieldMiddleware.Use(new ValidationMiddleware());

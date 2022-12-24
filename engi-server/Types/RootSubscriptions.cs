@@ -2,9 +2,9 @@ using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;
 
-public class EngiSubscriptions : ObjectGraphType
+public class RootSubscriptions : ObjectGraphType
 {
-    public EngiSubscriptions()
+    public RootSubscriptions()
     {
         Field<HeaderGraphType>("newFinalizedHead")
             .ResolveStream(context =>

@@ -205,10 +205,6 @@ builder.Services.AddGraphQL(graphql => graphql
 
                 return Task.CompletedTask;
             };
-
-        options.Schema!.FieldMiddleware
-            .Use(new NoMultipleAuthMutationsMiddleware())
-            .Use(new ValidationMiddleware());
     })
     .AddSystemTextJson()
     .AddErrorInfoProvider(options =>

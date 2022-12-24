@@ -71,7 +71,7 @@ public static class Program
         var http = new HttpClient();
 
         var response = await http.PostAsync($"{BaseUrl}/api/graphql",
-            new StringContent(json.Replace("\r\n", string.Empty), Encoding.UTF8, "application/json"));
+            new StringContent(json.Replace("\r", string.Empty).Replace("\n", string.Empty), Encoding.UTF8, "application/json"));
 
         var responseJson = await response.Content.ReadFromJsonAsync<JsonNode>();
 

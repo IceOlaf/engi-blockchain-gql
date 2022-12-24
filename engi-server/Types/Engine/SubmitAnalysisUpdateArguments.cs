@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Engi.Substrate.Server.Types.Analysis;
+namespace Engi.Substrate.Server.Types.Engine;
 
 public class SubmitAnalysisUpdateArguments
 {

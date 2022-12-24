@@ -1,9 +1,9 @@
 using Engi.Substrate.Jobs;
 using GraphQL.Types;
 
-namespace Engi.Substrate.Server.Types.Analysis;
+namespace Engi.Substrate.Server.Types.Engine;
 
-public class RepositoryComplexityGraphType : InputObjectGraphType<RepositoryComplexity>
+public class RepositoryComplexityGraphType : ObjectGraphType<RepositoryComplexity>
 {
     public RepositoryComplexityGraphType()
     {

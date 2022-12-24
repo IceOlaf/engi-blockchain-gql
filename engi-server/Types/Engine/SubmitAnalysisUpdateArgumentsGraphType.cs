@@ -1,6 +1,6 @@
 using GraphQL.Types;
 
-namespace Engi.Substrate.Server.Types.Analysis;
+namespace Engi.Substrate.Server.Types.Engine;
 
 public class SubmitAnalysisUpdateArgumentsGraphType : InputObjectGraphType<SubmitAnalysisUpdateArguments>
 {

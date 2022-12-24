@@ -3,12 +3,13 @@ using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Types;
 using Octokit;
 using Raven.Client.Documents.Session;
 using Repository = Octokit.Repository;
 
-namespace Engi.Substrate.Server.Types.Analysis;
+namespace Engi.Substrate.Server.Types.Engine;
 
 public class AnalysisMutations : ObjectGraphType
 {
@@ -16,8 +17,8 @@ public class AnalysisMutations : ObjectGraphType
     {
         Field<IdGraphType>("submit")
             .Description(@"
-                Submit an analysis request to the analysis engine. 
-                If the mutation completes successfully, it will return the id of the analysis document. 
+                Submit an analysis request to the analysis engine.
+                If the mutation completes successfully, it will return the id of the analysis document.
                 If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
             ")
             .Argument<NonNullGraphType<SubmitAnalysisArgumentsGraphType>>("args")
@@ -66,7 +67,7 @@ public class AnalysisMutations : ObjectGraphType
         {
             throw new ExecutionError("Repository, branch or commit not found.") { Code = "NOT_FOUND" };
         }
-        
+
         try
         {
             commit = await octokit.Repository.Commit.Get(repository.Id, args.Commit);

@@ -280,6 +280,13 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
 
     builder.Services.PostConfigure<EngiOptions>(engiOptions =>
     {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"))
+            || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"))
+            || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")))
+        {
+            Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as described in DEVELOPMENT.md.");
+        }
+
         var sns = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
         {
             ServiceURL = awsOptions.ServiceUrl

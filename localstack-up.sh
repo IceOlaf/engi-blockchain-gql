@@ -7,8 +7,11 @@ if ! command -v awslocal &> /dev/null; then
     exit
 fi
 
-echo "installing jq"
-apt update && apt install jq gettext -y
+if ! command -v jq &> /dev/null
+then
+    echo "installing jq"
+    apt update && apt install jq gettext -y
+fi
 
 up() {
     QUEUE_NAME=$1
@@ -25,7 +28,7 @@ up() {
     fi
 
     QUEUE_URL=`awslocal sqs create-queue --queue-name $QUEUE_NAME | jq -r .QueueUrl`
-    
+
     export QUEUE_ARN=`awslocal sqs get-queue-attributes --queue-url $QUEUE_URL --attribute-names QueueArn | jq -r .Attributes.QueueArn`
     export TOPIC_ARN=`awslocal sns create-topic --name $TOPIC_NAME | jq -r .TopicArn`
 

@@ -48,7 +48,7 @@ public class AnalysisMutations : ObjectGraphType
 
         if (enrollment == null)
         {
-            throw new ExecutionError("User does not have access to repository.") { Code = "FORBIDDEN" };
+            throw new AccessDeniedError(args.Url);
         }
 
         Repository repository;

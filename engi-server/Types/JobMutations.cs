@@ -4,6 +4,7 @@ using Engi.Substrate.Pallets;
 using Engi.Substrate.Server.Types.Authentication;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Types;
 using Raven.Client.Documents.Session;
 
@@ -102,7 +103,7 @@ public class JobMutations : ObjectGraphType
 
         if (!user.GithubEnrollments.ContainsRepositoryWithFullName(repositoryFullName))
         {
-            throw new ExecutionError("User does not have access to repository.") { Code = "FORBIDDEN" };
+            throw new AccessDeniedError(args.RepositoryUrl);
         }
 
         // submit

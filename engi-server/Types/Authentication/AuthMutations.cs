@@ -189,14 +189,14 @@ public class AuthMutations : ObjectGraphType
 
     private async Task<object?> RefreshAsync(IResolveFieldContext context)
     {
-        var enhancedContext = (EnhancedGraphQLContext)context.UserContext;
+        var cookies = (IRequestCookieCollection) context.UserContext["cookies"]!;
 
         var jwtOptions = context.RequestServices!
             .GetRequiredService<IOptions<JwtOptions>>();
 
         // verify refresh token from cookie
 
-        string? refreshTokenValue = enhancedContext.Cookies["refreshToken"];
+        string? refreshTokenValue = cookies["refreshToken"];
 
         if (string.IsNullOrEmpty(refreshTokenValue))
         {

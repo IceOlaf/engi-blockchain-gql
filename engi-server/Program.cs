@@ -8,9 +8,8 @@ using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types.Authentication;
-using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
-using GraphQL.Instrumentation;
+using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.SystemTextJson;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -346,6 +345,8 @@ app.UseEndpoints(endpoints =>
     const string graphQLEndpoint = "/api/graphql";
 
     endpoints.MapHealthChecks("/api/health");
+    endpoints.MapGraphQL<CustomGraphQLHttpMiddleware>(graphQLEndpoint,
+        new GraphQLHttpMiddlewareOptions());
     endpoints.MapGraphQLAltair(options: new()
     {
         GraphQLEndPoint = graphQLEndpoint,

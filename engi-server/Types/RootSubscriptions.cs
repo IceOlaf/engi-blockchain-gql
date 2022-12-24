@@ -7,6 +7,7 @@ public class RootSubscriptions : ObjectGraphType
     public RootSubscriptions()
     {
         Field<HeaderGraphType>("newFinalizedHead")
+            .Resolve(context => context.Source)
             .ResolveStream(context =>
             {
                 var newHeadObserver = context.RequestServices!

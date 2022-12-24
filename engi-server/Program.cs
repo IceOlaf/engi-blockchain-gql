@@ -348,7 +348,8 @@ app.UseEndpoints(endpoints =>
     endpoints.MapHealthChecks("/api/health");
     endpoints.MapGraphQLAltair(options: new()
     {
-        GraphQLEndPoint = graphQLEndpoint
+        GraphQLEndPoint = graphQLEndpoint,
+        SubscriptionsEndPoint = graphQLEndpoint
     });
     endpoints.MapGraphQLVoyager(options: new()
     {

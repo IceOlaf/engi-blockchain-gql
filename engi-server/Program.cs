@@ -67,9 +67,24 @@ builder.Services.Configure<EngiOptions>(engiSection);
 
 var jwtSection = builder.Configuration.GetRequiredSection("Jwt");
 var jwtOptions = jwtSection.Get<JwtOptions>();
+var jwtTokenValidationParameters = new TokenValidationParameters
+{
+    RequireExpirationTime = true,
+    RequireAudience = true,
+    RequireSignedTokens = true,
+    ClockSkew = TimeSpan.FromSeconds(15.0),
+    IssuerSigningKey = new RsaSecurityKey(jwtOptions.IssuerSigningKey),
+    ValidIssuer = jwtOptions.Issuer,
+    ValidAudience = jwtOptions.Audience,
+    ValidateAudience = true,
+    ValidateIssuer = true,
+    ValidateIssuerSigningKey = true,
+    ValidateLifetime = true
+};
 
 builder.Services.Configure<JwtOptions>(jwtSection);
 builder.Services.AddSingleton(jwtOptions);
+builder.Services.AddSingleton(jwtTokenValidationParameters);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -81,6 +96,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.Audience = jwtOptions.Audience;
     options.ClaimsIssuer = jwtOptions.Issuer;
+    options.TokenValidationParameters = jwtTokenValidationParameters;
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -92,20 +108,6 @@ builder.Services.AddAuthentication(options =>
 
             return Task.CompletedTask;
         }
-    };
-    options.TokenValidationParameters = new()
-    {
-        RequireExpirationTime = true,
-        RequireAudience = true,
-        RequireSignedTokens = true,
-        ClockSkew = TimeSpan.FromSeconds(15.0),
-        IssuerSigningKey = new RsaSecurityKey(jwtOptions.IssuerSigningKey),
-        ValidIssuer = jwtOptions.Issuer,
-        ValidAudience = jwtOptions.Audience,
-        ValidateAudience = true,
-        ValidateIssuer = true,
-        ValidateIssuerSigningKey = true,
-        ValidateLifetime = true
     };
 })
 .AddScheme<SudoApiKeyAuthenticationOptions, SudoApiKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey, options =>
@@ -196,7 +198,8 @@ builder.Services.AddGraphQL(graphql => graphql
         options.ExposeData = true;
         options.ExposeExceptionDetails = builder.Environment.IsDevelopment();
     })
-    .AddAuthorizationRule());
+    .AddAuthorizationRule()
+    .AddWebSocketAuthentication<JwtWebSocketAuthenticationService>());
 
 // email
 

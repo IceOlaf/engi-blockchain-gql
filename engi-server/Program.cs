@@ -81,7 +81,6 @@ builder.Services.AddAuthentication(options =>
 {
     options.Audience = jwtOptions.Audience;
     options.ClaimsIssuer = jwtOptions.Issuer;
-
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -92,23 +91,8 @@ builder.Services.AddAuthentication(options =>
             }
 
             return Task.CompletedTask;
-        },
-        OnMessageReceived = context =>
-        {
-            HttpRequest request = context.Request;
-
-            string token = request.Query["access_token"];
-
-            if (!string.IsNullOrEmpty(token))
-            {
-                context.Token = token;
-            }
-
-            return Task.CompletedTask;
         }
     };
-
-    options.ClaimsIssuer = jwtOptions.Issuer;
     options.TokenValidationParameters = new()
     {
         RequireExpirationTime = true,

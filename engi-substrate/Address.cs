@@ -5,7 +5,7 @@ using SimpleBase;
 
 namespace Engi.Substrate;
 
-public class Address : IScaleSerializable, IPublicKey, IEquatable<string>
+public class Address : IScaleSerializable, IPublicKey, IEquatable<string>, IEquatable<Address>
 {
     public string Id { get; }
 
@@ -62,6 +62,11 @@ public class Address : IScaleSerializable, IPublicKey, IEquatable<string>
     public static implicit operator Address(string s) => Parse(s);
 
     public static implicit operator string(Address address) => address.Id;
+
+    public bool Equals(Address? other)
+    {
+        return other != null && Id == other.Id;
+    }
 
     public bool Equals(string? s)
     {

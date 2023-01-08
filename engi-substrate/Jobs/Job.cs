@@ -102,7 +102,7 @@ public class Job
         if (currentUser != null)
         {
             CurrentUserSolution = solutions
-                .Where(x => x.Author == currentUser)
+                .Where(x => x.Author.Equals(currentUser))
                 .MaxBy(CountPassedTests);
         }
 

@@ -2,7 +2,7 @@ namespace Engi.Substrate.Server.Async;
 
 public class ConsistencyCheckCommand
 {
-    public string Id { get; set; } = null!;
+    public string Id { get; set; } = nameof(ConsistencyCheckCommand);
 
     public DateTime? LastExecutedOn { get; set; }
 

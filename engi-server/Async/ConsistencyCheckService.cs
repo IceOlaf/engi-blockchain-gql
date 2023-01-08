@@ -4,6 +4,7 @@ using Raven.Client.Documents.Commands.Batches;
 using Raven.Client.Documents.Operations;
 using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
+using Raven.Client.Exceptions;
 using Raven.Client.Json;
 using Sentry;
 using Constants = Raven.Client.Constants;
@@ -27,6 +28,24 @@ declare function filter(c) {
 
 from ConsistencyCheckCommands as c where filter(c) 
 ";
+    }
+
+    protected override async Task InitializeAsync()
+    {
+        using var session = Store.OpenAsyncSession();
+
+        session.Advanced.UseOptimisticConcurrency = true;
+
+        await session.StoreAsync(new ConsistencyCheckCommand());
+
+        try
+        {
+            await session.SaveChangesAsync();
+        }
+        catch (ConcurrencyException)
+        {
+            // ignore
+        }
     }
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<ConsistencyCheckCommand> batch, IServiceProvider serviceProvider)

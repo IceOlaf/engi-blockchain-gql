@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Execution;
@@ -58,7 +59,7 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
             data: new Dictionary<string, string>
             {
                 ["OperationName"] = request.OperationName ?? string.Empty,
-                ["Query"] = request.Query ?? string.Empty,
+                ["Query"] = SanitizeQuery(request.Query),
                 ["Variables"] = JsonSerializer.Serialize(request.Variables),
                 ["Extensions"] = JsonSerializer.Serialize(request.Extensions)
             });
@@ -108,4 +109,17 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
 
         await WriteJsonResponseAsync(context, statusCode, result);
     }
+
+    private static string SanitizeQuery(string? query)
+    {
+        if (string.IsNullOrEmpty(query))
+        {
+            return string.Empty;
+        }
+
+        return RemoveSignatureRegex.Replace(query, "signature: <redacted>");
+    }
+
+    private static readonly Regex RemoveSignatureRegex =
+        new(@"signature:\s*{(.+?)}", RegexOptions.Compiled | RegexOptions.Singleline);
 }

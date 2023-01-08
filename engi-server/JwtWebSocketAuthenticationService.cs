@@ -30,7 +30,7 @@ public class JwtWebSocketAuthenticationService : IWebSocketAuthenticationService
             // attempt to read the 'Authorization' key from the payload object and verify it contains "Bearer: XXXXXXXX"
 
             if (operationMessage.Payload is JsonElement json
-                && json.TryGetProperty("authorization", out var authorization))
+                && json.TryGetProperty("Authorization", out var authorization))
             {
                 string? value = authorization.GetString();
 

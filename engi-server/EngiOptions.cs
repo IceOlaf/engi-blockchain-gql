@@ -5,6 +5,11 @@ namespace Engi.Substrate.Server;
 public class EngiOptions
 {
     /// <summary>
+    /// Assume a role when using AWS services.
+    /// </summary>
+    public string? AssumeRole { get; set; }
+
+    /// <summary>
     /// The encryption certificate to use to store keys.
     /// </summary>
     public string EncryptionCertificate { get; set; } = null!;
@@ -19,7 +24,7 @@ public class EngiOptions
     /// </summary>
     public bool DisableChainObserver { get; set; }
 
-    ///
+    /// <summary>
     ///  Used to disable integration with Engine during testing.
     /// </summary>
     public bool DisableEngineIntegration { get; set; }

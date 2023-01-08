@@ -14,7 +14,7 @@ public class AccountsQuery : ObjectGraphType
             .Description("Query for the account existence of one or more addresses.")
             .Argument<NonNullGraphType<ListGraphType<StringGraphType>>>("addresses")
             .ResolveAsync(CheckExistenceAsync)
-            .AuthorizeWithPolicy(PolicyNames.Authenticated);
+            .AllowAnonymous();
     }
 
     private async Task<object?> CheckExistenceAsync(IResolveFieldContext<object?> context)

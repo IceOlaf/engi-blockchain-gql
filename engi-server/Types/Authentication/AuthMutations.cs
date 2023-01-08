@@ -130,12 +130,15 @@ public class AuthMutations : ObjectGraphType
 
         var user = session.LoadAsync<User>(userAddressRef.UserId).Result;
 
+        crypto.ValidateOrThrow(user, args.Signature);
+
         if (user.EmailConfirmedOn == null)
         {
-            throw new AuthenticationError();
+            throw new AuthenticationError
+            {
+                Code = "UNCONFIRMED_EMAIL"
+            };
         }
-
-        crypto.ValidateOrThrow(user, args.Signature);
 
         var refreshToken = BuildRefreshToken(user, jwtOptions.Value);
 

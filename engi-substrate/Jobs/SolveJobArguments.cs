@@ -16,7 +16,7 @@ public class SolveJobArguments : IExtrinsic
     [Required]
     public Address Author { get; set; } = null!;
 
-    [Required]
+    [Required, HttpUrl]
     public string PatchFileUrl { get; set; } = null!;
 
     [Required]

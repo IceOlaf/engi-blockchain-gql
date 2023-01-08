@@ -15,7 +15,7 @@ public class CreateJobArguments : IExtrinsic
 
     public Language Language { get; init; }
 
-    [Required, StringLength(100, MinimumLength = 12)]
+    [Required, HttpUrl)]
     public string RepositoryUrl { get; init; } = null!;
 
     [Required, StringLength(20, MinimumLength = 1)]

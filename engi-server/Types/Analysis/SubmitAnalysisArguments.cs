@@ -4,7 +4,7 @@ namespace Engi.Substrate.Server.Types.Analysis;
 
 public class SubmitAnalysisArguments
 {
-    [Required]
+    [Required, HttpUrl]
     public string Url { get; set; } = null!;
 
     [Required]

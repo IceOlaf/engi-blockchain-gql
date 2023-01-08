@@ -11,7 +11,7 @@ public class AttemptJobArguments : IExtrinsic
 
     public ulong JobId { get; init; }
 
-    [Required, MaxLength(100)]
+    [Required, HttpUrl]
     public string SubmissionPatchFileUrl { get; init; } = null!;
 
     public IEnumerable<Func<Field, PortableType, PortableType?, bool>> GetVariantAssertions()

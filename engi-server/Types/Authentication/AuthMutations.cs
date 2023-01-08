@@ -57,6 +57,15 @@ public class AuthMutations : ObjectGraphType
             ")
             .Argument<NonNullGraphType<ConfirmEmailArgumentsGraphType>>("args")
             .ResolveAsync(ConfirmEmailAsync);
+
+        Field<IdGraphType>("resendEmailConfirmation")
+            .Description(@"
+                Re-send the confirmation e-mail for a user. If the user's email is not found, code NOT_FOUND
+                is returned. If the user is found, but they have already confirmed their account, code CONFLICT
+                is returned.
+            ")
+            .Argument<NonNullGraphType<StringGraphType>>("email")
+            .ResolveAsync(ResendConfirmationEmailAsync);
     }
 
     private async Task<object?> ConfirmEmailAsync(IResolveFieldContext context)
@@ -326,15 +335,7 @@ public class AuthMutations : ObjectGraphType
         await session.StoreAsync(new UserEmailReference(user));
         await session.StoreAsync(new UserAddressReference(user));
 
-        await session.StoreAsync(new EmailDispatchCommand
-        {
-            UserId = user.Id,
-            TemplateName = "ConfirmEmail",
-            Data = new()
-            {
-                ["Url"] = $"{applicationOptions.Value.Url}/signup/confirm/{user.Address}?token={emailConfirmationToken.Value}"
-            }
-        });
+        await session.StoreAsync(new ConfirmEmailDispatchCommand(user, applicationOptions.Value));
 
         try
         {
@@ -358,6 +359,50 @@ public class AuthMutations : ObjectGraphType
 
         return null;
     }
+
+    private async Task<object?> ResendConfirmationEmailAsync(IResolveFieldContext<object?> context)
+    {
+        string email = context.GetArgument<string>("email");
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        var applicationOptions = scope.ServiceProvider.GetRequiredService<IOptions<ApplicationOptions>>();
+
+        // find user
+
+        using var session = scope.ServiceProvider
+            .GetRequiredService<IAsyncDocumentSession>();
+
+        var userEmailRef = await session
+            .LoadAsync<UserEmailReference>(UserEmailReference.KeyFrom(email),
+                include => include.IncludeDocuments(x => x.UserId));
+
+        if (userEmailRef == null)
+        {
+            throw new ExecutionError("E-mail not found")
+            {
+                Code = "NOT_FOUND"
+            };
+        }
+
+        var user = session.LoadAsync<User>(userEmailRef.UserId).Result;
+
+        if (user.EmailConfirmedOn.HasValue)
+        {
+            throw new ExecutionError("E-mail is already confirmed for account.")
+            {
+                Code = "CONFLICT"
+            };
+        }
+
+        await session.StoreAsync(new ConfirmEmailDispatchCommand(user, applicationOptions.Value));
+
+        await session.SaveChangesAsync();
+
+        return null;
+    }
+
+    // helpers
 
     private string BuildAccessToken(User user, JwtOptions jwtOptions)
     {

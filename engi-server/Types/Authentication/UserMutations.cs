@@ -2,7 +2,10 @@ using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
 using GraphQL;
 using GraphQL.Types;
+using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
+using Raven.Client.Exceptions;
+using SessionOptions = Raven.Client.Documents.Session.SessionOptions;
 
 namespace Engi.Substrate.Server.Types.Authentication;
 
@@ -10,8 +13,6 @@ public class UserMutations : ObjectGraphType
 {
     public UserMutations()
     {
-        this.AuthorizeWithPolicy(PolicyNames.Authenticated);
-
         Field<IdGraphType>("importKey")
             .Description(@"
                 Import a user's key, to be managed by ENGI. The user is located with the key's address.
@@ -23,6 +24,14 @@ public class UserMutations : ObjectGraphType
             .Argument<NonNullGraphType<ImportUserKeyArgumentsGraphType>>("args")
             .ResolveAsync(ImportUserKeyAsync)
             .AllowAnonymous();
+
+        Field<CurrentUserInfoGraphType>("update")
+            .Description(@"
+                Update current user.
+            ")
+            .Argument<NonNullGraphType<UpdateUserArgumentsGraphType>>("args")
+            .ResolveAsync(UpdateUserAsync)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
     }
 
     private async Task<object?> ImportUserKeyAsync(IResolveFieldContext context)
@@ -70,5 +79,53 @@ public class UserMutations : ObjectGraphType
         await session.SaveChangesAsync();
 
         return null;
+    }
+
+    private async Task<object?> UpdateUserAsync(IResolveFieldContext<object?> context)
+    {
+        var args = context.GetValidatedArgument<UpdateUserArguments>("args");
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IDocumentStore>()
+            .OpenAsyncSession(new SessionOptions
+            {
+                TransactionMode = TransactionMode.ClusterWide
+            });
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        if (!string.IsNullOrEmpty(args.Email)
+            && !string.Equals(args.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            string emailReferenceKey = UserEmailReference.KeyFrom(user.Email);
+
+            session.Delete(emailReferenceKey);
+
+            // update
+
+            user.Email = args.Email.ToLowerInvariant();
+
+            await session.StoreAsync(new UserEmailReference(user));
+        }
+
+        if (!string.IsNullOrEmpty(args.Display))
+        {
+            user.Display = args.Display;
+        }
+
+        try
+        {
+            await session.SaveChangesAsync();
+        }
+        catch (ConcurrencyException)
+        {
+            throw new ExecutionError("E-mail conflict.")
+            {
+                Code = "EMAIL_CONFLICT"
+            };
+        }
+
+        return (CurrentUserInfo) user;
     }
 }

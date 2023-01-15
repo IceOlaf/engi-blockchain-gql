@@ -10,6 +10,8 @@ public class CurrentUserInfo
 
     public UserFreelancerSettings? FreelancerSettings { get; set; }
 
+    public UserBusinessSettings? BusinessSettings { get; set; }
+
     public UserEmailSettings EmailSettings { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
@@ -23,6 +25,7 @@ public class CurrentUserInfo
             Email = user.Email,
             Display = user.Display,
             FreelancerSettings = user.FreelancerSettings,
+            BusinessSettings = user.BusinessSettings,
             EmailSettings = user.EmailSettings,
             CreatedOn = user.CreatedOn,
             GithubEnrollments = user.GithubEnrollments.Values.ToArray()

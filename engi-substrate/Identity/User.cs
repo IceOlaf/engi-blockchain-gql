@@ -12,6 +12,8 @@ public class User
 
     public UserFreelancerSettings? FreelancerSettings { get; set; }
 
+    public UserBusinessSettings? BusinessSettings { get; set; }
+
     public UserEmailSettings EmailSettings { get; set; } = new();
 
     public byte[]? KeypairPkcs8 { get; set; }

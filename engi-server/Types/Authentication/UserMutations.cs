@@ -119,6 +119,11 @@ public class UserMutations : ObjectGraphType
             user.FreelancerSettings = args.FreelancerSettings;
         }
 
+        if (args.BusinessSettings != null)
+        {
+            user.BusinessSettings = args.BusinessSettings;
+        }
+
         if (args.EmailSettings != null)
         {
             user.EmailSettings = args.EmailSettings;

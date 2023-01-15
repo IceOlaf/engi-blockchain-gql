@@ -54,12 +54,19 @@ public class SubstrateClient
         {
             error.TryGetProperty("data", out var data);
 
-            string? code = null;
+            int? code = null;
             string? message = null;
 
             try
             {
-                code = error.GetProperty("code").GetString()!;
+                var prop = error.GetProperty("code");
+
+                code = prop.ValueKind switch
+                {
+                    JsonValueKind.Number => prop.GetInt32(),
+                    JsonValueKind.String => int.Parse(prop.GetString()!),
+                    _ => throw new NotImplementedException()
+                };
             }
             catch
             {
@@ -75,7 +82,7 @@ public class SubstrateClient
                 // ignored
             }
 
-            if (code == "-32000" && message != null)
+            if (code == -32000 && message != null)
             {
                 string? hash = null;
 
@@ -96,11 +103,11 @@ public class SubstrateClient
                         });
                 }
 
-                throw new BlockHeaderNotFoundException(hash ?? "unknown", code, message, data);
+                throw new BlockHeaderNotFoundException(hash ?? "unknown", code.Value, message, data);
             }
 
             throw new InvalidOperationException(
-                $"Substrate error code={code ?? "unknown"}; message={message ?? "unknown"}: {data}")
+                $"Substrate error code={code?.ToString() ?? "unknown"}; message={message ?? "unknown"}: {data}")
             {
                 Data =
                 {
@@ -224,7 +231,7 @@ public class SubstrateClient
 
         if (block == null)
         {
-            throw new BlockHeaderNotFoundException(hash, "unknown", $"Block with hash {hash} was not found.", null);
+            throw new BlockHeaderNotFoundException(hash, null, $"Block with hash {hash} was not found.", null);
         }
 
         return block;

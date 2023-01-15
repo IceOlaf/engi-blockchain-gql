@@ -4,10 +4,10 @@ namespace Engi.Substrate;
 
 public class SubstrateException : Exception
 {
-    public string Code { get; }
+    public int? Code { get; }
 
-    public SubstrateException(string code, string message, JsonElement? data)
-        : base($"Substrate error code={code}; {message}; data={data}")
+    public SubstrateException(int? code, string message, JsonElement? data)
+        : base($"Substrate error code={code?.ToString() ?? "unknown"}; {message}; data={data}")
     {
         Code = code;
     }

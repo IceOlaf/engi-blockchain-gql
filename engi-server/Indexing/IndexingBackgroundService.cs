@@ -138,13 +138,17 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
             var block = doc.Result;
             var previous = block.PreviousId != null ? previousBlocks[block.PreviousId] : null;
+            var metadata = metadataById[doc.Id];
 
             void ConfigureScope(Scope scope)
             {
+                metadata.TryGetValue("attempt", out object? attemptObject);
+
                 scope.SetExtras(new Dictionary<string, object?>
                 {
                     ["number"] = block.Number.ToString(),
-                    ["hash"] = block.Hash ?? string.Empty
+                    ["hash"] = block.Hash ?? string.Empty,
+                    ["attempt"] = (long?) attemptObject
                 });
             }
 
@@ -166,16 +170,12 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 Sentry.CaptureException(ex, ConfigureScope);
 
                 // then reschedule a try in 2 seconds
-
-                var metadata = metadataById[doc.Id];
-
+                
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
             }
             catch (Exception ex) when (ExceptionUtils.IsTransient(ex))
             {
                 // then reschedule a try
-
-                var metadata = metadataById[doc.Id];
 
                 metadata.TryGetValue("attempt", out object? attemptObject);
 

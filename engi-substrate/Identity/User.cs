@@ -1,3 +1,5 @@
+using Engi.Substrate.Jobs;
+
 namespace Engi.Substrate.Identity;
 
 public class User
@@ -9,6 +11,8 @@ public class User
     public string Address { get; set; } = null!;
 
     public string Display { get; set; } = null!;
+
+    public Language[] JobPreference { get; set; } = Array.Empty<Language>();
 
     public byte[]? KeypairPkcs8 { get; set; }
 

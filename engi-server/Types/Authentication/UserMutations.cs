@@ -114,6 +114,11 @@ public class UserMutations : ObjectGraphType
             user.Display = args.Display;
         }
 
+        if (args.JobPreference != null)
+        {
+            user.JobPreference = args.JobPreference;
+        }
+
         try
         {
             await session.SaveChangesAsync();

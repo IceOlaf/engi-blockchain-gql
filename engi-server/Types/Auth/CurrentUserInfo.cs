@@ -1,12 +1,15 @@
 using Engi.Substrate.Identity;
+using Engi.Substrate.Jobs;
 
 namespace Engi.Substrate.Server.Types;
 
 public class CurrentUserInfo
 {
+    public string Email { get; set; } = null!;
+
     public string Display { get; set; } = null!;
 
-    public string Email { get; set; } = null!;
+    public Language[] JobPreference { get; set; } = null!;
 
     public DateTime CreatedOn { get; set; }
 
@@ -16,8 +19,9 @@ public class CurrentUserInfo
     {
         return new CurrentUserInfo
         {
-            Display = user.Display,
             Email = user.Email,
+            Display = user.Display,
+            JobPreference = user.JobPreference,
             CreatedOn = user.CreatedOn,
             GithubEnrollments = user.GithubEnrollments.Values.ToArray()
         };

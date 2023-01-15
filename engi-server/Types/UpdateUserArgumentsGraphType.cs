@@ -11,5 +11,8 @@ public class UpdateUserArgumentsGraphType : InputObjectGraphType<UpdateUserArgum
 
         Field(x => x.Display, nullable: true)
             .Description("The user's display name.");
+
+        Field(x => x.JobPreference, nullable: true)
+            .Description("The user's preference for jobs in languages.");
     }
 }

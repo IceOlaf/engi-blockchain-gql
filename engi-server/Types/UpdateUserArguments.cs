@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Engi.Substrate.Identity;
 using Engi.Substrate.Jobs;
 
 namespace Engi.Substrate.Server.Types;
@@ -11,4 +12,6 @@ public class UpdateUserArguments
     public string? Display { get; set; }
 
     public Language[]? JobPreference { get; set; }
+
+    public UserEmailSettings? EmailSettings { get; set; }
 }

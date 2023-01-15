@@ -14,6 +14,8 @@ public class User
 
     public Language[] JobPreference { get; set; } = Array.Empty<Language>();
 
+    public UserEmailSettings EmailSettings { get; set; } = new();
+
     public byte[]? KeypairPkcs8 { get; set; }
 
     public List<string> SystemRoles { get; } = new();

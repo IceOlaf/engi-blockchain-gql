@@ -15,6 +15,9 @@ public class CurrentUserInfoGraphType : ObjectGraphType<CurrentUserInfo>
         Field(x => x.JobPreference)
             .Description("The user's preference for jobs in languages.");
 
+        Field(x => x.EmailSettings, type: typeof(UserEmailSettingsGraphType))
+            .Description("The user's e-mail settings.");
+
         Field(x => x.CreatedOn)
             .Description("The date and time the user registered.");
 

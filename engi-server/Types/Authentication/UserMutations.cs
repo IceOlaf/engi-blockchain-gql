@@ -119,6 +119,11 @@ public class UserMutations : ObjectGraphType
             user.JobPreference = args.JobPreference;
         }
 
+        if (args.EmailSettings != null)
+        {
+            user.EmailSettings = args.EmailSettings;
+        }
+
         try
         {
             await session.SaveChangesAsync();

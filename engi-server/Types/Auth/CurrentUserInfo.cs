@@ -11,6 +11,8 @@ public class CurrentUserInfo
 
     public Language[] JobPreference { get; set; } = null!;
 
+    public UserEmailSettings EmailSettings { get; set; } = null!;
+
     public DateTime CreatedOn { get; set; }
 
     public UserGithubEnrollment[] GithubEnrollments { get; set; } = null!;
@@ -22,6 +24,7 @@ public class CurrentUserInfo
             Email = user.Email,
             Display = user.Display,
             JobPreference = user.JobPreference,
+            EmailSettings = user.EmailSettings,
             CreatedOn = user.CreatedOn,
             GithubEnrollments = user.GithubEnrollments.Values.ToArray()
         };

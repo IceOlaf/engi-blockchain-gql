@@ -7,4 +7,9 @@ public class AwsOptions
     /// Only allowed in Development environment, for safety reasons.
     /// </summary>
     public string? ServiceUrl { get; set; }
+
+    /// <summary>
+    /// Bucket name for website storage.
+    /// </summary>
+    public string BucketName { get; set; } = null!;
 }

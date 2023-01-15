@@ -1,7 +1,12 @@
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Util;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Keys;
 using GraphQL;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Types;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;
@@ -32,6 +37,51 @@ public class UserMutations : ObjectGraphType
             .Argument<NonNullGraphType<UpdateUserArgumentsGraphType>>("args")
             .ResolveAsync(UpdateUserAsync)
             .AuthorizeWithPolicy(PolicyNames.Authenticated);
+
+        Field<StringGraphType>("getProfileImagePreSignedUrl")
+            .Description(@"
+                Generates an S3 pre-signed URL to upload an avatar image with the specified content type.
+            ")
+            .Argument<string>("contentType")
+            .ResolveAsync(GetProfileImagePreSignedUrlAsync)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
+    }
+
+    private async Task<object?> GetProfileImagePreSignedUrlAsync(IResolveFieldContext<object?> context)
+    {
+        string contentType = context.GetArgument<string>("contentType");
+
+        string ext = contentType switch
+        {
+            "image/png" => "png",
+            "image/jpg" => "jpg",
+            "image/jpeg" => "jpg",
+            _ => throw new ExecutionError("Invalid content type")
+            {
+                Code = "INVALID_CONTENT_TYPE"
+            }
+        };
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        var awsOptions = scope.ServiceProvider.GetRequiredService<IOptions<AwsOptions>>().Value;
+
+        var s3 = CreateS3Client(awsOptions);
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = awsOptions.BucketName,
+            Key = $"{GetProfileImagePrefix(user)}_{Guid.NewGuid()}.{ext}",
+            Verb = HttpVerb.PUT,
+            ContentType = contentType,
+            Expires = DateTime.UtcNow.AddMinutes(5)
+        };
+
+        return s3.GetPreSignedURL(request);
     }
 
     private async Task<object?> ImportUserKeyAsync(IResolveFieldContext context)
@@ -114,6 +164,33 @@ public class UserMutations : ObjectGraphType
             user.Display = args.Display;
         }
 
+        if (!string.IsNullOrEmpty(args.ProfileImageUrl))
+        {
+            var awsOptions = scope.ServiceProvider.GetRequiredService<IOptions<AwsOptions>>().Value;
+
+            if (!AmazonS3Uri.TryParseAmazonS3Uri(args.ProfileImageUrl, out var s3Uri)
+               || !string.Equals(s3Uri.Bucket, awsOptions.BucketName, StringComparison.OrdinalIgnoreCase)
+               || !s3Uri.Key.StartsWith(GetProfileImagePrefix(user), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new AccessDeniedError(nameof(args.ProfileImageUrl));
+            }
+
+            var s3 = CreateS3Client(awsOptions);
+
+            var attributes = await s3.GetObjectAttributesAsync(new()
+            {
+                BucketName = awsOptions.BucketName,
+                Key = s3Uri.Key
+            });
+
+            if (attributes.ObjectSize == 0)
+            {
+                throw new ExecutionError("File has size zero.");
+            }
+
+            user.ProfileImageUrl = args.ProfileImageUrl;
+        }
+
         if (args.FreelancerSettings != null)
         {
             user.FreelancerSettings = args.FreelancerSettings;
@@ -142,5 +219,22 @@ public class UserMutations : ObjectGraphType
         }
 
         return (CurrentUserInfo) user;
+    }
+
+    private static string GetProfileImagePrefix(User user)
+    {
+        return $"profile_images/{user.Address}";
+    }
+
+    private static AmazonS3Client CreateS3Client(AwsOptions awsOptions)
+    {
+        var config = new AmazonS3Config();
+
+        if (awsOptions.ServiceUrl != null)
+        {
+            config.ServiceURL = awsOptions.ServiceUrl;
+        }
+
+        return new AmazonS3Client(config);
     }
 }

@@ -12,6 +12,9 @@ public class CurrentUserInfoGraphType : ObjectGraphType<CurrentUserInfo>
         Field(x => x.Display)
             .Description("The user's display name.");
 
+        Field(x => x.ProfileImageUrl, nullable: true)
+            .Description("The user's profile image URL.");
+
         Field(x => x.FreelancerSettings, nullable: true, type: typeof(UserFreelancerSettingsGraphType))
             .Description("The user's freelancer settings (if any).");
 

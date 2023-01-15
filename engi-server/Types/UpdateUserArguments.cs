@@ -10,6 +10,8 @@ public class UpdateUserArguments
 
     public string? Display { get; set; }
 
+    public string? ProfileImageUrl { get; set; }
+
     public UserFreelancerSettings? FreelancerSettings { get; set; }
 
     public UserBusinessSettings? BusinessSettings { get; set; }

@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="AsyncEnumerator" Version="4.*" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.101.54" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.100.3" />
     <PackageReference Include="AWSSDK.SQS" Version="3.7.100.3" />
     <PackageReference Include="BouncyCastle.NetCore" Version="1.9.*" />

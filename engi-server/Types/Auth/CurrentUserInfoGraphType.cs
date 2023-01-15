@@ -12,8 +12,8 @@ public class CurrentUserInfoGraphType : ObjectGraphType<CurrentUserInfo>
         Field(x => x.Display)
             .Description("The user's display name.");
 
-        Field(x => x.JobPreference)
-            .Description("The user's preference for jobs in languages.");
+        Field(x => x.FreelancerSettings, nullable: true, type: typeof(UserFreelancerSettingsGraphType))
+            .Description("The user's freelancer settings (if any).");
 
         Field(x => x.EmailSettings, type: typeof(UserEmailSettingsGraphType))
             .Description("The user's e-mail settings.");

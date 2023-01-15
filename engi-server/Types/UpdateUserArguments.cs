@@ -11,7 +11,7 @@ public class UpdateUserArguments
 
     public string? Display { get; set; }
 
-    public Language[]? JobPreference { get; set; }
+    public UserFreelancerSettings? FreelancerSettings { get; set; }
 
     public UserEmailSettings? EmailSettings { get; set; }
 }

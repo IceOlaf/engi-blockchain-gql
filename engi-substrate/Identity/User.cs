@@ -1,5 +1,3 @@
-using Engi.Substrate.Jobs;
-
 namespace Engi.Substrate.Identity;
 
 public class User
@@ -12,7 +10,7 @@ public class User
 
     public string Display { get; set; } = null!;
 
-    public Language[] JobPreference { get; set; } = Array.Empty<Language>();
+    public UserFreelancerSettings? FreelancerSettings { get; set; }
 
     public UserEmailSettings EmailSettings { get; set; } = new();
 

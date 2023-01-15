@@ -10,10 +10,6 @@ public class _002_AddUserInfo : Migration
         PatchCollection(@"
 from Users
 update {
-    if(!this.JobPreference) {
-        this.JobPreference = [""CSharp"",""Python"",""JavaScript"",""Rust""]
-    }
-
     if(!this.EmailSettings) {
         this.EmailSettings = {
             WeeklyNewsletter: true,

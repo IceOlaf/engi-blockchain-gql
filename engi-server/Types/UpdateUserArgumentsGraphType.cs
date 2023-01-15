@@ -12,8 +12,8 @@ public class UpdateUserArgumentsGraphType : InputObjectGraphType<UpdateUserArgum
         Field(x => x.Display, nullable: true)
             .Description("The user's display name.");
 
-        Field(x => x.JobPreference, nullable: true)
-            .Description("The user's preference for jobs in languages.");
+        Field(x => x.FreelancerSettings, nullable: true, type: typeof(UserFreelancerSettingsInputGraphType))
+            .Description("The user's freelancer settings (if any).");
 
         Field(x => x.EmailSettings, nullable: true, type: typeof(UserEmailSettingsInputGraphType))
             .Description("The user's e-mail settings.");

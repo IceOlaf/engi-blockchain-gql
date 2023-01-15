@@ -114,9 +114,9 @@ public class UserMutations : ObjectGraphType
             user.Display = args.Display;
         }
 
-        if (args.JobPreference != null)
+        if (args.FreelancerSettings != null)
         {
-            user.JobPreference = args.JobPreference;
+            user.FreelancerSettings = args.FreelancerSettings;
         }
 
         if (args.EmailSettings != null)

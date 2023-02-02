@@ -4,5 +4,5 @@ public class AccountExistence
 {
     public Address Address { get; set; } = null!;
 
-    public bool Exists { get; set; }
+    public AccountExistenceResult Exists { get; set; }
 }

@@ -12,6 +12,6 @@ public class AccountExistenceGraphType : ObjectGraphType<AccountExistence>
             .Description("The address.");
 
         Field(x => x.Exists)
-            .Description("A boolean denoting whether an account with that address exists.");
+            .Description("An enumeration denoting whether an account with that address exists.");
     }
 }

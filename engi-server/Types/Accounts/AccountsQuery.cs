@@ -34,19 +34,40 @@ public class AccountsQuery : ObjectGraphType
         var referenceIdsByAddress = addresses
             .ToDictionary(address => address, UserAddressReference.KeyFrom);
 
-        var references = await session.LoadAsync<UserAddressReference>(referenceIdsByAddress.Values);
+        var references = await session
+            .LoadAsync<UserAddressReference>(referenceIdsByAddress.Values,
+                include => include.IncludeDocuments(x => x.UserId));
+
+        var usersById = await session
+            .LoadAsync<User>(references.Values.Select(x => x.UserId));
 
         return referenceIdsByAddress
-            .Select((addressKeyValuePair) =>
+            .Select(addressKeyValuePair =>
             {
                 var (address, id) = addressKeyValuePair;
-                var result = references[id];
+
+                User? user = null;
+
+                if (references.TryGetValue(id, out var reference) && reference != null)
+                {
+                    user = usersById[reference.UserId];
+                }
 
                 return new AccountExistence
                 {
                     Address = address,
-                    Exists = references.TryGetValue(id, out var reference) && reference != null
+                    Exists = GetResult(user)
                 };
             });
+    }
+
+    private static AccountExistenceResult GetResult(User? user)
+    {
+        if (user == null)
+        {
+            return AccountExistenceResult.No;
+        }
+
+        return user.EmailConfirmedOn.HasValue ? AccountExistenceResult.Yes : AccountExistenceResult.Unconfirmed;
     }
 }

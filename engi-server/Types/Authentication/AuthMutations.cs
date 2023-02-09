@@ -60,11 +60,11 @@ public class AuthMutations : ObjectGraphType
 
         Field<IdGraphType>("resendEmailConfirmation")
             .Description(@"
-                Re-send the confirmation e-mail for a user. If the user's email is not found, code NOT_FOUND
-                is returned. If the user is found, but they have already confirmed their account, code CONFLICT
-                is returned.
+                Re-send the confirmation e-mail for a user, using their address. If the user's address is not found,
+                code NOT_FOUND is returned. If the user is found, but they have already confirmed their account,
+                code CONFLICT is returned.
             ")
-            .Argument<NonNullGraphType<StringGraphType>>("email")
+            .Argument<NonNullGraphType<StringGraphType>>("address")
             .ResolveAsync(ResendConfirmationEmailAsync);
     }
 
@@ -362,7 +362,7 @@ public class AuthMutations : ObjectGraphType
 
     private async Task<object?> ResendConfirmationEmailAsync(IResolveFieldContext<object?> context)
     {
-        string email = context.GetArgument<string>("email");
+        string address = context.GetArgument<string>("address");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
@@ -374,12 +374,12 @@ public class AuthMutations : ObjectGraphType
             .GetRequiredService<IAsyncDocumentSession>();
 
         var userEmailRef = await session
-            .LoadAsync<UserEmailReference>(UserEmailReference.KeyFrom(email),
+            .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(address),
                 include => include.IncludeDocuments(x => x.UserId));
 
         if (userEmailRef == null)
         {
-            throw new ExecutionError("E-mail not found")
+            throw new ExecutionError("Address not found")
             {
                 Code = "NOT_FOUND"
             };

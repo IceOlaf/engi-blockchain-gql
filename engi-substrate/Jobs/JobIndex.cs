@@ -18,8 +18,6 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         public string? Repository_Organization { get; set; }
 
-        public string[] SolvedBy { get; set; } = null!;
-
         public string[] SolutionIds { get; set; } = null!;
     }
 

@@ -35,7 +35,7 @@ public class RootQuery : ObjectGraphType
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
 
-        Field<JobGraphType>("job")
+        Field<JobDetailsGraphType>("job")
             .Argument<NonNullGraphType<UInt64GraphType>>("id")
             .ResolveAsync(GetJobAsync);
 
@@ -125,14 +125,41 @@ public class RootQuery : ObjectGraphType
 
         var reference = await session
             .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
-                include => include.IncludeDocuments<ReduceOutputReference>(x => x.ReduceOutputs));
+                include => include.IncludeDocuments(x => x.ReduceOutputs));
 
         if (reference == null)
         {
             return null;
         }
 
-        return session.LoadAsync<Job>(reference.ReduceOutputs.First()).Result;
+        var job = await session
+            .LoadAsync<Job>(reference.ReduceOutputs.First(),
+                include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
+
+        var creatorAggregatesReference = await session
+            .LoadAsync<ReduceOutputReference>(
+                JobUserAggregatesIndex.Result.ReferenceKeyFrom(job.Creator),
+                include => include.IncludeDocuments(x => x.ReduceOutputs));
+
+        JobUserAggregatesIndex.Result? creatorAggregates = null;
+
+        if (creatorAggregatesReference?.ReduceOutputs.Any() == true)
+        {
+            creatorAggregates = await session
+                .LoadAsync<JobUserAggregatesIndex.Result>(
+                    creatorAggregatesReference.ReduceOutputs.FirstOrDefault());
+        }
+
+        return new JobDetails
+        {
+            Job = job,
+            CreatorUserInfo = new()
+            {
+                Address = job.Creator,
+                CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
+                SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
+            }
+        };
     }
 
     private async Task<object?> GetJobsAsync(IResolveFieldContext context)

@@ -22,6 +22,8 @@ public class Job
 
     public int AttemptCount { get; init; }
 
+    public string[] SolvedBy { get; set; } = null!;
+
     public int SolutionUserCount { get; set; }
 
     public Solution? LeadingSolution { get; set; }

@@ -108,7 +108,15 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
         var octokit = await octokitFactory.CreateForAsync(enrollment!.InstallationId);
 
+        var githubRepo = await octokit.Repository.Get(repo!.Id);
+
         var content = await octokit.Repository.Content.GetReadme(repo!.Id);
+
+        readme.Owner = new GithubRepositoryOwner
+        {
+            Login = githubRepo.Owner.Login,
+            AvatarUrl = githubRepo.Owner.AvatarUrl
+        };
 
         readme.RetrievedOn = DateTime.UtcNow;
         readme.Content = content.Content;

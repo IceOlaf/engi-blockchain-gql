@@ -9,7 +9,6 @@ public class JobGraphType : ObjectGraphType<Job>
     {
         Description = "An ENGI job.";
 
-        // TODO: https://github.com/graphql-dotnet/graphql-dotnet/issues/3303
         Field("id", x => x.JobId, type: typeof(IdGraphType))
             .Description("The job id on the chain.");
         Field(x => x.Creator)

@@ -27,6 +27,9 @@ public class RepositoryGraphType : ObjectGraphType<Repository>
         Field<StringGraphType>("readme")
             .Description("The repository's README or null if it has not been retrieved yet, or is not available.")
             .ResolveAsync(LoadReadmeAsync);
+        Field<StringGraphType>("avatarUrl")
+            .Description("The repository owner's avatar URL, if available.")
+            .ResolveAsync(LoadAvatarUrlAsync);
     }
 
     private async Task<object?> LoadReadmeAsync(IResolveFieldContext<Repository> context)
@@ -35,13 +38,29 @@ public class RepositoryGraphType : ObjectGraphType<Repository>
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        using (session.Advanced.DocumentStore.AggressivelyCacheFor(TimeSpan.FromMinutes(15)))
+        using (await session.Advanced.DocumentStore.AggressivelyCacheForAsync(TimeSpan.FromMinutes(15)))
         {
             string readmeId = GithubRepositoryReadme.KeyFrom(context.Source.FullName);
 
             var readme = await session.LoadAsync<GithubRepositoryReadme>(readmeId);
 
             return readme?.Content;
+        }
+    }
+
+    private async Task<object?> LoadAvatarUrlAsync(IResolveFieldContext<Repository> context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        using (await session.Advanced.DocumentStore.AggressivelyCacheForAsync(TimeSpan.FromMinutes(15)))
+        {
+            string readmeId = GithubRepositoryReadme.KeyFrom(context.Source.FullName);
+
+            var readme = await session.LoadAsync<GithubRepositoryReadme>(readmeId);
+
+            return readme?.Owner?.AvatarUrl;
         }
     }
 }

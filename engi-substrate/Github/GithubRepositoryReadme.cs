@@ -6,6 +6,8 @@ public class GithubRepositoryReadme
 
     public DateTime RetrievedOn { get; set; }
 
+    public GithubRepositoryOwner? Owner { get; set; }
+
     public string Content { get; set; } = null!;
 
     public static string KeyFrom(string repositoryFullName)

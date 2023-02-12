@@ -14,6 +14,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         public DateTime? UpdatedOn_DateTime { get; set; }
 
+        public string? Repository_FullName { get; set; }
+
         public string? Repository_Organization { get; set; }
 
         public string[] SolvedBy { get; set; } = null!;
@@ -51,6 +53,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
                 UpdatedOn_DateTime = snapshot.SnapshotOn.DateTime,
+                Repository_FullName = snapshot.Repository.FullName,
                 Repository_Organization = snapshot.Repository.Organization,
                 SolvedBy = new string[0],
                 SolutionIds = new string[0],
@@ -76,6 +79,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Query = null!,
                  CreatedOn_DateTime = null,
                  UpdatedOn_DateTime = attempt.SnapshotOn.DateTime,
+                 Repository_FullName = null,
                  Repository_Organization = null,
                  SolvedBy = new string[0],
                  SolutionIds = new string[0],
@@ -101,6 +105,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Query = null!,
                   CreatedOn_DateTime = null,
                   UpdatedOn_DateTime = solution.SnapshotOn.DateTime,
+                  Repository_FullName = null,
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
                   SolutionIds = new [] { solution.Id },
@@ -132,6 +137,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Query = g.SelectMany(x => x.Query).Distinct(),
                 CreatedOn_DateTime = first.CreatedOn.DateTime,
                 UpdatedOn_DateTime = latest.UpdatedOn.DateTime,
+                Repository_FullName = first.Repository_FullName,
                 Repository_Organization = first.Repository_Organization,
                 SolvedBy = solvedBy,
                 SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
@@ -145,6 +151,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         Store(x => x.CreatedOn_DateTime, FieldStorage.No);
         Store(x => x.UpdatedOn_DateTime, FieldStorage.No);
+        Store(x => x.Repository_FullName, FieldStorage.No);
         Store(x => x.Repository_Organization, FieldStorage.No);
 
         OutputReduceToCollection = "Jobs";
@@ -190,5 +197,5 @@ namespace Engi.Substrate.Jobs
 
 public static class JobIndexUtils
 {
-    public static JobStatus CalculateStatus(Solution solution, int attemptCount) => throw new NotImplementedException();
+    public static JobStatus CalculateStatus(Solution? solution, int attemptCount) => throw new NotImplementedException();
 }

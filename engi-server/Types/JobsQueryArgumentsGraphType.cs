@@ -30,6 +30,9 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
         Field(x => x.MaxFunding, nullable: true, type: typeof(UInt128GraphType))
             .Description("The maximum funding to search for (inclusive).");
 
+        Field(x => x.RepositoryFullName, nullable: true)
+            .Description("The repository fullname to search for. e.g. for https://github.com/engi-network/blockchain, 'engi-network/blockchain'.");
+
         Field(x => x.RepositoryOrganization, nullable: true)
             .Description("The repository organization to search for. e.g. for https://github.com/engi-network/blockchain, 'engi-network'.");
     }

@@ -65,6 +65,12 @@ public static class JobIndexQueryExtensions
                 .ContainsAny(x => x.SolvedBy, args.SolvedBy);
         }
 
+        if (args.RepositoryFullName != null)
+        {
+            query = query
+                .WhereIn(x => x.Repository_FullName, args.RepositoryFullName);
+        }
+
         if (args.RepositoryOrganization != null)
         {
             query = query

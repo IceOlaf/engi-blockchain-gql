@@ -1,3 +1,4 @@
+using Engi.Substrate.Github;
 using Raven.Client.Documents.Indexes;
 using static Engi.Substrate.Jobs.JobIndexUtils;
 
@@ -23,6 +24,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
     public JobIndex()
     {
         AddMap<JobSnapshot>(snapshots => from snapshot in snapshots
+            let repositoryFullName = snapshot.Repository.Url.Replace("https://github.com/", "")
+            let readme = LoadDocument<GithubRepositoryReadme>($"readme/github/{repositoryFullName}")
             select new Result
             {
                 JobId = snapshot.JobId,
@@ -42,7 +45,9 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 {
                     snapshot.JobId.ToString().TrimStart('0'),
                     snapshot.Name,
-                    snapshot.Repository.Url.Replace("https://github.com/", "")
+                    repositoryFullName,
+                    snapshot.Language.ToString(),
+                    readme.Content
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
                 UpdatedOn_DateTime = snapshot.SnapshotOn.DateTime,
@@ -137,7 +142,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
         Suggestion(x => x.Query);
 
         StoreAllFields(FieldStorage.Yes);
-        
+
         Store(x => x.CreatedOn_DateTime, FieldStorage.No);
         Store(x => x.UpdatedOn_DateTime, FieldStorage.No);
         Store(x => x.Repository_Organization, FieldStorage.No);

@@ -1,4 +1,5 @@
 using Raven.Client.Documents.Indexes;
+using static Engi.Substrate.Jobs.JobIndexUtils;
 
 namespace Engi.Substrate.Jobs;
 
@@ -48,6 +49,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Repository_Organization = snapshot.Repository.Organization,
                 SolvedBy = new string[0],
                 SolutionIds = new string[0],
+                Status = JobStatus.None
             });
 
         AddMap<JobAttemptedSnapshot>(attempts => from attempt in attempts
@@ -71,7 +73,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  UpdatedOn_DateTime = attempt.SnapshotOn.DateTime,
                  Repository_Organization = null,
                  SolvedBy = new string[0],
-                 SolutionIds = new string[0]
+                 SolutionIds = new string[0],
+                 Status = JobStatus.None
              });
 
         AddMap<SolutionSnapshot>(solutions => from solution in solutions
@@ -95,7 +98,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   UpdatedOn_DateTime = solution.SnapshotOn.DateTime,
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
-                  SolutionIds = new [] { solution.Id }
+                  SolutionIds = new [] { solution.Id },
+                  Status = JobStatus.None
               });
 
         Reduce = results => from result in results
@@ -104,6 +108,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
             let latest = g.OrderByDescending(x => x.UpdatedOn.DateTime).First()
             let first = g.First(x => x.CreatedOn != null)
             let solvedBy = g.SelectMany(x => x.SolvedBy).Distinct().ToArray()
+            let attemptCount = g.Sum(x => x.AttemptCount)
             select new Result
             {
                 JobId = g.Key,
@@ -115,7 +120,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Tests = first.Tests,
                 Requirements = first.Requirements,
                 Solution = latest.Solution,
-                AttemptCount = g.Sum(x => x.AttemptCount),
+                AttemptCount = attemptCount,
                 SolutionUserCount = solvedBy.Length,
                 CreatedOn = first.CreatedOn,
                 UpdatedOn = latest.UpdatedOn,
@@ -124,7 +129,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 UpdatedOn_DateTime = latest.UpdatedOn.DateTime,
                 Repository_Organization = first.Repository_Organization,
                 SolvedBy = solvedBy,
-                SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray()
+                SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
+                Status = CalculateStatus(latest.Solution, attemptCount)
             };
 
         Index(x => x.Query, FieldIndexing.Search);
@@ -138,10 +144,46 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         OutputReduceToCollection = "Jobs";
         PatternForOutputReduceToCollectionReferences = result => $"JobReferences/{result.JobId}";
+
+        AdditionalSources = new Dictionary<string, string>
+        {
+            {
+                "JobIndexUtils",
+                @"
+using Engi.Substrate.Jobs;
+
+namespace Engi.Substrate.Jobs
+{
+    public static class JobIndexUtils
+    {
+        public static string CalculateStatus(Solution solution, int attemptCount)
+        {
+            if (solution != null)
+            {
+                return ""Complete"";
+            }
+
+            if (attemptCount > 0)
+            {
+                return ""Active"";
+            }
+
+            return ""Open"";
+        }
+    }
+}
+"
+            }
+        };
     }
 
     public static string ReferenceKeyFrom(ulong jobId)
     {
         return $"JobReferences/{jobId.ToString(StorageFormats.UInt64)}";
     }
+}
+
+public static class JobIndexUtils
+{
+    public static JobStatus CalculateStatus(Solution solution, int attemptCount) => throw new NotImplementedException();
 }

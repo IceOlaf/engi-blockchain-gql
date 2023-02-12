@@ -34,23 +34,7 @@ public class Job
 
     public BlockReference UpdatedOn { get; set; } = null!;
 
-    public JobStatus Status
-    {
-        get
-        {
-            if (Solution != null)
-            {
-                return JobStatus.Complete;
-            }
-
-            if (AttemptCount > 0)
-            {
-                return JobStatus.Active;
-            }
-
-            return JobStatus.Open;
-        }
-    }
+    public JobStatus Status { get; set; }
 
     private int CountPassedTests(Solution solution)
     {

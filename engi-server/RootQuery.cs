@@ -1,7 +1,6 @@
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
-using Engi.Substrate.Server.Types.Engine;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
@@ -43,6 +42,9 @@ public class RootQuery : ObjectGraphType
         Field<JobsQueryResultGraphType>("jobs")
             .Argument<JobsQueryArgumentsGraphType>("query")
             .ResolveAsync(GetJobsAsync);
+
+        Field<JobAggregatesGraphType>("jobAggregates")
+            .ResolveAsync(GetJobAggregatesAsync);
 
         Field<TransactionsPagedResult>("transactions")
             .Argument<TransactionsPagedQueryArgumentsGraphType>("query")
@@ -182,6 +184,20 @@ public class RootQuery : ObjectGraphType
             Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.LongTotalResults),
             Suggestions = suggestionsLazy?.Value.Result.Values.First().Suggestions.ToArray()
         };
+    }
+
+    private async Task<object?> GetJobAggregatesAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var aggregates = await session
+            .Query<JobAggregateIndex.Result, JobAggregateIndex>()
+            .ProjectInto<JobAggregateIndex.Result>()
+            .FirstOrDefaultAsync();
+
+        return aggregates ?? new JobAggregateIndex.Result();
     }
 
     private async Task<object?> GetTransactionsAsync(IResolveFieldContext context)

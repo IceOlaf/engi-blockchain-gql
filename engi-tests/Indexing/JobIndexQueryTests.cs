@@ -53,7 +53,7 @@ public class JobIndexQueryTests : EngiRavenTestDriver
         {
             var resultAddress1 = await session.Advanced
                 .AsyncDocumentQuery<JobIndex.Result, JobIndex>()
-                .FilterBy(new JobsQueryArguments
+                .Search(new JobsQueryArguments
                 {
                     SolvedBy = new[] { Address1 }
                 })
@@ -61,7 +61,7 @@ public class JobIndexQueryTests : EngiRavenTestDriver
 
             var resultAddress2 = await session.Advanced
                 .AsyncDocumentQuery<JobIndex.Result, JobIndex>()
-                .FilterBy(new JobsQueryArguments
+                .Search(new JobsQueryArguments
                 {
                     SolvedBy = new[] { Address2 }
                 })

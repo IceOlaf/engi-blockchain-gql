@@ -7,4 +7,6 @@ public class JobsQueryResult
     public PagedResult<Job> Result { get; set; } = null!;
 
     public string[]? Suggestions { get; set; }
+
+    public FacetResults Facets { get; set; } = null!;
 }

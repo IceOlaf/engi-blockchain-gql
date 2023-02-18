@@ -148,7 +148,9 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Status = CalculateStatus(latest.Solution, attemptCount)
             };
 
+        Index(x => x.Language, FieldIndexing.Exact);
         Index(x => x.Query, FieldIndexing.Search);
+
         Suggestion(x => x.Query);
 
         StoreAllFields(FieldStorage.Yes);

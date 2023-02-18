@@ -5,7 +5,7 @@ namespace Engi.Substrate.Jobs;
 
 public static class JobIndexQueryExtensions
 {
-    public static IAsyncDocumentQuery<JobIndex.Result> FilterBy(
+    public static IAsyncDocumentQuery<JobIndex.Result> Search(
         this IAsyncDocumentQuery<JobIndex.Result> query,
         JobsQueryArguments? args,
         out QueryStatistics stats)
@@ -114,10 +114,10 @@ public static class JobIndexQueryExtensions
             .Take(args.Limit);
     }
 
-    public static IAsyncDocumentQuery<JobIndex.Result> FilterBy(
+    public static IAsyncDocumentQuery<JobIndex.Result> Search(
         this IAsyncDocumentQuery<JobIndex.Result> query,
         JobsQueryArguments? args)
     {
-        return FilterBy(query, args, out var _);
+        return Search(query, args, out _);
     }
 }

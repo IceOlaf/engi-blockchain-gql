@@ -14,5 +14,6 @@ public class JobsQueryResultGraphType : ObjectGraphType<JobsQueryResult>
         Field<JobsQueryStaticDataGraphType>("static")
             .Description("Get static data related to job queries.")
             .Resolve(_ => new JobsQueryStaticData());
+        Field(x => x.Facets, type: typeof(FacetResultsGraphType));
     }
 }

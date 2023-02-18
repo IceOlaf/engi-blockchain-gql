@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types;
@@ -7,6 +8,7 @@ using GraphQL;
 using GraphQL.Types;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
+using Raven.Client.Documents.Queries.Facets;
 using Raven.Client.Documents.Queries.Suggestions;
 using Raven.Client.Documents.Session;
 using Sentry;
@@ -239,7 +241,7 @@ public class RootQuery : ObjectGraphType
 
         var query = session
             .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>()
-            .FilterBy(args, out var stats);
+            .Search(args, out var stats);
 
         Lazy<Task<Dictionary<string, SuggestionResult>>>? suggestionsLazy = null;
         
@@ -260,6 +262,33 @@ public class RootQuery : ObjectGraphType
             .Include(x => x.SolutionIds)
             .LazilyAsync();
 
+        var now = DateTime.UtcNow;
+
+        var createdOnRanges = new[]
+        {
+            new { Period = "LastDay", DateTime = now.AddDays(-1).Date },
+            new { Period = "Last15", DateTime = now.AddDays(-15).Date },
+            new { Period = "Last30", DateTime = now.AddDays(-30).Date },
+            new { Period = "LastQuarter", DateTime = now.AddDays(-120).Date },
+            new { Period = "LastYear", DateTime = now.AddYears(-1).Date }
+        };
+
+        var facetsLazy = query
+            .AggregateBy(builder => builder.ByField(x => x.Language))
+            .AndAggregateBy(builder => builder.ByField(x => x.Repository_Organization))
+            .AndAggregateBy(new RangeFacet<JobIndex.Result>
+            {
+                Ranges = createdOnRanges
+                    .Select(range =>
+                    {
+                        var dt = range.DateTime;
+                        Expression<Func<JobIndex.Result, bool>> exp = x => x.CreatedOn_DateTime >= dt;
+                        return exp;
+                    })
+                    .ToList()
+            })
+            .ExecuteLazyAsync();
+
         await session.Advanced.Eagerly
             .ExecuteAllPendingLazyOperationsAsync();
 
@@ -276,7 +305,25 @@ public class RootQuery : ObjectGraphType
         return new JobsQueryResult
         {
             Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.LongTotalResults),
-            Suggestions = suggestionsLazy?.Value.Result.Values.First().Suggestions.ToArray()
+            Suggestions = suggestionsLazy?.Value.Result.Values.First().Suggestions.ToArray(),
+            Facets = new()
+            {
+                CreatedOnPeriod = new FacetResult
+                {
+                    Name = nameof(Job.CreatedOn),
+                    Values = createdOnRanges
+                        .Select((range, index) => new FacetValueExtended
+                        {
+                            Range = range.Period,
+                            Value = range.DateTime.ToString("o"),
+                            Count = facetsLazy.Value.Result[nameof(JobIndex.Result.CreatedOn_DateTime)].Values[index].Count
+                        })
+                        .Cast<FacetValue>()
+                        .ToList()
+                },
+                Language = facetsLazy.Value.Result[nameof(Job.Language)],
+                Organization = facetsLazy.Value.Result[nameof(JobIndex.Result.Repository_Organization)]
+            }
         };
     }
 

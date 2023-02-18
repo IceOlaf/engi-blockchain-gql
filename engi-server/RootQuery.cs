@@ -11,6 +11,8 @@ using Raven.Client.Documents.Queries.Suggestions;
 using Raven.Client.Documents.Session;
 using Sentry;
 
+using User = Engi.Substrate.Identity.User;
+
 namespace Engi.Substrate.Server;
 
 public class RootQuery : ObjectGraphType
@@ -197,12 +199,19 @@ public class RootQuery : ObjectGraphType
                 include => include.IncludeDocuments(x => x.ReduceOutputs));
 
         JobUserAggregatesIndex.Result? creatorAggregates = null;
+        User? creator = null;
 
         if (creatorAggregatesReference?.ReduceOutputs.Any() == true)
         {
             creatorAggregates = await session
                 .LoadAsync<JobUserAggregatesIndex.Result>(
-                    creatorAggregatesReference.ReduceOutputs.FirstOrDefault());
+                    creatorAggregatesReference.ReduceOutputs.FirstOrDefault(),
+                    include => include.IncludeDocuments(x => x.UserId));
+
+            if (creatorAggregates?.UserId != null)
+            {
+                creator = await session.LoadAsync<User>(creatorAggregates.UserId);
+            }
         }
 
         return new JobDetails
@@ -211,6 +220,9 @@ public class RootQuery : ObjectGraphType
             CreatorUserInfo = new()
             {
                 Address = job.Creator,
+                Display = creator?.Display,
+                ProfileImageUrl = creator?.ProfileImageUrl,
+                CreatedOn = creator?.CreatedOn,
                 CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
                 SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
             }

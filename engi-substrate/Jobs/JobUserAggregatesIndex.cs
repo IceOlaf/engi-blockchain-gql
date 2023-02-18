@@ -1,3 +1,4 @@
+using Engi.Substrate.Identity;
 using Raven.Client.Documents.Indexes;
 
 namespace Engi.Substrate.Jobs;
@@ -7,6 +8,8 @@ public class JobUserAggregatesIndex : AbstractIndexCreationTask<Job, JobUserAggr
     public class Result
     {
         public string Address { get; set; } = null!;
+
+        public string UserId { get; set; } = null!;
 
         public int CreatedCount { get; set; }
 
@@ -23,12 +26,14 @@ public class JobUserAggregatesIndex : AbstractIndexCreationTask<Job, JobUserAggr
     public JobUserAggregatesIndex()
     {
         Map = jobs => jobs
-            .SelectMany(job => new[] { job.Creator }.Concat(job.SolvedBy).Distinct().Select(address => new Result
-            {
-                Address = address,
-                CreatedCount = job.Creator == address ? 1 : 0,
-                SolvedCount = job.SolvedBy.Contains(address) ? 1 : 0
-            }));
+            .SelectMany(job => new[] { job.Creator }.Concat(job.SolvedBy).Distinct()
+                .Select(address => new Result
+                {
+                    Address = address,
+                    UserId = LoadDocument<UserAddressReference>($"UserAddressReferences/{address}").UserId,
+                    CreatedCount = job.Creator == address ? 1 : 0,
+                    SolvedCount = job.SolvedBy.Contains(address) ? 1 : 0
+                }));
 
         Reduce = results => from result in results
             group result by result.Address
@@ -36,6 +41,7 @@ public class JobUserAggregatesIndex : AbstractIndexCreationTask<Job, JobUserAggr
             select new Result
             {
                 Address = g.Key,
+                UserId = g.First().UserId,
                 CreatedCount = g.Sum(x => x.CreatedCount),
                 SolvedCount = g.Sum(x => x.SolvedCount)
             };

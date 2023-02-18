@@ -33,6 +33,9 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
         Field(x => x.SolvedBy, nullable: true, type: typeof(ListGraphType<StringGraphType>))
             .Description("Filter by one or more addresses who posted solutions to this job.");
 
+        Field(x => x.CreatedOrSolvedBy, nullable: true)
+            .Description("Filter jobs by an address which can appear as creator or solver.");
+
         Field(x => x.RepositoryFullName, nullable: true)
             .Description("The repository fullname to search for. e.g. for https://github.com/engi-network/blockchain, 'engi-network/blockchain'.");
 

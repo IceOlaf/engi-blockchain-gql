@@ -65,6 +65,16 @@ public static class JobIndexQueryExtensions
                 .ContainsAny(x => x.SolvedBy, args.SolvedBy);
         }
 
+        if (args.CreatedOrSolvedBy != null)
+        {
+            query = query
+                .OpenSubclause()
+                .WhereEquals(x => x.Creator, args.CreatedOrSolvedBy)
+                .OrElse()
+                .ContainsAny(x => x.SolvedBy, new[] { args.CreatedOrSolvedBy })
+                .CloseSubclause();
+        }
+
         if (args.RepositoryFullName != null)
         {
             query = query

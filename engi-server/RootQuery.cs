@@ -26,6 +26,11 @@ public class RootQuery : ObjectGraphType
         Field<AccountsQuery>("accounts")
             .Resolve(_ => new { });
 
+        Field<ActivityGraphType>("activity")
+            .Argument<ActivityArgumentsGraphType>("args")
+            .ResolveAsync(GetActivityAsync)
+            .Description("Get the job activity for the last N days.");
+
         Field<AuthQuery>("auth")
             .Resolve(_ => new { });
 
@@ -69,6 +74,56 @@ public class RootQuery : ObjectGraphType
         {
             return null;
         }
+    }
+
+    private async Task<object?> GetActivityAsync(IResolveFieldContext context)
+    {
+        var args = context.GetOptionalValidatedArgument<ActivityArguments>("args") ?? new();
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var queries = new List<(string Day, Lazy<Task<IEnumerable<Job>>> Completed, Lazy<Task<IEnumerable<Job>>> NotCompleted)>();
+
+        foreach(var day in Enumerable.Range(0, args.DayCount)
+            .Select(offset => DateTime.UtcNow.AddDays(-offset).ToString("yyyy-MM-dd")))
+        {
+            var @base = session
+                .Query<JobIndex.Result, JobIndex>()
+                .Where(x => x.UpdatedOn_Date == day)
+                .OrderByDescending(x => x.UpdatedOn_DateTime);
+
+            var completed = @base
+                .Where(x => x.Status == JobStatus.Complete)
+                .Take(args.MaxCompletedCount)
+                .ProjectInto<Job>()
+                .LazilyAsync();
+
+            var notCompleted = @base
+                .Where(x => x.Status.In(JobStatus.Open, JobStatus.Active))
+                .Take(args.MaxNotCompletedCount)
+                .ProjectInto<Job>()
+                .LazilyAsync();
+
+            queries.Add((day, completed, notCompleted));
+        }
+
+        await session.Advanced.Eagerly
+            .ExecuteAllPendingLazyOperationsAsync();
+
+        var items = queries.Select(x => new ActivityDaily
+        {
+            Date = DateTime.ParseExact(x.Day, "yyyy-MM-dd", null),
+            Completed = x.Completed.Value.Result,
+            NotCompleted = x.NotCompleted.Value.Result
+        });
+
+        return new Activity
+        {
+            Items = items
+                .OrderBy(x => x.Date)
+        };
     }
 
     private async Task<object?> GetHealthAsync(IResolveFieldContext context)

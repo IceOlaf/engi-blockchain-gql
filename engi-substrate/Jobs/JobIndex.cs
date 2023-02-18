@@ -14,6 +14,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         public DateTime? UpdatedOn_DateTime { get; set; }
 
+        public string? UpdatedOn_Date { get; set; }
+
         public string? Repository_FullName { get; set; }
 
         public string? Repository_Organization { get; set; }
@@ -51,6 +53,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
                 UpdatedOn_DateTime = snapshot.SnapshotOn.DateTime,
+                UpdatedOn_Date = snapshot.SnapshotOn.DateTime.ToString("yyyy-MM-dd"),
                 Repository_FullName = snapshot.Repository.FullName,
                 Repository_Organization = snapshot.Repository.Organization,
                 SolvedBy = new string[0],
@@ -77,6 +80,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Query = null!,
                  CreatedOn_DateTime = null,
                  UpdatedOn_DateTime = attempt.SnapshotOn.DateTime,
+                 UpdatedOn_Date = null,
                  Repository_FullName = null,
                  Repository_Organization = null,
                  SolvedBy = new string[0],
@@ -103,6 +107,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Query = null!,
                   CreatedOn_DateTime = null,
                   UpdatedOn_DateTime = solution.SnapshotOn.DateTime,
+                  UpdatedOn_Date = solution.SnapshotOn.DateTime.ToString("yyyy-MM-dd"),
                   Repository_FullName = null,
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
@@ -135,6 +140,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Query = g.SelectMany(x => x.Query).Distinct(),
                 CreatedOn_DateTime = first.CreatedOn.DateTime,
                 UpdatedOn_DateTime = latest.UpdatedOn.DateTime,
+                UpdatedOn_Date = latest.UpdatedOn_Date,
                 Repository_FullName = first.Repository_FullName,
                 Repository_Organization = first.Repository_Organization,
                 SolvedBy = solvedBy,

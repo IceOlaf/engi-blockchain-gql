@@ -93,12 +93,15 @@ jobs:
     parameters:
       environment:
         type: string
+      tag:
+        type: string
+        default: latest
     steps:
       - checkout
       - aws-ecr/build-and-push-image:
           repo: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>"
           create-repo: true
-          tag: latest
+          tag: "<< parameters.tag >>"
           registry-id: AWS_ID
           extra-build-args: "--build-arg BUILD_VERSION=$CIRCLE_BUILD_NUM"
           platform: "linux/amd64,linux/arm64"
@@ -109,13 +112,23 @@ workflows:
   build-test-push-workflow:
     jobs:
       - build:
-          name: build-staging
+          name: build-latest
+          tag: latest
           environment: staging
+          filters:
+            branches:
+              ignore: main
           context:
             - aws
+      - build:
+          name: build-staging
+          tag: staging
+          environment: staging
           filters:
-            tags:
-              only: ""
+            branches:
+              only: main
+          context:
+            - aws
       - deploy:
           name: deploy-staging-<< matrix.region >>
           environment: staging

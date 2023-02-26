@@ -39,7 +39,9 @@ public class AccountsQuery : ObjectGraphType
                 include => include.IncludeDocuments(x => x.UserId));
 
         var usersById = await session
-            .LoadAsync<User>(references.Values.Select(x => x.UserId));
+            .LoadAsync<User>(references.Values
+                .Where(x => x != null)
+                .Select(x => x.UserId));
 
         return referenceIdsByAddress
             .Select(addressKeyValuePair =>

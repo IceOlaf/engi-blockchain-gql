@@ -1,6 +1,7 @@
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Engi.Substrate;
+using Engi.Substrate.Indexing;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Authentication;
@@ -17,6 +18,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
+using Raven.Client.Documents.Conventions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +53,24 @@ builder.Services.AddTransient(sp =>
     return new SubstrateClient(httpClientFactory);
 });
 
-builder.Services.AddRaven(builder.Configuration.GetRequiredSection("Raven"));
+builder.Services.AddRaven(
+    builder.Configuration.GetRequiredSection("Raven"),
+    conventions =>
+    {
+        conventions.ThrowIfQueryPageSizeIsNotSet = true;
+
+        conventions.Serialization = new EngiSerializationConventions();
+
+        conventions.FindCollectionName = type =>
+        {
+            if (typeof(EmailDispatchCommand).IsAssignableFrom(type))
+            {
+                return $"{nameof(EmailDispatchCommand)}s";
+            }
+
+            return DocumentConventions.DefaultGetCollectionName(type);
+        };
+    });
 
 // ASP.NET + auth
 

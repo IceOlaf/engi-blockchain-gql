@@ -1,8 +1,8 @@
 using System.Security.Cryptography.X509Certificates;
-using Engi.Substrate.Indexing;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Server.Indexing;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Conventions;
 using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Operations.Expiration;
 using Raven.Client.Documents.Operations.Refresh;
@@ -14,7 +14,10 @@ namespace Engi.Substrate.Server;
 
 public static class RavenConfigurationExtensions
 {
-    public static IServiceCollection AddRaven(this IServiceCollection services, IConfigurationSection section)
+    public static IServiceCollection AddRaven(
+        this IServiceCollection services,
+        IConfigurationSection section,
+        Action<DocumentConventions> customizeConventions)
     {
         var options = section.Get<RavenConnectionOptions>();
 
@@ -28,11 +31,7 @@ public static class RavenConfigurationExtensions
 
         // customize conventions
 
-        var conventions = store.Conventions;
-
-        conventions.ThrowIfQueryPageSizeIsNotSet = true;
-
-        conventions.Serialization = new EngiSerializationConventions();
+        customizeConventions(store.Conventions);
 
         store.Initialize();
 

@@ -151,6 +151,7 @@ workflows:
               only: main
       - build:
           name: build-production
+          tag: production
           environment: production
           context:
             - aws

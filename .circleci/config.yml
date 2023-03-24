@@ -67,6 +67,8 @@ jobs:
         type: string
       region:
         type: string
+    environment:
+      TF_CLOUD_ORGANIZATION: 'engi-<< parameters.environment >>'
     steps:
       - when:
           condition:

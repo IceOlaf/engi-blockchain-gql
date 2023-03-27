@@ -67,6 +67,8 @@ jobs:
         type: string
       region:
         type: string
+    environment:
+      TF_CLOUD_ORGANIZATION: 'engi-<< parameters.environment >>'
     steps:
       - when:
           condition:
@@ -149,6 +151,7 @@ workflows:
               only: main
       - build:
           name: build-production
+          tag: production
           environment: production
           context:
             - aws

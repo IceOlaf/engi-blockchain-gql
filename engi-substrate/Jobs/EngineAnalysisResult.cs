@@ -2,7 +2,7 @@ namespace Engi.Substrate.Jobs;
 
 public class EngineAnalysisResult
 {
-    public Language Language { get; set; }
+    public Technology[] Technologies { get; set; } = Array.Empty<Technology>();
 
     public string[]? Files { get; set; }
 

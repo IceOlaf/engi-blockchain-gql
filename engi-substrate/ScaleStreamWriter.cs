@@ -59,6 +59,17 @@ public class ScaleStreamWriter : IDisposable
         Write(Convert.ToByte(e));
     }
 
+    public void Write<T>(T[] items)
+        where T : Enum
+    {
+        WriteCompact(items.Length);
+
+        foreach (var item in items)
+        {
+            Write(Convert.ToByte(item));
+        }
+    }
+
     public void WriteCompact(ulong value)
     {
         var result = Compact(value);

@@ -10,7 +10,7 @@ public class Job
 
     public Repository Repository { get; init; } = null!;
 
-    public Language Language { get; init; }
+    public Technology[] Technologies { get; init; } = Array.Empty<Technology>();
 
     public string Name { get; init; } = null!;
 

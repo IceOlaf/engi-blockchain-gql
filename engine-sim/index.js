@@ -14,7 +14,7 @@ const exampleAnalysisResult = {
   repo: "https://github.com/engi-network/demo-csharp.git",
   branch: "master",
   commit: "2bca053",
-  language: "CSharp",
+  technologies: ["CSharp"],
   files: [
     "./PrimeService.Tests/PrimeService_IsPrimeShould.cs",
     "./PrimeService/PrimeService.cs",

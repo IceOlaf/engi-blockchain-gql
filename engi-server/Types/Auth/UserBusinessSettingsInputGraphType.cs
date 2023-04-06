@@ -10,7 +10,7 @@ public class UserBusinessSettingsInputGraphType : InputObjectGraphType<UserBusin
         Field(x => x.CompanyName)
             .Description("The company name.");
 
-        Field(x => x.PreferredLanguages)
-            .Description("The preferred languages.");
+        Field(x => x.PreferredTechnologies)
+            .Description("The preferred technologies.");
     }
 }

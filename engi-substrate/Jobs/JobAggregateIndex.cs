@@ -12,9 +12,9 @@ public class JobAggregateIndex : AbstractIndexCreationTask<Job, JobAggregateInde
 
         public string TotalAmountFunded { get; set; } = null!;
 
-        public Language Language { get; set; }
+        public Technology[] Technologies { get; set; } = Array.Empty<Technology>();
 
-        public int LanguageCount { get; set; }
+        public int TechnologyCount { get; set; }
     }
 
     public JobAggregateIndex()
@@ -24,8 +24,8 @@ public class JobAggregateIndex : AbstractIndexCreationTask<Job, JobAggregateInde
             {
                 ActiveJobCount = job.Status == JobStatus.Open || job.Status == JobStatus.Active ? 1 : 0,
                 TotalAmountFunded = job.Funding,
-                Language = job.Language,
-                LanguageCount = 0
+                Technologies = job.Technologies,
+                TechnologyCount = 0
             };
 
         Reduce = results => from result in results
@@ -33,8 +33,8 @@ public class JobAggregateIndex : AbstractIndexCreationTask<Job, JobAggregateInde
             select new Result
             {
                 ActiveJobCount = g.Sum(x => x.ActiveJobCount),
-                LanguageCount = g.Select(x => x.Language).Distinct().Count(),
-                Language = Language.CSharp,
+                TechnologyCount = g.Select(x => x.Technologies).Distinct().Count(),
+                Technologies = new Technology[] { Technology.CSharp },
                 TotalAmountFunded = Sum(g.Select(x => x.TotalAmountFunded))
             };
 

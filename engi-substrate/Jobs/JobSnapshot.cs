@@ -14,7 +14,7 @@ public class JobSnapshot : IBlockSnapshot
 
     public Repository Repository { get; init; } = null!;
 
-    public Language Language { get; init; }
+    public Technology[] Technologies { get; init; } = Array.Empty<Technology>();
     
     public string Name { get; init; } = null!;
 
@@ -46,7 +46,7 @@ public class JobSnapshot : IBlockSnapshot
             Creator = reader.ReadAddress(),
             Funding = reader.ReadUInt128(),
             Repository = Repository.Parse(reader),
-            Language = reader.ReadEnum<Language>(),
+            Technologies = reader.ReadEnumList<Technology>(),
             Name = reader.ReadString()!,
             Tests = reader.ReadList(Test.Parse),
             Requirements = reader.ReadOptional(FilesRequirement.Parse),

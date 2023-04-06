@@ -4,5 +4,5 @@ namespace Engi.Substrate.Identity;
 
 public class UserFreelancerSettings
 {
-    public Language[] JobPreference { get; set; } = Array.Empty<Language>();
+    public Technology[] JobPreference { get; set; } = Array.Empty<Technology>();
 }

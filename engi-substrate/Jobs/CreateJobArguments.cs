@@ -13,7 +13,8 @@ public class CreateJobArguments : IExtrinsic
     [Range(500, ulong.MaxValue)]
     public ulong Funding { get; init; }
 
-    public Language Language { get; init; }
+    [NotNullOrEmptyCollection]
+    public Technology[] Technologies { get; init; } = Array.Empty<Technology>();
 
     [Required, HttpUrl]
     public string RepositoryUrl { get; init; } = null!;
@@ -51,7 +52,7 @@ public class CreateJobArguments : IExtrinsic
     public void Serialize(ScaleStreamWriter writer, RuntimeMetadata meta)
     {
         writer.WriteCompact(Funding);
-        writer.Write(Language);
+        writer.Write(Technologies);
         writer.Write(RepositoryUrl);
         writer.Write(BranchName);
         writer.Write(CommitHash);

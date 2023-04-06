@@ -6,5 +6,5 @@ public class UserBusinessSettings
 {
     public string CompanyName { get; set; } = null!;
 
-    public Language[] PreferredLanguages { get; set; } = Array.Empty<Language>();
+    public Technology[] PreferredTechnologies { get; set; } = Array.Empty<Technology>();
 }

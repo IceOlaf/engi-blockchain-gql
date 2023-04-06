@@ -180,7 +180,7 @@ public class EngineResponseDequeueService : BackgroundService
         {
             var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
 
-            analysis.Language = result.Language;
+            analysis.Technologies = result.Technologies;
             analysis.Files = result.Files;
             analysis.Complexity = result.Complexity;
             analysis.Tests = result.Tests;

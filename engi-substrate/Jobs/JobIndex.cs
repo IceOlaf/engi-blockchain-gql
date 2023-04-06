@@ -34,7 +34,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Creator = (string)(object)snapshot.Creator,
                 Funding = (string)(object)snapshot.Funding,
                 Repository = snapshot.Repository,
-                Language = snapshot.Language,
+                Technologies = snapshot.Technologies,
                 Name = snapshot.Name,
                 Tests = snapshot.Tests,
                 Requirements = snapshot.Requirements,
@@ -48,7 +48,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                     snapshot.JobId.ToString().TrimStart('0'),
                     snapshot.Name,
                     repositoryFullName,
-                    snapshot.Language.ToString(),
+                    String.Join(",", snapshot.Technologies.Select(p=>p.ToString()).ToArray()),
                     readme.Content
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
@@ -68,7 +68,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Creator = null!,
                  Funding = null!,
                  Repository = null!,
-                 Language = Language.CSharp,
+                 Technologies = new Technology[] { Technology.CSharp },
                  Name = null!,
                  Tests = null!,
                  Requirements = null!,
@@ -95,7 +95,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Creator = null!,
                   Funding = null!,
                   Repository = null!,
-                  Language = Language.CSharp,
+                  Technologies = new Technology[] { Technology.CSharp },
                   Name = null!,
                   Tests = null!,
                   Requirements = null!,
@@ -128,7 +128,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Creator = first.Creator,
                 Funding = first.Funding,
                 Repository = first.Repository,
-                Language = first.Language,
+                Technologies = first.Technologies,
                 Name = first.Name,
                 Tests = first.Tests,
                 Requirements = first.Requirements,
@@ -148,7 +148,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Status = CalculateStatus(latest.Solution, attemptCount)
             };
 
-        Index(x => x.Language, FieldIndexing.Exact);
+        Index(x => x.Technologies, FieldIndexing.Search);
         Index(x => x.Query, FieldIndexing.Search);
 
         Suggestion(x => x.Query);

@@ -1,6 +1,6 @@
 namespace Engi.Substrate.Jobs;
 
-public enum Language
+public enum Technology
 {
     CSharp = 0,
     Python = 1,

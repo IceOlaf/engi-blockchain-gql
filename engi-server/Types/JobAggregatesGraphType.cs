@@ -13,7 +13,7 @@ public class JobAggregatesGraphType : ObjectGraphType<JobAggregateIndex.Result>
         Field(x => x.TotalAmountFunded)
             .Description("Total amount funded.");
 
-        Field(x => x.LanguageCount)
-            .Description("Total number of languages used in jobs.");
+        Field(x => x.TechnologyCount)
+            .Description("Total number of technologies used in jobs.");
     }
 }

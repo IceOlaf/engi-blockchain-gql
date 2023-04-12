@@ -4,5 +4,5 @@ namespace Engi.Substrate.Server.Types;
 
 public class JobsQueryStaticData
 {
-    public Language[] Languages => Enum.GetValues<Language>();
+    public Technology[] Technologies => Enum.GetValues<Technology>();
 }

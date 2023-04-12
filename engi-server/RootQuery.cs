@@ -274,7 +274,7 @@ public class RootQuery : ObjectGraphType
         };
 
         var facetsLazy = query
-            .AggregateBy(builder => builder.ByField(x => x.Language))
+            .AggregateBy(builder => builder.ByField(x => x.Technologies))
             .AndAggregateBy(builder => builder.ByField(x => x.Repository_Organization))
             .AndAggregateBy(new RangeFacet<JobIndex.Result>
             {
@@ -321,7 +321,7 @@ public class RootQuery : ObjectGraphType
                         .Cast<FacetValue>()
                         .ToList()
                 },
-                Language = facetsLazy.Value.Result[nameof(Job.Language)],
+                Technologies = facetsLazy.Value.Result[nameof(Job.Technologies)],
                 Organization = facetsLazy.Value.Result[nameof(JobIndex.Result.Repository_Organization)]
             }
         };

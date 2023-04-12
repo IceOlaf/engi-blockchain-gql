@@ -36,10 +36,10 @@ public static class JobIndexQueryExtensions
                 .Search(x => x.Query, $"{args.Search}*", @operator: SearchOperator.And);
         }
 
-        if (args.Language != null)
+        if (args.Technologies != null)
         {
             query = query
-                .WhereIn(x => x.Language, args.Language);
+                .ContainsAny(x => x.Technologies, args.Technologies);
         }
 
         if (args.MinFunding != null && args.MaxFunding != null)

@@ -17,8 +17,8 @@ public class JobGraphType : ObjectGraphType<Job>
             .Description("The funding amount.");
         Field(x => x.Repository, type: typeof(RepositoryGraphType))
             .Description("The job's repository information (url, branch, commit hash).");
-        Field(x => x.Language)
-            .Description("The principal language of the repository.");
+        Field(x => x.Technologies)
+            .Description("The principal technology of the repository.");
         Field(x => x.Name)
             .Description("The job name.");
         Field(x => x.Tests, type: typeof(ListGraphType<TestGraphType>))

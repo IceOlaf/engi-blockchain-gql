@@ -6,7 +6,7 @@ public class FacetResults
 {
     public FacetResult CreatedOnPeriod { get; set; } = null!;
 
-    public FacetResult Language { get; set; } = null!;
+    public FacetResult Technologies { get; set; } = null!;
 
     public FacetResult Organization { get; set; } = null!;
 }

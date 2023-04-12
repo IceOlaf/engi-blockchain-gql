@@ -176,6 +176,26 @@ public class ScaleStreamReader : IDisposable
         return result;
     }
 
+    public T[] ReadEnumList<T>()
+        where T : struct, Enum
+    {
+        ulong length = ReadCompactInteger();
+
+        if (length == 0)
+        {
+            return Array.Empty<T>();
+        }
+
+        T[] data = new T[length];
+
+        for (ulong i = 0; i < length; ++i)
+        {
+            data[i] = ReadEnum<T>();
+        }
+
+        return data;
+    }
+
     public ulong ReadCompactInteger()
     {
         int b0 = ReadByte();

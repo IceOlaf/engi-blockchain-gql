@@ -18,7 +18,7 @@ public class RepositoryAnalysis : IDispatched
 
     public RepositoryAnalysisStatus Status { get; set; }
 
-    public Language? Language { get; set; }
+    public Technology[]? Technologies { get; set; }
 
     public string[]? Files { get; set; }
 

@@ -13,7 +13,7 @@ public class JobsQueryArguments : OrderedQueryArguments<JobsOrderByProperty>, IV
 
     public string? Search { get; set; }
 
-    public Language[]? Language { get; set; }
+    public Technology[]? Technologies { get; set; }
 
     public BigInteger? MinFunding { get; set; }
 

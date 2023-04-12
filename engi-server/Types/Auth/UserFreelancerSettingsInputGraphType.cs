@@ -8,6 +8,6 @@ public class UserFreelancerSettingsInputGraphType : InputObjectGraphType<UserFre
     public UserFreelancerSettingsInputGraphType()
     {
         Field(x => x.JobPreference)
-            .Description("The user's preference for jobs in languages.");
+            .Description("The user's preference for jobs in technologies.");
     }
 }

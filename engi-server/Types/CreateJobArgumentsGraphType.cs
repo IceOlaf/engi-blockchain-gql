@@ -11,8 +11,8 @@ public class CreateJobArgumentsGraphType : InputObjectGraphType<CreateJobArgumen
 
         Field(x => x.Funding, type: typeof(UInt128GraphType))
             .Description("The funding for the job.");
-        Field(x => x.Language)
-            .Description("The main repository language.");
+        Field(x => x.Technologies)
+            .Description("The main repository technologies.");
         Field(x => x.RepositoryUrl)
             .Description("The repository URL.");
         Field(x => x.BranchName)

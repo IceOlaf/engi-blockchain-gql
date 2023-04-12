@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using Amazon.Util;
 using Engi.Substrate.Jobs;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
@@ -55,7 +57,11 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
             config.ServiceURL = awsOptions.ServiceUrl;
         }
 
-        var client = new AmazonSimpleNotificationServiceClient(config);
+        var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
+            ? FallbackCredentialsFactory.GetCredentials()
+            : new InstanceProfileAWSCredentials(engiOptions.AssumeRole);
+
+        var client = new AmazonSimpleNotificationServiceClient(credentials, config);
 
         using var session = batch.OpenAsyncSession();
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Amazon.Runtime;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -40,7 +41,11 @@ public class EngineResponseDequeueService : BackgroundService
             config.ServiceURL = awsOptions.ServiceUrl;
         }
 
-        var sqs = new AmazonSQSClient(config);
+        var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
+            ? FallbackCredentialsFactory.GetCredentials()
+            : new InstanceProfileAWSCredentials(engiOptions.AssumeRole);
+
+        var sqs = new AmazonSQSClient(credentials, config);
 
         while (!stoppingToken.IsCancellationRequested)
         {

@@ -9,10 +9,10 @@ public class _004_LanguageTechnologies : Migration
     public override void Up()
     {
         this.PatchCollection(@"
-            from Job as j
+            from Jobs as j
             update {
-                p.Technologies = [j.Language];
-                delete p.Language;
+                j.Technologies = [j.Language];
+                delete j.Language;
             }
         ");
     }

@@ -22,7 +22,7 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
 
     protected override string CreateQuery()
     {
-        return @"from JobAttemptedSnapshots";
+        return @"from JobAttemptedSnapshots where DispatchedOn = null";
     }
 
     protected override async Task ProcessBatchAsync(
@@ -31,7 +31,7 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
     {
         // use a cluster session here to prevent dupes if an attempt is re-indexed
 
-        using var session = Store.OpenAsyncSession(new SessionOptions()
+        using var session = Store.OpenAsyncSession(new SessionOptions
         {
             TransactionMode = TransactionMode.ClusterWide
         });

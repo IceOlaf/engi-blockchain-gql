@@ -1,11 +1,9 @@
 using System.Collections.Concurrent;
-using System.Net;
 using System.Reactive.Linq;
 using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
-using Engi.Substrate.Server.Async;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
@@ -46,8 +44,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             .OfType<NewHeadChainObserver>()
             .Single();
 
-        Header? previousHeader = null;
-
         headerObservable = headObserver.FinalizedHeaders
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () =>
@@ -79,18 +75,10 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                     {
                         // we can ignore this, someone else stored it
                     }
-
-                    previousHeader = header;
                 }
                 catch (Exception ex)
                 {
                     Logger.LogError(ex, "Failed to index new header={number}", header.Number);
-
-                    // in the case of an error saving, don't hold up the indexing but
-                    // reset the previousHeader variable so that the next block will
-                    // index the missed ones
-
-                    previousHeader = null;
                 }
             }))
             .Concat()

@@ -9,7 +9,6 @@ using GraphQL.Types;
 using Octokit;
 using Raven.Client.Documents.Commands.Batches;
 using Raven.Client.Documents.Session;
-using Sentry;
 using User = Engi.Substrate.Identity.User;
 
 namespace Engi.Substrate.Server.Types.Github;

@@ -4,7 +4,6 @@ using System.Text.Json;
 using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
-using Amazon.Util;
 using Engi.Substrate.Jobs;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;

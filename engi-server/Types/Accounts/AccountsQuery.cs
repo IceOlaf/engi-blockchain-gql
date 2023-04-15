@@ -32,10 +32,28 @@ public class AccountsQuery : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var referenceIdsByAddress = addresses
-            .ToDictionary(address => address, UserAddressReference.KeyFrom);
+            .ToDictionary(address => address, address =>
+            {
+                try
+                {
+                    var parsedAddress = Address.Parse(address);
+
+                    return UserAddressReference.KeyFrom(parsedAddress);
+                }
+                catch (ArgumentOutOfRangeException ex) when (ex.ParamName == "address")
+                {
+                    // failed to parse, address is not supported
+
+                    return null;
+                }
+            });
+
+        var validAddresses = referenceIdsByAddress.Values
+            .Where(value => value != null)
+            .ToArray();
 
         var references = await session
-            .LoadAsync<UserAddressReference>(referenceIdsByAddress.Values,
+            .LoadAsync<UserAddressReference>(validAddresses,
                 include => include.IncludeDocuments(x => x.UserId));
 
         var usersById = await session
@@ -50,7 +68,9 @@ public class AccountsQuery : ObjectGraphType
 
                 User? user = null;
 
-                if (references.TryGetValue(id, out var reference) && reference != null)
+                if (id != null
+                    && references.TryGetValue(id, out var reference)
+                    && reference != null)
                 {
                     user = usersById[reference.UserId];
                 }
@@ -58,13 +78,18 @@ public class AccountsQuery : ObjectGraphType
                 return new AccountExistence
                 {
                     Address = address,
-                    Exists = GetResult(user)
+                    Exists = GetResult(id, user)
                 };
             });
     }
 
-    private static AccountExistenceResult GetResult(User? user)
+    private static AccountExistenceResult GetResult(string? id, User? user)
     {
+        if (id == null)
+        {
+            return AccountExistenceResult.UnsupportedAddress;
+        }
+
         if (user == null)
         {
             return AccountExistenceResult.No;

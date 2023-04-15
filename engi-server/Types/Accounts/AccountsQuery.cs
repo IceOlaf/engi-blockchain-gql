@@ -32,6 +32,7 @@ public class AccountsQuery : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var referenceIdsByAddress = addresses
+            .Distinct()
             .ToDictionary(address => address, address =>
             {
                 try

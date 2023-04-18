@@ -114,6 +114,8 @@ disable indexing by setting `Engi:DisableChainObserver = true` in `appsettings.j
 
 ## Running the tests
 
+First, [https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html](authenticate ECR image download service.)
+
 Tests include both unit and integrations tests.
 
 The `docker-compose-integration-tests.yml` file can be used to run all tests by raising the set of required services.

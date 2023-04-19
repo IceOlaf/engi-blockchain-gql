@@ -31,7 +31,7 @@ services:
       file: docker-compose-services.yml
       service: api
     ports:
-      - "5000:5000"
+      - "8000:8000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - AWS_ACCESS_KEY_ID=test

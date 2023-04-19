@@ -3,5 +3,6 @@ bin/
 .vs/
 integration-test-results/
 *.user
+*.swp
 node_modules/
 package-lock.json

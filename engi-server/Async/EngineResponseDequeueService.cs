@@ -47,6 +47,7 @@ public class EngineResponseDequeueService : BackgroundService
 
         var sqs = new AmazonSQSClient(credentials, config);
 
+        logger.LogInformation("Processing queue messages from engine. queue={queue}", engiOptions.EngineOutputQueueUrl);
         while (!stoppingToken.IsCancellationRequested)
         {
             ReceiveMessageResponse batch;

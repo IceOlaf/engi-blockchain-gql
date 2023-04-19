@@ -10,14 +10,14 @@ services:
       - RAVEN_ServerUrl_Tcp=38888
   substrate:
     container_name: substrate-node
-    image: 163803973373.dkr.ecr.us-west-2.amazonaws.com/blockchain-mainnet
+    image: 163803973373.dkr.ecr.us-west-2.amazonaws.com/blockchain-mainnet:mainnet
     command: --dev --pruning archive --rpc-external --ws-external --charlie
   api:
     build: 
       context: .
     environment:
       - ASPNETCORE_ENVIRONMENT=CI
-      - ASPNETCORE_URLS=http://*:5000
+      - ASPNETCORE_URLS=http://*:8000
       - SUBSTRATE__HTTPURL=http://substrate:9933
       - SUBSTRATE__WSURL=ws://substrate:9944
       - WAIT_HOSTS=substrate:9933, substrate:9944, ravendb:8080, ravendb:38888

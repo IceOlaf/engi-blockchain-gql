@@ -47,6 +47,11 @@ public class EngineResponseDequeueService : BackgroundService
 
         var sqs = new AmazonSQSClient(credentials, config);
 
+        if (string.IsNullOrEmpty(engiOptions.AssumeRole) {
+            logger.LogInformation("Assume role is empty, using fallback");
+        } else {
+            logger.LogInformation("Using assume role");
+        }
         logger.LogInformation("Processing queue messages from engine. queue={queue}", engiOptions.EngineOutputQueueUrl);
         while (!stoppingToken.IsCancellationRequested)
         {

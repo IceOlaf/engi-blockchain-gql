@@ -24,5 +24,5 @@ down() {
     fi
 }
 
-down "engine-in"
-down "engine-out"
+down "graphql-engine-in.fifo"
+down "graphql-engine-out.fifo"

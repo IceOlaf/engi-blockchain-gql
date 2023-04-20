@@ -27,10 +27,10 @@ up() {
         exit 1
     fi
 
-    QUEUE_URL=`awslocal sqs create-queue --queue-name $QUEUE_NAME | jq -r .QueueUrl`
+    QUEUE_URL=`awslocal sqs create-queue --queue-name $QUEUE_NAME --attributes FifoQueue=true | jq -r .QueueUrl`
 
     export QUEUE_ARN=`awslocal sqs get-queue-attributes --queue-url $QUEUE_URL --attribute-names QueueArn | jq -r .Attributes.QueueArn`
-    export TOPIC_ARN=`awslocal sns create-topic --name $TOPIC_NAME | jq -r .TopicArn`
+    export TOPIC_ARN=`awslocal sns create-topic --name $TOPIC_NAME --attributes FifoTopic=true | jq -r .TopicArn`
 
     POLICY=`echo '{ "Version": "2012-10-17", "Statement": { "Effect": "Allow", "Principal": "*", "Action": "SQS:SendMessage", "Resource": "${QUEUE_ARN}", "Condition": { "ArnEquals": { "aws:SourceArn": "${TOPIC_ARN}" } } } }' | envsubst`
 
@@ -47,5 +47,5 @@ up() {
     echo "Created $1 queue, topic, subscription."
 }
 
-up "engine-in"
-up "engine-out"
+up "graphql-engine-in.fifo"
+up "graphql-engine-out.fifo"

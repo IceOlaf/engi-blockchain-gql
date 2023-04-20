@@ -6,9 +6,9 @@ const sqs = new AWS.SQS({ endpoint });
 const sns = new AWS.SNS({ endpoint });
 
 const incomingQueueUrl =
-  "http://localhost:4566/000000000000/engine-in";
+  "http://localhost:4566/000000000000/graphql-engine-in.fifo";
 
-const outgoingTopicArn = "arn:aws:sns:us-east-1:000000000000:engine-out";
+const outgoingTopicArn = "arn:aws:sns:us-east-1:000000000000:graphql-engine-out.fifo";
 
 const exampleAnalysisResult = {
   repo: "https://github.com/engi-network/demo-csharp.git",

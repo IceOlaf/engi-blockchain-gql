@@ -53,7 +53,7 @@ public class EngineResponseDequeueService : BackgroundService
 
         await sts.AssumeRoleAsync(new AssumeRoleRequest {
             DurationSeconds = 1600,
-            RoleSessionName = "EngineSession",
+            RoleSessionName = "EngineResponse",
             RoleArn = roleArn,
         }, stoppingToken);
 

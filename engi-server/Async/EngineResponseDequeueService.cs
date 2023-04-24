@@ -52,6 +52,8 @@ public class EngineResponseDequeueService : BackgroundService
         logger.LogInformation("Assuming role with arn: {}", roleArn);
 
         await sts.AssumeRoleAsync(new AssumeRoleRequest {
+            DurationSeconds = 1600,
+            RoleSessionName = "EngineSession",
             RoleArn = roleArn,
         }, stoppingToken);
 

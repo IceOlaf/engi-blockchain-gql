@@ -1,5 +1,7 @@
 using System.Text.Json;
 using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -35,11 +37,25 @@ public class EngineResponseDequeueService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var config = new AmazonSQSConfig();
+        var stsConfig = new AmazonSecurityTokenServiceConfig();
 
         if(awsOptions.ServiceUrl != null)
         {
             config.ServiceURL = awsOptions.ServiceUrl;
+            stsConfig.ServiceURL = awsOptions.ServiceUrl;
         }
+
+        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
+
+        // TODO: aws account from engiOptions.
+        var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
+        logger.LogInformation("Assuming role with arn: {}", roleArn);
+
+        await sts.AssumeRoleAsync(new AssumeRoleRequest {
+            DurationSeconds = 1600,
+            RoleSessionName = "EngineResponse",
+            RoleArn = roleArn,
+        }, stoppingToken);
 
         var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
             ? FallbackCredentialsFactory.GetCredentials()

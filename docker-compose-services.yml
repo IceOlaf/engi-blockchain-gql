@@ -10,7 +10,7 @@ services:
       - RAVEN_ServerUrl_Tcp=38888
   substrate:
     container_name: substrate-node
-    image: 163803973373.dkr.ecr.us-west-2.amazonaws.com/blockchain-mainnet:mainnet
+    image: 163803973373.dkr.ecr.us-west-2.amazonaws.com/blockchain-testnet:testnet
     command: --dev --pruning archive --rpc-external --ws-external --charlie
   api:
     build: 

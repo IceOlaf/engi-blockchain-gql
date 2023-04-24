@@ -1,7 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Engi.Substrate.Jobs;
@@ -50,11 +53,27 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
     protected override async Task ProcessBatchAsync(SubscriptionBatch<QueueEngineRequestCommand> batch, IServiceProvider serviceProvider)
     {
         var config = new AmazonSimpleNotificationServiceConfig();
+        var stsConfig = new AmazonSecurityTokenServiceConfig();
 
         if(awsOptions.ServiceUrl != null)
         {
             config.ServiceURL = awsOptions.ServiceUrl;
+            stsConfig.ServiceURL = awsOptions.ServiceUrl;
         }
+
+        CancellationTokenSource s = new CancellationTokenSource();
+        var stoppingToken = s.Token;
+        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
+
+        // TODO: aws account from engiOptions.
+        var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
+        Logger.LogInformation("Assuming role with arn: {}", roleArn);
+
+        await sts.AssumeRoleAsync(new AssumeRoleRequest {
+            DurationSeconds = 1600,
+            RoleSessionName = "EngineRequest",
+            RoleArn = roleArn,
+        }, stoppingToken);
 
         var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
             ? FallbackCredentialsFactory.GetCredentials()

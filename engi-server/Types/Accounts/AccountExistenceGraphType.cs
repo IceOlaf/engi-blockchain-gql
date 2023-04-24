@@ -8,7 +8,7 @@ public class AccountExistenceGraphType : ObjectGraphType<AccountExistence>
     {
         Description = "Denotes the existence of an ENGI account for a particular address.";
 
-        Field(x => x.Address, type: typeof(AddressGraphType))
+        Field(x => x.Address)
             .Description("The address.");
 
         Field(x => x.Exists)

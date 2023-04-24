@@ -119,8 +119,8 @@ public class Address : IScaleSerializable, IPublicKey, IEquatable<string>, IEqua
 
         if (result.Length != 32)
         {
-            throw new ArgumentException(
-                "Decoded address is not 32 bytes long", nameof(address));
+            throw new ArgumentOutOfRangeException(
+                nameof(address), address, "Decoded address is not 32 bytes long");
         }
 
         return result;

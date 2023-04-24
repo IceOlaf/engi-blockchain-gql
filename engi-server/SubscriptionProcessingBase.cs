@@ -14,12 +14,16 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
         IHub sentry,
         ILoggerFactory loggerFactory)
     {
+        Name = $"SubscriptionProcessor<{GetType().Name}>";
+
         Store = store;
         ServiceProvider = serviceProvider;
         Logger = loggerFactory.CreateLogger(GetType());
         Sentry = sentry;
         ProcessConcurrently = !env.IsDevelopment() && !env.IsEnvironment("CI");
     }
+
+    protected string Name { get; init; }
 
     protected IDocumentStore Store { get; init; }
 
@@ -39,9 +43,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        string name = $"SubscriptionProcessor<{GetType().Name}>";
-
-        var workerOptions = new SubscriptionWorkerOptions(name)
+        var workerOptions = new SubscriptionWorkerOptions(Name)
         {
             Strategy = ProcessConcurrently 
                 ? SubscriptionOpeningStrategy.Concurrent 
@@ -57,7 +59,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
 
         string query = CreateQuery();
 
-        await CreateOrUpdateAsync(name, query);
+        await CreateOrUpdateAsync(Name, query);
 
         await InitializeAsync();
         
@@ -193,7 +195,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
     {
         try
         {
-            throw new InvalidOperationException("Subscription processing was terminated.", inner);
+            throw new SubscriptionProcessingTerminatedException(Name, inner);
         }
         catch (Exception ex)
         {

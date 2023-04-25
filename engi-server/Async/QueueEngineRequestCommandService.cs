@@ -69,17 +69,13 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
         var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
         Logger.LogInformation("Assuming role with arn: {}", roleArn);
 
-        await sts.AssumeRoleAsync(new AssumeRoleRequest {
+        var roleAssumed = await sts.AssumeRoleAsync(new AssumeRoleRequest {
             DurationSeconds = 1600,
             RoleSessionName = "EngineRequest",
             RoleArn = roleArn,
         }, stoppingToken);
 
-        var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
-            ? FallbackCredentialsFactory.GetCredentials()
-            : new InstanceProfileAWSCredentials(engiOptions.AssumeRole);
-
-        var client = new AmazonSimpleNotificationServiceClient(credentials, config);
+        var client = new AmazonSimpleNotificationServiceClient(roleAssumed.Credentials, config);
 
         using var session = batch.OpenAsyncSession();
 

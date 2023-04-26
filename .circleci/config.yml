@@ -1,182 +1,31 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-# build the Docker image and run the tests
-# if all the tests pass, push the image to ECR
-# then invoke Terraform Cloud to deploy the new image
+# this allows you to use CircleCI's dynamic configuration feature
+setup: true
 
+# the continuation orb is required in order to use dynamic configuration
 orbs:
-  aws-ecr: circleci/aws-ecr@8.1.2
-  terraform: circleci/terraform@3.2.0
+  continuation: circleci/continuation@0.3.1
 
-parameters:
-  terraform-app:
-    type: string
-    default: graphql
-  terraform-setup:
-    type: string
-    default: deploy/setup/graphql
-  terraform-version:
-    type: string
-    default: 1.2.2
-  primary_region:
-    type: string
-    default: "usw2"
-
-executors:
-  build:
-    machine:
-      image: ubuntu-2004:202201-01
-
-commands:
-  terraform-deploy:
-    parameters:
-      terraform-workspace:
-        type: string
-    steps:
-      - run:
-          name: "Checkout Terraform sources"
-          command: |
-            git clone git@github.com:engi-network/deploy.git
-      - run:
-          name: Create .terraformrc file locally
-          command: |
-            echo "credentials \"app.terraform.io\" {token =
-            \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
-      - terraform/install:
-          terraform_version: << pipeline.parameters.terraform-version >>
-      - run:
-          command: |
-            echo 'TF_WORKSPACE="<< parameters.terraform-workspace >>" /usr/local/bin/terraform $*' > ~/bin/terraform
-            chmod +x ~/bin/terraform
-      - terraform/plan:
-          path: << pipeline.parameters.terraform-setup >>
-          out: /tmp/terraform.plan
-      - terraform/apply:
-          path: << pipeline.parameters.terraform-setup >>
-          plan: /tmp/terraform.plan
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+# our defined job, and its steps
 jobs:
-  deploy:
-    executor: build
-    parameters:
-      environment:
-        type: string
-      region:
-        type: string
-    environment:
-      TF_CLOUD_ORGANIZATION: 'engi-<< parameters.environment >>'
+  setup:
+    executor: continuation/default
     steps:
-      - when:
-          condition:
-            equal:
-              [
-                << pipeline.parameters.primary_region >>,
-                << parameters.region >>,
-              ]
-          steps:
-            - terraform-deploy:
-                terraform-workspace: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>"
-      - unless:
-          condition:
-            equal:
-              [
-                << pipeline.parameters.primary_region >>,
-                << parameters.region >>,
-              ]
-          steps:
-            - terraform-deploy:
-                terraform-workspace: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>-<< parameters.region >>"
-  build:
-    executor: build
-    parameters:
-      environment:
-        type: string
-      tag:
-        type: string
-        default: latest
-    steps:
-      - checkout
-      - aws-ecr/build-and-push-image:
-          repo: "<< pipeline.parameters.terraform-app >>-<< parameters.environment >>"
-          create-repo: true
-          tag: "<< parameters.tag >>"
-          registry-id: AWS_ID
-          extra-build-args: "--build-arg BUILD_VERSION=$CIRCLE_BUILD_NUM"
-          platform: "linux/amd64,linux/arm64"
+      - checkout # checkout code
+      - run: # run a command
+          name: Fetch CircleCI config from submodule
+          command: |
+            git submodule update --init --remote
+      - run: # run a command
+          name: Setup config
+          command: .circleci/circleci/bin/setup-config.sh
+      - continuation/continue:
+          configuration_path: .circleci/project.yml # use newly generated config to continue
+          parameters: .circleci/parameters.json
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+# our single workflow, that triggers the setup job defined above
 workflows:
-  build-test-push-workflow:
+  setup:
     jobs:
-      - build:
-          name: build-latest
-          tag: latest
-          environment: staging
-          filters:
-            branches:
-              ignore: main
-          context:
-            - aws
-      - build:
-          name: build-staging
-          tag: staging
-          environment: staging
-          filters:
-            branches:
-              only: main
-          context:
-            - aws
-      - deploy:
-          name: deploy-staging-<< matrix.region >>
-          environment: staging
-          requires:
-            - build-staging
-          matrix:
-            parameters:
-              region:
-                - use1
-                - use2
-                - usw1
-                - usw2
-          context:
-            - terraform
-            - aws
-          filters:
-            branches:
-              only: main
-      - build:
-          name: build-production
-          tag: production
-          environment: production
-          context:
-            - aws
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-      - deploy:
-          name: deploy-production-<< matrix.region >>
-          environment: production
-          requires:
-            - build-production
-          context:
-            - terraform
-            - aws
-          matrix:
-            parameters:
-              region:
-                - use1
-                - use2
-                - usw1
-                - usw2
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+      - setup

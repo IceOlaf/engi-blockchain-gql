@@ -15,7 +15,7 @@ services:
     build:
       context: ./engi-docs
     environment:
-      - WAIT_HOSTS=api:5000
+      - WAIT_HOSTS=api:8000
     volumes:
       - ./engi-server/wwwroot/docs/:/docs/public/
 

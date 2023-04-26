@@ -11,8 +11,10 @@ public class _005_JobSnapshots : Migration
         this.PatchCollection(@"
             from JobSnapshots as j
             update {
-                j.Technologies = [j.Language];
-                delete j.Language;
+                if (j.Language !== undefined) {
+                    j.Technologies = [j.Language];
+                    delete j.Language;
+                }
             }
         ");
     }

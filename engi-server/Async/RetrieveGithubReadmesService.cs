@@ -88,6 +88,12 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
             return; // we already have one and it's recent
         }
 
+        var creatorId = creatorReferenceLazy.Value.Result;
+
+        if (creatorId == null) {
+            return;
+        }
+
         var creator = await session.LoadAsync<User>(
             creatorReferenceLazy.Value.Result.UserId);
 

@@ -51,17 +51,13 @@ public class EngineResponseDequeueService : BackgroundService
         var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
         logger.LogInformation("Assuming role with arn: {}", roleArn);
 
-        await sts.AssumeRoleAsync(new AssumeRoleRequest {
+        var rolesAssumed = await sts.AssumeRoleAsync(new AssumeRoleRequest {
             DurationSeconds = 1600,
             RoleSessionName = "EngineResponse",
             RoleArn = roleArn,
         }, stoppingToken);
 
-        var credentials = string.IsNullOrEmpty(engiOptions.AssumeRole)
-            ? FallbackCredentialsFactory.GetCredentials()
-            : new InstanceProfileAWSCredentials(engiOptions.AssumeRole);
-
-        var sqs = new AmazonSQSClient(credentials, config);
+        var sqs = new AmazonSQSClient(rolesAssumed.Credentials, config);
 
         if (string.IsNullOrEmpty(engiOptions.AssumeRole)) {
             logger.LogInformation("Assume role is empty, using fallback");

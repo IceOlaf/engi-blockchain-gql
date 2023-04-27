@@ -97,6 +97,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     protected override async Task ProcessBatchAsync(
         SubscriptionBatch<ExpandedBlock> batch, IServiceProvider serviceProvider)
     {
+        Logger.LogInformation("Processing blocks");
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
         var snapshotObserver = serviceProvider
@@ -120,6 +121,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         var metadataById = batch.Items
             .ToDictionary(x => x.Id, x => session.Advanced.GetMetadataFor(x.Result));
 
+        Logger.LogInformation("{} processing blocks to fetch");
         await batch.Items.ParallelForEachAsync(async doc =>
         {
             var client = new SubstrateClient(httpClientFactory);
@@ -198,6 +200,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         }
 
         await session.SaveChangesAsync();
+        Logger.LogInformation("Done processing blocks");
     }
 
     private async Task<IEnumerable<object>> ProcessBatchItemAsync(

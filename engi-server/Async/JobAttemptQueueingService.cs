@@ -30,6 +30,7 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
         IServiceProvider serviceProvider)
     {
         // use a cluster session here to prevent dupes if an attempt is re-indexed
+        Logger.LogInformation("Processing attempt batches");
 
         using var session = Store.OpenAsyncSession(new SessionOptions
         {
@@ -61,5 +62,6 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
                 session.Advanced.Clear();
             }
         }
+        Logger.LogInformation("Done processing attempt batches");
     }
 }

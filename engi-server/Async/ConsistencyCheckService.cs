@@ -50,6 +50,7 @@ from ConsistencyCheckCommands as c where filter(c)
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<ConsistencyCheckCommand> batch, IServiceProvider serviceProvider)
     {
+        Logger.LogInformation("Starting Consistency Check");
         using var session = batch.OpenAsyncSession();
 
         foreach (var item in batch.Items)
@@ -73,6 +74,7 @@ from ConsistencyCheckCommands as c where filter(c)
         }
 
         await session.SaveChangesAsync();
+        Logger.LogInformation("Consistency Check Finished");
     }
 
     private async Task<long> EnsureIndexingConsistencyAsync(ulong toInclusive)

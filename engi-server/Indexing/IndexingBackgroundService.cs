@@ -107,12 +107,15 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         var meta = await snapshotObserver.Metadata;
 
+        Logger.LogInformation("TJDEBUG: Metadata {}", meta);
+
         using var session = batch.OpenAsyncSession();
 
         // account for jobs stored
 
         session.Advanced.MaxNumberOfRequestsPerSession = batch.NumberOfItemsInBatch * 10;
 
+        Logger.LogInformation("TJDEBUG get last block");
         var previousBlocks = await session
             .LoadAsync<ExpandedBlock>(batch.Items.Select(x => x.Result.PreviousId));
 

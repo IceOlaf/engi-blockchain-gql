@@ -100,11 +100,13 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         Logger.LogInformation("Processing blocks");
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
+        Logger.LogInformation("TJDEBUG doitnow");
         var snapshotObserver = serviceProvider
             .GetServices<IChainObserver>()
             .OfType<ChainSnapshotObserver>()
             .Single();
 
+        Logger.LogInformation("TJDEBUG  observing snapshots");
         var meta = await snapshotObserver.Metadata;
 
         Logger.LogInformation("TJDEBUG: Metadata {}", meta);

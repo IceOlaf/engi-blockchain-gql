@@ -199,6 +199,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
         }
         catch (Exception ex)
         {
+            Logger.LogError("Subscription processing terminated: {}", ex);
             CaptureException(LogLevel.Critical, ex);
 
             throw;

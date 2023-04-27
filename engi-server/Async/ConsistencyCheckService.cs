@@ -93,6 +93,7 @@ from ConsistencyCheckCommands as c where filter(c)
         }
         catch (Exception ex)
         {
+            Logger.LogError("Exception in consistency check: {}", ex);
             Sentry.CaptureException(ex);
         }
 

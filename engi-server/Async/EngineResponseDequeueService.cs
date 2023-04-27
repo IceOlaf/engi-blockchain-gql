@@ -82,6 +82,7 @@ public class EngineResponseDequeueService : BackgroundService
             {
                 if (ex.CancellationToken == stoppingToken)
                 {
+                    logger.LogError("We were told to stop: {}", ex);
                     return;
                 }
 

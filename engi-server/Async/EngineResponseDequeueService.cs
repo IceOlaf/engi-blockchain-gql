@@ -100,6 +100,7 @@ public class EngineResponseDequeueService : BackgroundService
                 continue;
             }
 
+            logger.LogInformation("{} engine responses to process", batch.Messages.Count);
             foreach (var message in batch.Messages)
             {
                 using var session = store.OpenAsyncSession();

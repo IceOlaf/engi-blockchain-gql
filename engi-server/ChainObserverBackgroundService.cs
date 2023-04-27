@@ -40,6 +40,7 @@ public class ChainObserverBackgroundService : BackgroundService
         while (!cancellation.IsCancellationRequested)
         {
             // connect and read
+            logger.LogInformation("TJDEBUG OBSERVING THINGS {}", uri);
 
             try
             {

@@ -53,10 +53,8 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<DistributeCodeCommand> batch, IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing Distribute command");
         using var session = batch.OpenAsyncSession();
 
-        Logger.LogInformation("{} Distribute commands to process", batch.Items.Count);
         foreach (var item in batch.Items)
         {
             var command = item.Result;
@@ -89,7 +87,6 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         }
 
         await session.SaveChangesAsync();
-        Logger.LogInformation("Done processing Distribute command");
     }
 
     private async Task<string?> ProcessAsync(DistributeCodeCommand command,

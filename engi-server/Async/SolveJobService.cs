@@ -43,7 +43,6 @@ from SolveJobCommands as c where filter(c) include c.JobAttemptedSnapshotId
         SubscriptionBatch<SolveJobCommand> batch,
         IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing solve jobs");
         await using var scope = serviceProvider.CreateAsyncScope();
 
         var sudoer = KeypairFactory.CreateFromAny(engiOptions.SudoChainMnemonic);
@@ -52,7 +51,6 @@ from SolveJobCommands as c where filter(c) include c.JobAttemptedSnapshotId
 
         using var session = batch.OpenAsyncSession();
 
-        Logger.LogInformation("{} solve jobs to process", batch.Items.Count);
         foreach (var item in batch.Items)
         {
             var command = item.Result;
@@ -79,7 +77,6 @@ from SolveJobCommands as c where filter(c) include c.JobAttemptedSnapshotId
         }
 
         await session.SaveChangesAsync();
-        Logger.LogInformation("Done processing solve jobs");
     }
 
     private async Task ProcessAsync(

@@ -38,17 +38,14 @@ public class ChainSnapshotObserver : IChainObserver
 
     public Task ObserveAsync(JsonRpcRequest request, JsonRpcResponse response)
     {
-    Console.WriteLine("TJDEBUG metadata fetched");
         if (request.Method == ChainKeys.StateGetMetadata)
         {
-    Console.WriteLine("TJDEBUG it was metta");
             using var stream = new ScaleStreamReader(response.Result.GetValue<string>());
 
             SetResultOrRecreate(ref metadataCompletion, RuntimeMetadata.Parse(stream));
         }
         else if (response.Method == ChainKeys.StateRuntimeVersion)
         {
-    Console.WriteLine("TJDEBUG it was rver");
             var version = response.Parameters!.Result.Deserialize<RuntimeVersion>(
                 SubstrateJsonSerializerOptions.Default)!;
 
@@ -56,7 +53,6 @@ public class ChainSnapshotObserver : IChainObserver
         }
         else if (request.Method == ChainKeys.ChainGetBlockHash && request.Params![0] == "0")
         {
-    Console.WriteLine("TJDEBUG it was bhash");
             SetResultOrRecreate(ref genesisHashCompletion, response.Result.GetValue<string>());
         }
         else

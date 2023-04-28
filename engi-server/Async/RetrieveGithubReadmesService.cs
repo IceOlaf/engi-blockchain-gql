@@ -36,10 +36,8 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<JobSnapshot> batch, IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing job snapshots");
         using var session = batch.OpenAsyncSession();
 
-        Logger.LogInformation("{} snapshots to process", batch.Items.Count);
         foreach (var item in batch.Items)
         {
             var command = item.Result;
@@ -61,7 +59,6 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
         }
 
         await session.SaveChangesAsync();
-        Logger.LogInformation("Done processing job snapshots");
     }
 
     private async Task ProcessAsync(

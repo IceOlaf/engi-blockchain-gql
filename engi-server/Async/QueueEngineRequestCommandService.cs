@@ -54,7 +54,6 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
     {
         var config = new AmazonSimpleNotificationServiceConfig();
         var stsConfig = new AmazonSecurityTokenServiceConfig();
-        Logger.LogInformation("Processing Engine requests");
 
         if(awsOptions.ServiceUrl != null)
         {
@@ -80,7 +79,6 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
         using var session = batch.OpenAsyncSession();
 
-        Logger.LogInformation("{} requests to process", batch.Items.Count);
         foreach (var item in batch.Items)
         {
             var command = item.Result;
@@ -135,7 +133,6 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
             await session.SaveChangesAsync();
         }
-        Logger.LogInformation("Done processing engine requests");
     }
 
     private static string CalculateSha256(string s)

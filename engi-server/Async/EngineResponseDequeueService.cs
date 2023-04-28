@@ -82,7 +82,6 @@ public class EngineResponseDequeueService : BackgroundService
             {
                 if (ex.CancellationToken == stoppingToken)
                 {
-                    logger.LogError("We were told to stop: {}", ex);
                     return;
                 }
 
@@ -101,7 +100,6 @@ public class EngineResponseDequeueService : BackgroundService
                 continue;
             }
 
-            logger.LogInformation("{} engine responses to process", batch.Messages.Count);
             foreach (var message in batch.Messages)
             {
                 using var session = store.OpenAsyncSession();

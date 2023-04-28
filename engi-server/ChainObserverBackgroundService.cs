@@ -40,13 +40,11 @@ public class ChainObserverBackgroundService : BackgroundService
         while (!cancellation.IsCancellationRequested)
         {
             // connect and read
-            logger.LogInformation("TJDEBUG OBSERVING THINGS {}", uri);
 
             try
             {
                 using var connection = await ChainWsConnection.CreateWithRetryAsync(uri, loggerFactory, cancellation,
                     (ex, retryInTimeSpan) => logger.LogDebug(ex, "Unable to connect. Retry in: {0}", retryInTimeSpan));
-            logger.LogInformation("TJDEBUG OBSERVE THIS!!");
 
                 logger.LogInformation("Connected to {url}.", uri);
 
@@ -122,7 +120,6 @@ public class ChainObserverBackgroundService : BackgroundService
             catch (OperationCanceledException)
                 when (cancellation.IsCancellationRequested)
             {
-            logger.LogInformation("TJDEBUG CANCELLIZE!!");
                 logger.LogInformation("Cancelled.");
 
                 // only stop if cancelled by us
@@ -131,7 +128,6 @@ public class ChainObserverBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-            logger.LogInformation("TJDEBUG EXCEPT THIS!!");
                 bool isNetworkError = ex is IOException or WebSocketException or SocketException;
 
                 if (isNetworkError)

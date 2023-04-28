@@ -33,7 +33,6 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<EmailDispatchCommand> batch, IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing email dispatch");
         var razorlight = serviceProvider.GetRequiredService<IRazorLightEngine>();
         var sendgrid = serviceProvider.GetRequiredService<SendGridClient>();
         var emailOptions = serviceProvider.GetRequiredService<IOptions<EmailOptions>>().Value;
@@ -43,7 +42,6 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
 
         using var session = batch.OpenAsyncSession();
 
-        Logger.LogInformation("{} email dispatch to process");
         foreach (var item in batch.Items)
         {
             var command = item.Result;
@@ -113,6 +111,5 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
         }
 
         await session.SaveChangesAsync();
-        Logger.LogInformation("{Done processing email dispatch");
     }
 }

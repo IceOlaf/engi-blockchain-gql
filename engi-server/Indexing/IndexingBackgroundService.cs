@@ -97,19 +97,14 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     protected override async Task ProcessBatchAsync(
         SubscriptionBatch<ExpandedBlock> batch, IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing blocks");
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
-        Logger.LogInformation("TJDEBUG doitnow");
         var snapshotObserver = serviceProvider
             .GetServices<IChainObserver>()
             .OfType<ChainSnapshotObserver>()
             .Single();
 
-        Logger.LogInformation("TJDEBUG  observing snapshots");
         var meta = await snapshotObserver.Metadata;
-
-        Logger.LogInformation("TJDEBUG: Metadata {}", meta);
 
         using var session = batch.OpenAsyncSession();
 
@@ -117,7 +112,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
         session.Advanced.MaxNumberOfRequestsPerSession = batch.NumberOfItemsInBatch * 10;
 
-        Logger.LogInformation("TJDEBUG get last block");
         var previousBlocks = await session
             .LoadAsync<ExpandedBlock>(batch.Items.Select(x => x.Result.PreviousId));
 
@@ -126,7 +120,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         var metadataById = batch.Items
             .ToDictionary(x => x.Id, x => session.Advanced.GetMetadataFor(x.Result));
 
-        Logger.LogInformation("{} processing blocks to fetch");
         await batch.Items.ParallelForEachAsync(async doc =>
         {
             var client = new SubstrateClient(httpClientFactory);
@@ -205,7 +198,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         }
 
         await session.SaveChangesAsync();
-        Logger.LogInformation("Done processing blocks");
     }
 
     private async Task<IEnumerable<object>> ProcessBatchItemAsync(

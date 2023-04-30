@@ -1,4 +1,6 @@
 using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Engi.Substrate;
@@ -17,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
@@ -276,6 +279,39 @@ if(engiOptions.DisableEngineIntegration == false)
     builder.Services.AddHostedService<QueueEngineRequestCommandService>();
     builder.Services.AddHostedService<SolveJobService>();
 }
+
+// aws
+
+builder.Services.AddTransient<Func<Task<Credentials>>>(serviceProvider =>
+{
+    var cache = serviceProvider.GetRequiredService<IMemoryCache>();
+    var awsOptions = serviceProvider.GetRequiredService<IOptions<AwsOptions>>().Value;
+
+    return () => cache.GetOrCreateAsync("sts-assume-role", async e =>
+    {
+        if (string.IsNullOrEmpty(engiOptions.AssumeRoleArn))
+        {
+            return (Credentials) FallbackCredentialsFactory.GetCredentials();
+        }
+
+        var stsConfig = new AmazonSecurityTokenServiceConfig().Apply(awsOptions);
+
+        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
+
+        var assumedRole = await sts.AssumeRoleAsync(new AssumeRoleRequest
+        {
+            DurationSeconds = (int)TimeSpan.FromMinutes(30).TotalSeconds,
+            RoleSessionName = "graphql",
+            RoleArn = engiOptions.AssumeRoleArn
+        });
+
+        // expire cache 15 minutes before actually expiring to allow time for processing
+
+        e.AbsoluteExpiration = assumedRole.Credentials.Expiration - TimeSpan.FromMinutes(15);
+
+        return assumedRole.Credentials;
+    });
+});
 
 // localstack
 

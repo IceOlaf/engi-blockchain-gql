@@ -2,6 +2,7 @@ using Engi.Substrate.Github;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
@@ -15,13 +16,11 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
     public RetrieveGithubReadmesService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
-    {
-        MaxDocumentsPerBatch = 10;
-    }
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
+    { }
 
     protected override string CreateQuery()
     {

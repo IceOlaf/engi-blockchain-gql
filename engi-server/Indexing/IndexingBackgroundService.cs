@@ -4,6 +4,7 @@ using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
@@ -21,9 +22,9 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         IDocumentStore store,
         IServiceProvider serviceProvider,
         IHub sentry,
-        IWebHostEnvironment env,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     { }
 
     protected override string CreateQuery()

@@ -23,12 +23,11 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
         IDocumentStore store,
         IServiceProvider serviceProvider,
         Func<Task<Credentials>> credentialsFactory,
-        IWebHostEnvironment env,
         IHub sentry,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
         this.credentialsFactory = credentialsFactory;
         this.awsOptions = awsOptions.Value;

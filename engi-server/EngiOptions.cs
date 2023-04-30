@@ -82,6 +82,11 @@ public class EngiOptions
     [Required]
     public string SudoChainMnemonic { get; set; } = null!;
 
+    /// <summary>
+    /// Use a Concurrent strategy to process Raven subscriptions, where possible.
+    /// </summary>
+    public bool ProcessRavenSubscriptionsConcurrently { get; set; }
+
     public X509Certificate2 EncryptionCertificateAsX509 =>
         X509CertificatesHelper.CertificateFromBase64String(EncryptionCertificate);
 }

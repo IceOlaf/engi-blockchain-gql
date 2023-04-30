@@ -1,4 +1,5 @@
 using Engi.Substrate.Server.Indexing;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Commands.Batches;
 using Raven.Client.Documents.Operations;
@@ -13,8 +14,13 @@ namespace Engi.Substrate.Server.Async;
 
 public class ConsistencyCheckService : SubscriptionProcessingBase<ConsistencyCheckCommand>
 {
-    public ConsistencyCheckService(IDocumentStore store, IServiceProvider serviceProvider, IWebHostEnvironment env, IHub sentry, ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+    public ConsistencyCheckService(
+        IDocumentStore store,
+        IServiceProvider serviceProvider,
+        IHub sentry,
+        IOptions<EngiOptions> engiOptions,
+        ILoggerFactory loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
         ProcessConcurrently = false;
     }

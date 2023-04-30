@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions.Documents.Subscriptions;
@@ -10,8 +11,8 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
     protected SubscriptionProcessingBase(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
     {
         Name = $"SubscriptionProcessor<{GetType().Name}>";
@@ -20,7 +21,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService where T 
         ServiceProvider = serviceProvider;
         Logger = loggerFactory.CreateLogger(GetType());
         Sentry = sentry;
-        ProcessConcurrently = !env.IsDevelopment() && !env.IsEnvironment("CI");
+        ProcessConcurrently = engiOptions.Value.ProcessRavenSubscriptionsConcurrently;
     }
 
     protected string Name { get; init; }

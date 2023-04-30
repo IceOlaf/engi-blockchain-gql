@@ -27,12 +27,12 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
     public DistributeCodeService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
         ILoggerFactory loggerFactory,
         IOptionsMonitor<ApplicationOptions> applicationOptions,
+        IOptions<EngiOptions> engiOptions,
         IOptionsMonitor<SubstrateClientOptions> substrateOptions)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
         this.applicationOptions = applicationOptions;
         this.substrateOptions = substrateOptions;

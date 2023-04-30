@@ -34,9 +34,31 @@ from ConsistencyCheckCommands as c where filter(c)
     {
         using var session = Store.OpenAsyncSession();
 
+        // if someone else is working on the document, leave it alone
+
         session.Advanced.UseOptimisticConcurrency = true;
 
-        await session.StoreAsync(new ConsistencyCheckCommand());
+        var command = await session
+            .LoadAsync<ConsistencyCheckCommand>(
+                ConsistencyCheckCommand.Key);
+
+        if (command == null)
+        {
+            command = new ConsistencyCheckCommand();
+
+            await session.StoreAsync(command);
+        }
+        else
+        {
+            var metadata = session.Advanced.GetMetadataFor(command);
+
+            // make sure there is a refresh value
+
+            if (!metadata.ContainsKey(Constants.Documents.Metadata.Refresh))
+            {
+                metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddMinutes(15);
+            }
+        }
 
         try
         {
@@ -51,6 +73,12 @@ from ConsistencyCheckCommands as c where filter(c)
     protected override async Task ProcessBatchAsync(SubscriptionBatch<ConsistencyCheckCommand> batch, IServiceProvider serviceProvider)
     {
         using var session = batch.OpenAsyncSession();
+
+        // if the consistency check is running but another process modifies the document
+        // we want to allow the service to replace any changes (most likely made by nodes
+        // executing InitializeAsync)
+
+        session.Advanced.UseOptimisticConcurrency = false;
 
         foreach (var item in batch.Items)
         {
@@ -91,7 +119,7 @@ from ConsistencyCheckCommands as c where filter(c)
         }
         catch (Exception ex)
         {
-            Sentry.CaptureException(ex);
+            Logger.LogError(ex, "Failed while executing consistency check.");
         }
 
         return recovered;

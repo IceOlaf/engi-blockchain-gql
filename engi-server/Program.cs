@@ -1,3 +1,4 @@
+using Amazon.Runtime;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Engi.Substrate;
@@ -288,15 +289,11 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
             Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as described in DEVELOPMENT.md.");
         }
 
-        var sns = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
-        {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+        var sns = new AmazonSimpleNotificationServiceClient(
+            new AmazonSimpleNotificationServiceConfig().Apply(awsOptions));
 
-        var sqs = new AmazonSQSClient(new AmazonSQSConfig
-        {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+        var sqs = new AmazonSQSClient(
+            new AmazonSQSConfig().Apply(awsOptions));
 
         while (true)
         {

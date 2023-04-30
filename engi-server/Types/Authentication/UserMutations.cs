@@ -1,3 +1,4 @@
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Util;
@@ -228,13 +229,7 @@ public class UserMutations : ObjectGraphType
 
     private static AmazonS3Client CreateS3Client(AwsOptions awsOptions)
     {
-        var config = new AmazonS3Config();
-
-        if (awsOptions.ServiceUrl != null)
-        {
-            config.ServiceURL = awsOptions.ServiceUrl;
-        }
-
-        return new AmazonS3Client(config);
+        return new AmazonS3Client(
+            new AmazonS3Config().Apply(awsOptions));
     }
 }

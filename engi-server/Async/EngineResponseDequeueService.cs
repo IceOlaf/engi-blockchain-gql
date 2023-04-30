@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SQS;
@@ -35,14 +36,8 @@ public class EngineResponseDequeueService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var config = new AmazonSQSConfig();
-        var stsConfig = new AmazonSecurityTokenServiceConfig();
-
-        if(awsOptions.ServiceUrl != null)
-        {
-            config.ServiceURL = awsOptions.ServiceUrl;
-            stsConfig.ServiceURL = awsOptions.ServiceUrl;
-        }
+        var config = new AmazonSQSConfig().Apply(awsOptions);
+        var stsConfig = new AmazonSecurityTokenServiceConfig().Apply(awsOptions);
 
         var sts = new AmazonSecurityTokenServiceClient(stsConfig);
 

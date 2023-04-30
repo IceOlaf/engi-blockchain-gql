@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
@@ -50,14 +51,8 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<QueueEngineRequestCommand> batch, IServiceProvider serviceProvider)
     {
-        var config = new AmazonSimpleNotificationServiceConfig();
-        var stsConfig = new AmazonSecurityTokenServiceConfig();
-
-        if(awsOptions.ServiceUrl != null)
-        {
-            config.ServiceURL = awsOptions.ServiceUrl;
-            stsConfig.ServiceURL = awsOptions.ServiceUrl;
-        }
+        var config = new AmazonSimpleNotificationServiceConfig().Apply(awsOptions);
+        var stsConfig = new AmazonSecurityTokenServiceConfig().Apply(awsOptions);
 
         CancellationTokenSource s = new CancellationTokenSource();
         var stoppingToken = s.Token;

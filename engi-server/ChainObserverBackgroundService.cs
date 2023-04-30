@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text.Json;
+using Engi.Substrate.Observers;
 using Engi.Substrate.WebSockets;
 using Microsoft.Extensions.Options;
 

@@ -1,3 +1,5 @@
+using Engi.Substrate.Observers;
+
 namespace Engi.Substrate.Server;
 
 public class LatestChainStateProvider

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using Engi.Substrate.Server.Indexing;
+using Engi.Substrate.Indexing;
 using Engi.Substrate.Server.Types.Validation;
 
 namespace Engi.Substrate.Server.Types;

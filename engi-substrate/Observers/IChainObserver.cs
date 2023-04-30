@@ -1,6 +1,6 @@
 using Engi.Substrate.WebSockets;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Observers;
 
 public interface IChainObserver
 {

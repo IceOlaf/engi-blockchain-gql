@@ -4,15 +4,17 @@ using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Observers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
 using Sentry;
-
 using Constants = Raven.Client.Constants;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBlock>
 {

@@ -1,6 +1,6 @@
 using Raven.Client.Documents.Indexes;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class BlockIndex : AbstractIndexCreationTask<ExpandedBlock>
 {

@@ -1,8 +1,8 @@
 using System.Text;
 using Engi.Substrate.Identity;
+using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;
-using Engi.Substrate.Server.Indexing;
 using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
 using Microsoft.Extensions.Options;

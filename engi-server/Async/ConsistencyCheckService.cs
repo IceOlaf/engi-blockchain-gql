@@ -1,4 +1,5 @@
-using Engi.Substrate.Server.Indexing;
+using Engi.Substrate.Indexing;
+using Engi.Substrate.Observers;
 using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Commands.Batches;

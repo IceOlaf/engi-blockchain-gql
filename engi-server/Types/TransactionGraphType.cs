@@ -1,4 +1,4 @@
-using Engi.Substrate.Server.Indexing;
+using Engi.Substrate.Indexing;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;

@@ -11,7 +11,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AsyncEnumerator" Version="4.*" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.101.54" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.101.52" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.100.3" />
@@ -33,11 +32,5 @@
   <ItemGroup>
     <ProjectReference Include="..\engi-substrate\Engi.Substrate.csproj" />
     <ProjectReference Include="..\libgit2sharp\LibGit2Sharp\LibGit2Sharp.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>Engi.Substrate.Playground</_Parameter1>
-    </AssemblyAttribute>
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@ using System.Text.Json;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.WebSockets;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Observers;
 
 public class ChainSnapshotObserver : IChainObserver
 {

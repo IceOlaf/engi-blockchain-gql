@@ -1,4 +1,4 @@
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate;
 
 public class SubscriptionProcessingTerminatedException : Exception
 {

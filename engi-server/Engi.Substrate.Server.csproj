@@ -35,4 +35,9 @@
     <ProjectReference Include="..\libgit2sharp\LibGit2Sharp\LibGit2Sharp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>Engi.Substrate.Playground</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>

@@ -201,7 +201,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         await session.SaveChangesAsync();
     }
 
-    private async Task<IEnumerable<object>> ProcessBatchItemAsync(
+    internal static async Task<IEnumerable<object>> ProcessBatchItemAsync(
         ExpandedBlock block,
         ExpandedBlock? previous,
         RuntimeMetadata meta,
@@ -268,7 +268,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         return results;
     }
 
-    private async Task<JobSnapshot> RetrieveJobSnapshotAsync(
+    private static async Task<JobSnapshot> RetrieveJobSnapshotAsync(
         ulong jobId,
         ExpandedBlock block,
         SubstrateClient client)
@@ -279,7 +279,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             reader => JobSnapshot.Parse(reader, block), block.Hash!))!;
     }
 
-    private IEnumerable<Indexable> GetIndexables(ExpandedBlock block)
+    private static IEnumerable<Indexable> GetIndexables(ExpandedBlock block)
     {
         foreach (var extrinsic in block.Extrinsics.Where(x => x.IsSuccessful))
         {

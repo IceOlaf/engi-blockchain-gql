@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\engi-server\Engi.Substrate.Server.csproj" />
     <ProjectReference Include="..\engi-substrate\Engi.Substrate.csproj" />
   </ItemGroup>
 

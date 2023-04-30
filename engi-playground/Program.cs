@@ -9,11 +9,13 @@ using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Keys;
 using Engi.Substrate.Server;
+using Engi.Substrate.Server.Indexing;
 using Org.BouncyCastle.Crypto.Encodings;
 using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.OpenSsl;
 using Raven.Client.Documents;
+using Raven.Client.Documents.Session;
 
 namespace Engi.Substrate.Playground;
 
@@ -21,7 +23,7 @@ namespace Engi.Substrate.Playground;
 
 public static class Program
 {
-    private static readonly string ChainUrl = "http://localhost:9933";
+    private static readonly string ChainUrl = "https://testnet.engi.network:9933";
     private static readonly string BaseUrl = "http://localhost:5000";
 
     // //Dave
@@ -44,6 +46,28 @@ public static class Program
 
     public static async Task Main()
     {
+        await IndexBlockAsync("0x007244bf671eafc602e3c9a6fc7c270079d4d4527fdb97e4ca94faf2c6d36b13");
+
+        return;
+    }
+
+    private static async Task IndexBlockAsync(string blockHash)
+    {
+        var client = new SubstrateClient(ChainUrl);
+
+        var header = await client.GetChainHeaderAsync(blockHash);
+
+        var meta = await client.GetStateMetadataAsync();
+
+        var block = new ExpandedBlock(header!);
+
+        await IndexingBackgroundService.ProcessBatchItemAsync(block, null, meta, client);
+
+        var (session, _) = OpenAsyncSession();
+
+        await session.StoreAsync(block);
+
+        await session.SaveChangesAsync();
     }
 
     private static async Task TryLoginAsync(Keypair keypair)
@@ -132,9 +156,9 @@ public static class Program
         return Convert.ToBase64String(encrypted);
     }
 
-    private static async Task JobWorkflowTestCaseAsync()
+    private static (IAsyncDocumentSession session, DocumentStore store) OpenAsyncSession()
     {
-        using var store = new DocumentStore
+        var store = new DocumentStore
         {
             Urls = new[] { "http://localhost:8080 " },
             Database = "engi-local"
@@ -144,9 +168,16 @@ public static class Program
 
         store.Initialize();
 
-        using var session = store.OpenAsyncSession();
+        var session = store.OpenAsyncSession();
 
         session.Advanced.MaxNumberOfRequestsPerSession = 100000;
+
+        return (session, store);
+    }
+
+    private static async Task JobWorkflowTestCaseAsync()
+    {
+        var (session, store) = OpenAsyncSession();
 
         // create a job
 

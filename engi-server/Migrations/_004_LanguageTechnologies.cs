@@ -1,4 +1,3 @@
-using Raven.Client.Documents.Operations.Indexes;
 using Raven.Migrations;
 
 namespace Engi.Substrate.Server.Migrations;

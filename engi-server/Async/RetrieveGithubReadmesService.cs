@@ -90,8 +90,10 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
         var creatorId = creatorReferenceLazy.Value.Result;
 
-        if (creatorId == null) {
-            return;
+        if (creatorId == null)
+        {
+            throw new ChainAssumptionInconsistencyException(
+                $"A user matching address={job.Creator} was not found.");
         }
 
         var creator = await session.LoadAsync<User>(

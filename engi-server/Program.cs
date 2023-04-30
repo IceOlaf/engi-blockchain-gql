@@ -1,3 +1,4 @@
+using Amazon.IdentityManagement;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
@@ -343,6 +344,9 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
             Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as described in DEVELOPMENT.md.");
         }
 
+        var iam = new AmazonIdentityManagementServiceClient(
+            new AmazonIdentityManagementServiceConfig().Apply(awsOptions));
+
         var sns = new AmazonSimpleNotificationServiceClient(
             new AmazonSimpleNotificationServiceConfig().Apply(awsOptions));
 
@@ -374,6 +378,12 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
             Console.WriteLine($"{queues.QueueUrls.Count}/2 queues found, waiting for 5 sec.");
             Thread.Sleep(5000);
         }
+
+        var iamRole = iam.ListRolesAsync().GetAwaiter().GetResult()
+            .Roles
+            .First();
+
+        engiOptions.AssumeRoleArn = iamRole.Arn;
 
         var inTopic = sns.FindTopicAsync("graphql-engine-in.fifo").GetAwaiter().GetResult();
 

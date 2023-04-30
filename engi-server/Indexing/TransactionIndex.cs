@@ -104,9 +104,19 @@ namespace Engi.Substrate.Server.Indexing
                 return null;
             }
 
-            if(pallet == ""Exchange"")
+            if(pallet == ""Exchange"" && call == ""sell"")
             {
                 return TransactionType.Exchange;
+            }
+
+            if(pallet == ""ChainBridge"" && call == ""acknowledge_proposal"")
+            {
+                var innerCall = args.call?.Exchange?.transfer;
+
+                if(innerCall != null)
+                {
+                    return TransactionType.Exchange;
+                }
             }
 
             if(pallet == ""Balances"")
@@ -136,9 +146,12 @@ namespace Engi.Substrate.Server.Indexing
         {
             if(type == TransactionType.Exchange)
             {
-                decimal amount = decimal.Parse((string) args.amount);
+                if(callName == ""sell"")
+                {
+                    return -decimal.Parse((string) args.amount);
+                }
 
-                return callName == ""sell"" ? -amount : amount;
+                return decimal.Parse((string) args.call.Exchange.transfer[1]);
             }
 
             if(type == TransactionType.Transfer)

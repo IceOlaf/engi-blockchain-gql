@@ -13,16 +13,7 @@ public class SudoApiKeyAuthenticationHandler : AuthenticationHandler<SudoApiKeyA
         UrlEncoder encoder,
         ISystemClock clock)
         : base(options, logger, encoder, clock)
-    {
-        string apiKey = (options.Get(AuthenticationSchemes.ApiKey).ApiKey ?? string.Empty)
-            .Replace(" ", string.Empty);
-
-        if (apiKey.Length < 8)
-        {
-            throw new ArgumentNullException(
-                nameof(apiKey), "API key must be 8 characters or longer and not contain any spaces.");
-        }
-    }
+    { }
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {

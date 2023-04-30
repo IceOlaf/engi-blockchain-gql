@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Raven.Client.Documents.Conventions;
@@ -25,7 +26,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var applicationSection = builder.Configuration.GetRequiredSection("Application");
 var engiSection = builder.Configuration.GetRequiredSection("Engi");
-var substrateSection = builder.Configuration.GetRequiredSection("Substrate");
 
 builder.WebHost.UseSentry(options =>
 {
@@ -39,15 +39,20 @@ builder.Services.AddHealthChecks();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
-builder.Services.Configure<SubstrateClientOptions>(substrateSection);
-builder.Services.AddHttpClient(nameof(SubstrateClient), http =>
+builder.Services.AddOptions<SubstrateClientOptions>()
+    .Bind(builder.Configuration.GetRequiredSection("Substrate"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddHttpClient(nameof(SubstrateClient), (serviceProvider, http) =>
     {
-        var options = substrateSection
-            .Get<SubstrateClientOptions>();
+        var options = serviceProvider
+            .GetRequiredService<IOptions<SubstrateClientOptions>>().Value;
 
         http.BaseAddress = new Uri(options.HttpUrl);
     })
     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, @try => TimeSpan.FromSeconds(@try)));
+
 builder.Services.AddTransient(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
@@ -82,8 +87,15 @@ builder.Services
         opts.JsonSerializerOptions.Converters.Add(new InputsJsonConverter());
     });
 
-builder.Services.Configure<ApplicationOptions>(applicationSection);
-builder.Services.Configure<EngiOptions>(engiSection);
+builder.Services.AddOptions<ApplicationOptions>()
+    .Bind(applicationSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<EngiOptions>()
+    .Bind(engiSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 var jwtSection = builder.Configuration.GetRequiredSection("Jwt");
 var jwtOptions = jwtSection.Get<JwtOptions>();
@@ -102,7 +114,11 @@ var jwtTokenValidationParameters = new TokenValidationParameters
     ValidateLifetime = true
 };
 
-builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(jwtSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(jwtOptions);
 builder.Services.AddSingleton(jwtTokenValidationParameters);
 
@@ -265,16 +281,18 @@ if(engiOptions.DisableEngineIntegration == false)
 
 var awsSection = builder.Configuration.GetRequiredSection("Aws");
 
-builder.Services.Configure<AwsOptions>(awsSection)
-    .PostConfigure<AwsOptions>(aws =>
-    {
-        // just to be safe, override this if not running locally
+builder.Services.AddOptions<AwsOptions>()
+    .Bind(awsSection);
 
-        if (!builder.Environment.IsDevelopment())
-        {
-            aws.ServiceUrl = null;
-        }
-    });
+builder.Services.PostConfigure<AwsOptions>(aws =>
+{
+    // just to be safe, override this if not running locally
+
+    if (!builder.Environment.IsDevelopment())
+    {
+        aws.ServiceUrl = null;
+    }
+});
 
 if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration == false)
 {

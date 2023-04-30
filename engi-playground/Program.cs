@@ -21,7 +21,7 @@ namespace Engi.Substrate.Playground;
 
 public static class Program
 {
-    private static readonly string ChainUrl = "https://testnet.engi.network:9933";
+    private static readonly string ChainUrl = "http://localhost:9933";
     private static readonly string BaseUrl = "http://localhost:5000";
 
     // //Dave
@@ -44,9 +44,6 @@ public static class Program
 
     public static async Task Main()
     {
-        await IndexBlockAsync("0x007244bf671eafc602e3c9a6fc7c270079d4d4527fdb97e4ca94faf2c6d36b13");
-
-        return;
     }
 
     private static async Task IndexBlockAsync(string blockHash)

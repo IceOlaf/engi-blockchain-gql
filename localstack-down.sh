@@ -7,7 +7,14 @@ if ! command -v awslocal &> /dev/null; then
     exit
 fi
 
-down() {
+down_iam() {
+    if awslocal iam get-role --role-name graphql-testing &> /dev/null; then
+      awslocal iam delete-role --role-name graphql-testing
+      echo "Cleaned up IAM role."
+    fi
+}
+
+down_sns_sqs_pair() {
     QUEUE_NAME=$1
     TOPIC_NAME=$1
 
@@ -24,5 +31,6 @@ down() {
     fi
 }
 
-down "graphql-engine-in.fifo"
-down "graphql-engine-out.fifo"
+down_iam
+down_sns_sqs_pair "graphql-engine-in.fifo"
+down_sns_sqs_pair "graphql-engine-out.fifo"

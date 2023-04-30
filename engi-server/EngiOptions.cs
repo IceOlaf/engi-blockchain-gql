@@ -87,6 +87,11 @@ public class EngiOptions
     /// </summary>
     public bool ProcessRavenSubscriptionsConcurrently { get; set; }
 
+    /// <summary>
+    /// Max documents per batch used for engine-related subscriptions.
+    /// </summary>
+    public int ProcessRavenSubscriptionsMaxDocumentPerEngineBatch { get; set; } = 4;
+
     public X509Certificate2 EncryptionCertificateAsX509 =>
         X509CertificatesHelper.CertificateFromBase64String(EncryptionCertificate);
 }

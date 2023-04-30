@@ -23,7 +23,7 @@ public class SolveJobService : SubscriptionProcessingBase<SolveJobCommand>
     {
         this.engiOptions = engiOptions.Value;
 
-        MaxDocumentsPerBatch = 1;
+        MaxDocumentsPerBatch = engiOptions.Value.ProcessRavenSubscriptionsMaxDocumentPerEngineBatch;
     }
 
     protected override string CreateQuery()

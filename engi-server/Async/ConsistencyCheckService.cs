@@ -22,6 +22,8 @@ public class ConsistencyCheckService : SubscriptionProcessingBase<ConsistencyChe
         ILoggerFactory loggerFactory)
         : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
+        // should never be processed concurrently
+
         ProcessConcurrently = false;
     }
 

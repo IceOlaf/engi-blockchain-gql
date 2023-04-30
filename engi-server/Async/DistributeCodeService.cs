@@ -37,7 +37,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         this.applicationOptions = applicationOptions;
         this.substrateOptions = substrateOptions;
 
-        MaxDocumentsPerBatch = 1;
+        MaxDocumentsPerBatch = engiOptions.Value.ProcessRavenSubscriptionsMaxDocumentPerEngineBatch;
     }
 
     protected override string CreateQuery()

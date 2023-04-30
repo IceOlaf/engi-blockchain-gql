@@ -282,7 +282,7 @@ if(engiOptions.DisableEngineIntegration == false)
 
 // aws
 
-builder.Services.AddTransient<Func<Task<Credentials>>>(serviceProvider =>
+builder.Services.AddTransient<Func<Task<AWSCredentials>>>(serviceProvider =>
 {
     var cache = serviceProvider.GetRequiredService<IMemoryCache>();
     var awsOptions = serviceProvider.GetRequiredService<IOptions<AwsOptions>>().Value;
@@ -291,7 +291,7 @@ builder.Services.AddTransient<Func<Task<Credentials>>>(serviceProvider =>
     {
         if (string.IsNullOrEmpty(engiOptions.AssumeRoleArn))
         {
-            return (Credentials) FallbackCredentialsFactory.GetCredentials();
+            return FallbackCredentialsFactory.GetCredentials();
         }
 
         var stsConfig = new AmazonSecurityTokenServiceConfig().Apply(awsOptions);

@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Amazon.Runtime;
-using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Engi.Substrate.Jobs;
@@ -15,14 +14,14 @@ namespace Engi.Substrate.Server.Async;
 
 public class QueueEngineRequestCommandService : SubscriptionProcessingBase<QueueEngineRequestCommand>
 {
-    private readonly Func<Task<Credentials>> credentialsFactory;
+    private readonly Func<Task<AWSCredentials>> credentialsFactory;
     private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
     public QueueEngineRequestCommandService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        Func<Task<Credentials>> credentialsFactory,
+        Func<Task<AWSCredentials>> credentialsFactory,
         IHub sentry,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions,

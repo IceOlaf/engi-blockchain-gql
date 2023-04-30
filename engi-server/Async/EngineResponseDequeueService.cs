@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Amazon.Runtime;
-using Amazon.SecurityToken.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -13,14 +12,14 @@ namespace Engi.Substrate.Server.Async;
 public class EngineResponseDequeueService : BackgroundService
 {
     private readonly IDocumentStore store;
-    private readonly Func<Task<Credentials>> credentialsFactory;
+    private readonly Func<Task<AWSCredentials>> credentialsFactory;
     private readonly ILogger logger;
     private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
     public EngineResponseDequeueService(
         IDocumentStore store,
-        Func<Task<Credentials>> credentialsFactory,
+        Func<Task<AWSCredentials>> credentialsFactory,
         ILogger<EngineResponseDequeueService> logger,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions)

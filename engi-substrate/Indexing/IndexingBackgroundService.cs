@@ -107,7 +107,9 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             .OfType<ChainSnapshotObserver>()
             .Single();
 
-        var meta = await snapshotObserver.Metadata;
+        var meta = await snapshotObserver.Metadata
+            // this will timeout if the snapshot observer from the ChainObserverBackgroundService is not running
+            .TimeoutAfter(TimeSpan.FromSeconds(30));
 
         using var session = batch.OpenAsyncSession();
 

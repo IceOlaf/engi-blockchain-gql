@@ -261,7 +261,7 @@ public static class Program
             JobId = jobId,
             Attempt = new()
             {
-                AttemptId = 100,
+                AttemptId = solutionId,
                 Attempter = solver,
                 Tests = new TestAttempt[]
                 {

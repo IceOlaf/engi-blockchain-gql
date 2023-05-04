@@ -1,3 +1,4 @@
+using Engi.Substrate.Observers;
 using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types;

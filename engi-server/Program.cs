@@ -1,13 +1,17 @@
+using Amazon.IdentityManagement;
+using Amazon.Runtime;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Engi.Substrate;
 using Engi.Substrate.Indexing;
+using Engi.Substrate.Observers;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Authentication;
 using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Github;
-using Engi.Substrate.Server.Indexing;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Server.Transports.AspNetCore;
@@ -16,6 +20,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Raven.Client.Documents.Conventions;
@@ -24,7 +30,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var applicationSection = builder.Configuration.GetRequiredSection("Application");
 var engiSection = builder.Configuration.GetRequiredSection("Engi");
-var substrateSection = builder.Configuration.GetRequiredSection("Substrate");
 
 builder.WebHost.UseSentry(options =>
 {
@@ -38,15 +43,20 @@ builder.Services.AddHealthChecks();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
-builder.Services.Configure<SubstrateClientOptions>(substrateSection);
-builder.Services.AddHttpClient(nameof(SubstrateClient), http =>
+builder.Services.AddOptions<SubstrateClientOptions>()
+    .Bind(builder.Configuration.GetRequiredSection("Substrate"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddHttpClient(nameof(SubstrateClient), (serviceProvider, http) =>
     {
-        var options = substrateSection
-            .Get<SubstrateClientOptions>();
+        var options = serviceProvider
+            .GetRequiredService<IOptions<SubstrateClientOptions>>().Value;
 
         http.BaseAddress = new Uri(options.HttpUrl);
     })
     .AddTransientHttpErrorPolicy(x => x.WaitAndRetryAsync(3, @try => TimeSpan.FromSeconds(@try)));
+
 builder.Services.AddTransient(sp =>
 {
     var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
@@ -81,8 +91,15 @@ builder.Services
         opts.JsonSerializerOptions.Converters.Add(new InputsJsonConverter());
     });
 
-builder.Services.Configure<ApplicationOptions>(applicationSection);
-builder.Services.Configure<EngiOptions>(engiSection);
+builder.Services.AddOptions<ApplicationOptions>()
+    .Bind(applicationSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<EngiOptions>()
+    .Bind(engiSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 var jwtSection = builder.Configuration.GetRequiredSection("Jwt");
 var jwtOptions = jwtSection.Get<JwtOptions>();
@@ -101,7 +118,11 @@ var jwtTokenValidationParameters = new TokenValidationParameters
     ValidateLifetime = true
 };
 
-builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.AddOptions<JwtOptions>()
+    .Bind(jwtSection)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(jwtOptions);
 builder.Services.AddSingleton(jwtTokenValidationParameters);
 
@@ -260,20 +281,55 @@ if(engiOptions.DisableEngineIntegration == false)
     builder.Services.AddHostedService<SolveJobService>();
 }
 
+// aws
+
+builder.Services.AddTransient<Func<Task<AWSCredentials>>>(serviceProvider =>
+{
+    var cache = serviceProvider.GetRequiredService<IMemoryCache>();
+    var awsOptions = serviceProvider.GetRequiredService<IOptions<AwsOptions>>().Value;
+
+    return () => cache.GetOrCreateAsync("sts-assume-role", async e =>
+    {
+        if (string.IsNullOrEmpty(engiOptions.AssumeRoleArn))
+        {
+            return FallbackCredentialsFactory.GetCredentials();
+        }
+
+        var stsConfig = new AmazonSecurityTokenServiceConfig().Apply(awsOptions);
+
+        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
+
+        var assumedRole = await sts.AssumeRoleAsync(new AssumeRoleRequest
+        {
+            DurationSeconds = (int)TimeSpan.FromMinutes(30).TotalSeconds,
+            RoleSessionName = "graphql",
+            RoleArn = engiOptions.AssumeRoleArn
+        });
+
+        // expire cache 15 minutes before actually expiring to allow time for processing
+
+        e.AbsoluteExpiration = assumedRole.Credentials.Expiration - TimeSpan.FromMinutes(15);
+
+        return assumedRole.Credentials;
+    });
+});
+
 // localstack
 
 var awsSection = builder.Configuration.GetRequiredSection("Aws");
 
-builder.Services.Configure<AwsOptions>(awsSection)
-    .PostConfigure<AwsOptions>(aws =>
-    {
-        // just to be safe, override this if not running locally
+builder.Services.AddOptions<AwsOptions>()
+    .Bind(awsSection);
 
-        if (!builder.Environment.IsDevelopment())
-        {
-            aws.ServiceUrl = null;
-        }
-    });
+builder.Services.PostConfigure<AwsOptions>(aws =>
+{
+    // just to be safe, override this if not running locally
+
+    if (!builder.Environment.IsDevelopment())
+    {
+        aws.ServiceUrl = null;
+    }
+});
 
 if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration == false)
 {
@@ -288,15 +344,14 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
             Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as described in DEVELOPMENT.md.");
         }
 
-        var sns = new AmazonSimpleNotificationServiceClient(new AmazonSimpleNotificationServiceConfig
-        {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+        var iam = new AmazonIdentityManagementServiceClient(
+            new AmazonIdentityManagementServiceConfig().Apply(awsOptions));
 
-        var sqs = new AmazonSQSClient(new AmazonSQSConfig
-        {
-            ServiceURL = awsOptions.ServiceUrl
-        });
+        var sns = new AmazonSimpleNotificationServiceClient(
+            new AmazonSimpleNotificationServiceConfig().Apply(awsOptions));
+
+        var sqs = new AmazonSQSClient(
+            new AmazonSQSConfig().Apply(awsOptions));
 
         while (true)
         {
@@ -323,6 +378,12 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
             Console.WriteLine($"{queues.QueueUrls.Count}/2 queues found, waiting for 5 sec.");
             Thread.Sleep(5000);
         }
+
+        var iamRole = iam.ListRolesAsync().GetAwaiter().GetResult()
+            .Roles
+            .First();
+
+        engiOptions.AssumeRoleArn = iamRole.Arn;
 
         var inTopic = sns.FindTopicAsync("graphql-engine-in.fifo").GetAwaiter().GetResult();
 

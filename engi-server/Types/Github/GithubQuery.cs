@@ -35,10 +35,11 @@ public class GithubQuery : ObjectGraphType
             .ResolveAsync(GetCommitsAsync)
             .AuthorizeWithPolicy(PolicyNames.Authenticated);
 
-        Field<UserGithubEnrollmentGraphType>("jobAuthorization")
-            .Description("Get GitHub authorization for a particular job.")
-            .Argument<NonNullGraphType<StringGraphType>>("jobId")
-            .ResolveAsync(GetAuthorizationForJobAsync)
+        Field<UserGithubEnrollmentGraphType>("repositoryAuthorization")
+            .Description("Get GitHub authorization for a user/repository pair.")
+            .Argument<NonNullGraphType<StringGraphType>>("userId")
+            .Argument<NonNullGraphType<StringGraphType>>("repositoryUrl")
+            .ResolveAsync(GetAuthorizationForRepositoryAsync)
             .AuthorizeWithPolicy(PolicyNames.Sudo);
     }
 
@@ -190,48 +191,26 @@ public class GithubQuery : ObjectGraphType
             }));
     }
 
-    private async Task<object?> GetAuthorizationForJobAsync(IResolveFieldContext<object?> context)
+    private async Task<object?> GetAuthorizationForRepositoryAsync(IResolveFieldContext<object?> context)
     {
-        ulong jobId = context.GetArgument<ulong>("jobId");
+        string userId = context.GetArgument<string>("userId");
+        string repositoryUrl = context.GetArgument<string>("repositoryUrl");
 
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        var reference = await session
-            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
-                include => include.IncludeDocuments<ReduceOutputReference>(x => x.ReduceOutputs));
+        var user = await session.LoadAsync<User>(userId);
 
-        if (reference == null)
+        if (user == null)
         {
-            return null;
+            throw new InvalidOperationException(
+                $"Invalid engine request to get github authorization for user id={userId}; user does not exist.");
         }
 
-        var job = await session.LoadAsync<Job>(reference.ReduceOutputs.First());
+        var fullName = RepositoryUrl.ParseFullName(repositoryUrl);
 
-        if(job == null)
-        {
-            throw new ExecutionError("Job was not found.")
-            {
-                Code = "NOT_FOUND"
-            };
-        }
-
-        var creatorReference = await session
-            .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(job.Creator),
-                include => include.IncludeDocuments(x => x.UserId));
-
-        if(creatorReference == null)
-        {
-            throw new ExecutionError("Creator account was not found.")
-            {
-                Code = "NOT_FOUND"
-            };
-        }
-
-        var creator = await session.LoadAsync<User>(creatorReference.UserId);
-
-        var (enrollment, _) = creator.GithubEnrollments.Find(job.Repository.FullName);
+        var (enrollment, _) = user.GithubEnrollments.Find(fullName);
 
         return enrollment;
     }

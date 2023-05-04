@@ -1,6 +1,6 @@
 using Engi.Substrate.Metadata.V14;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class ExpandedBlock
 {

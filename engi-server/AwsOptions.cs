@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Engi.Substrate.Server;
 
 public class AwsOptions
@@ -11,5 +13,6 @@ public class AwsOptions
     /// <summary>
     /// Bucket name for website storage.
     /// </summary>
+    [Required]
     public string BucketName { get; set; } = null!;
 }

@@ -4,14 +4,17 @@ using System.Text;
 using Dasync.Collections;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
+using Engi.Substrate.Observers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Subscriptions;
 using Raven.Client.Exceptions;
 using Sentry;
-
 using Constants = Raven.Client.Constants;
 
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBlock>
 {
@@ -21,9 +24,9 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         IDocumentStore store,
         IServiceProvider serviceProvider,
         IHub sentry,
-        IWebHostEnvironment env,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     { }
 
     protected override string CreateQuery()
@@ -104,7 +107,9 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             .OfType<ChainSnapshotObserver>()
             .Single();
 
-        var meta = await snapshotObserver.Metadata;
+        var meta = await snapshotObserver.Metadata
+            // this will timeout if the snapshot observer from the ChainObserverBackgroundService is not running
+            .TimeoutAfter(TimeSpan.FromSeconds(30));
 
         using var session = batch.OpenAsyncSession();
 
@@ -200,7 +205,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         await session.SaveChangesAsync();
     }
 
-    private async Task<IEnumerable<object>> ProcessBatchItemAsync(
+    internal static async Task<IEnumerable<object>> ProcessBatchItemAsync(
         ExpandedBlock block,
         ExpandedBlock? previous,
         RuntimeMetadata meta,
@@ -267,7 +272,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         return results;
     }
 
-    private async Task<JobSnapshot> RetrieveJobSnapshotAsync(
+    private static async Task<JobSnapshot> RetrieveJobSnapshotAsync(
         ulong jobId,
         ExpandedBlock block,
         SubstrateClient client)
@@ -278,7 +283,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             reader => JobSnapshot.Parse(reader, block), block.Hash!))!;
     }
 
-    private IEnumerable<Indexable> GetIndexables(ExpandedBlock block)
+    private static IEnumerable<Indexable> GetIndexables(ExpandedBlock block)
     {
         foreach (var extrinsic in block.Extrinsics.Where(x => x.IsSuccessful))
         {

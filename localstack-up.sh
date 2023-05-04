@@ -13,7 +13,17 @@ then
     apt update && apt install jq gettext -y
 fi
 
-up() {
+POLICY=`echo '{ "Version": "2012-10-17", "Statement": { "Effect": "Allow", "Principal": "*", "Action": "SQS:SendMessage", "Resource": "${QUEUE_ARN}", "Condition": { "ArnEquals": { "aws:SourceArn": "${TOPIC_ARN}" } } } }' | envsubst`
+echo $POLICY > ./policy.json
+
+up_iam() {
+  ROLE_POLICY='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
+  awslocal iam create-role --role-name graphql-testing --assume-role-policy-document "${ROLE_POLICY}"
+
+  echo "Created IAM role."
+}
+
+up_sns_sqs_pair() {
     QUEUE_NAME=$1
     TOPIC_NAME=$1
 
@@ -32,11 +42,7 @@ up() {
     export QUEUE_ARN=`awslocal sqs get-queue-attributes --queue-url $QUEUE_URL --attribute-names QueueArn | jq -r .Attributes.QueueArn`
     export TOPIC_ARN=`awslocal sns create-topic --name $TOPIC_NAME --attributes FifoTopic=true | jq -r .TopicArn`
 
-    POLICY=`echo '{ "Version": "2012-10-17", "Statement": { "Effect": "Allow", "Principal": "*", "Action": "SQS:SendMessage", "Resource": "${QUEUE_ARN}", "Condition": { "ArnEquals": { "aws:SourceArn": "${TOPIC_ARN}" } } } }' | envsubst`
-
-    echo $POLICY > ./policy.json
     awslocal sqs set-queue-attributes --queue-url $QUEUE_URL --attributes Policy=file://./policy.json
-    rm ./policy.json
 
     awslocal sns add-permission --topic-arn $TOPIC_ARN --label queue-permission --action-name Publish --aws-account-id 000000000000
 
@@ -44,11 +50,11 @@ up() {
 
     awslocal sns subscribe --topic-arn $TOPIC_ARN --protocol sqs --notification-endpoint $QUEUE_ARN
 
-    ROLE_POLICY='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
-    awslocal iam create-role --role-name graphql-testing --assume-role-policy-document "${ROLE_POLICY}"
-
     echo "Created $1 queue, topic, subscription."
 }
 
-up "graphql-engine-in.fifo"
-up "graphql-engine-out.fifo"
+up_iam
+up_sns_sqs_pair "graphql-engine-in.fifo"
+up_sns_sqs_pair "graphql-engine-out.fifo"
+
+rm ./policy.json

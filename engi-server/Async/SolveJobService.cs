@@ -16,15 +16,14 @@ public class SolveJobService : SubscriptionProcessingBase<SolveJobCommand>
     public SolveJobService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
         ILoggerFactory loggerFactory,
         IOptions<EngiOptions> engiOptions)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
         this.engiOptions = engiOptions.Value;
 
-        MaxDocumentsPerBatch = 1;
+        MaxDocumentsPerBatch = engiOptions.Value.ProcessRavenSubscriptionsMaxDocumentPerEngineBatch;
     }
 
     protected override string CreateQuery()

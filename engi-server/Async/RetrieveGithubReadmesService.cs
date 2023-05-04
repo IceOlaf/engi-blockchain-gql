@@ -2,6 +2,7 @@ using Engi.Substrate.Github;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
@@ -15,13 +16,11 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
     public RetrieveGithubReadmesService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
-    {
-        MaxDocumentsPerBatch = 10;
-    }
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
+    { }
 
     protected override string CreateQuery()
     {
@@ -41,6 +40,7 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
         foreach (var item in batch.Items)
         {
             var command = item.Result;
+
             try
             {
                 await ProcessAsync(command, session, serviceProvider);
@@ -56,9 +56,9 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
                     "Processing command {command} failed; sentry id={sentryId}.",
                     command.Id, sentryId.ToString());
             }
-        }
 
-        await session.SaveChangesAsync();
+            await session.SaveChangesAsync();
+        }
     }
 
     private async Task ProcessAsync(
@@ -90,8 +90,10 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
         var creatorId = creatorReferenceLazy.Value.Result;
 
-        if (creatorId == null) {
-            return;
+        if (creatorId == null)
+        {
+            throw new ChainAssumptionInconsistencyException(
+                $"A user matching address={job.Creator} was not found.");
         }
 
         var creator = await session.LoadAsync<User>(

@@ -46,9 +46,11 @@ public class SubstrateClient
 
         var response = await http.PostAsJsonAsync(string.Empty, payload);
 
+        string contentString = await response.Content.ReadAsStringAsync();
+
         response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var json = JsonSerializer.Deserialize<JsonElement>(contentString);
 
         if (json.TryGetProperty("error", out var error))
         {

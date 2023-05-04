@@ -33,4 +33,6 @@ public class EventRecord
 
         return Parse(reader, meta);
     }
+
+    public override string? ToString() => Event.ToString();
 }

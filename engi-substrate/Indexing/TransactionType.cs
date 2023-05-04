@@ -1,4 +1,4 @@
-namespace Engi.Substrate.Server.Indexing;
+namespace Engi.Substrate.Indexing;
 
 public enum TransactionType
 {

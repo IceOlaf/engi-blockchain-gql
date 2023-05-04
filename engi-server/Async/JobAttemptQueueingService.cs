@@ -1,4 +1,5 @@
 using Engi.Substrate.Jobs;
+using Microsoft.Extensions.Options;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
@@ -14,10 +15,10 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
     public JobAttemptQueueingService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {}
 
     protected override string CreateQuery()

@@ -1,10 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using Amazon.Runtime;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using Engi.Substrate.Jobs;
@@ -17,24 +14,21 @@ namespace Engi.Substrate.Server.Async;
 
 public class QueueEngineRequestCommandService : SubscriptionProcessingBase<QueueEngineRequestCommand>
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
+    private readonly Func<Task<AWSCredentials>> credentialsFactory;
     private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
     public QueueEngineRequestCommandService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
+        Func<Task<AWSCredentials>> credentialsFactory,
         IHub sentry,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
+        this.credentialsFactory = credentialsFactory;
         this.awsOptions = awsOptions.Value;
         this.engiOptions = engiOptions.Value;
     }
@@ -52,30 +46,10 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
     protected override async Task ProcessBatchAsync(SubscriptionBatch<QueueEngineRequestCommand> batch, IServiceProvider serviceProvider)
     {
-        var config = new AmazonSimpleNotificationServiceConfig();
-        var stsConfig = new AmazonSecurityTokenServiceConfig();
+        var credentials = await credentialsFactory();
 
-        if(awsOptions.ServiceUrl != null)
-        {
-            config.ServiceURL = awsOptions.ServiceUrl;
-            stsConfig.ServiceURL = awsOptions.ServiceUrl;
-        }
-
-        CancellationTokenSource s = new CancellationTokenSource();
-        var stoppingToken = s.Token;
-        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
-
-        // TODO: aws account from engiOptions.
-        var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
-        Logger.LogInformation("Assuming role with arn: {}", roleArn);
-
-        var roleAssumed = await sts.AssumeRoleAsync(new AssumeRoleRequest {
-            DurationSeconds = 1600,
-            RoleSessionName = "EngineRequest",
-            RoleArn = roleArn,
-        }, stoppingToken);
-
-        var client = new AmazonSimpleNotificationServiceClient(roleAssumed.Credentials, config);
+        var client = new AmazonSimpleNotificationServiceClient(credentials,
+            new AmazonSimpleNotificationServiceConfig().Apply(awsOptions));
 
         using var session = batch.OpenAsyncSession();
 
@@ -143,4 +117,9 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
 
         return Hex.GetString(result);
     }
+
+    private static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 }

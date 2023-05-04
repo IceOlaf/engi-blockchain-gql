@@ -3,7 +3,7 @@ using System.Reactive.Subjects;
 using System.Text.Json;
 using Engi.Substrate.WebSockets;
 
-namespace Engi.Substrate.Server;
+namespace Engi.Substrate.Observers;
 
 public class NewHeadChainObserver : IChainObserver
 {

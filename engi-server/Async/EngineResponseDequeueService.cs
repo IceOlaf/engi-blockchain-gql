@@ -1,7 +1,5 @@
 using System.Text.Json;
 using Amazon.Runtime;
-using Amazon.SecurityToken;
-using Amazon.SecurityToken.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -14,59 +12,34 @@ namespace Engi.Substrate.Server.Async;
 public class EngineResponseDequeueService : BackgroundService
 {
     private readonly IDocumentStore store;
+    private readonly Func<Task<AWSCredentials>> credentialsFactory;
     private readonly ILogger logger;
     private readonly AwsOptions awsOptions;
     private readonly EngiOptions engiOptions;
 
-    private static readonly JsonSerializerOptions MessageSerializationOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public EngineResponseDequeueService(
         IDocumentStore store,
+        Func<Task<AWSCredentials>> credentialsFactory,
         ILogger<EngineResponseDequeueService> logger,
         IOptions<AwsOptions> awsOptions,
         IOptions<EngiOptions> engiOptions)
     {
         this.store = store;
+        this.credentialsFactory = credentialsFactory;
         this.logger = logger;
         this.awsOptions = awsOptions.Value;
         this.engiOptions = engiOptions.Value;
     }
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var config = new AmazonSQSConfig();
-        var stsConfig = new AmazonSecurityTokenServiceConfig();
-
-        if(awsOptions.ServiceUrl != null)
-        {
-            config.ServiceURL = awsOptions.ServiceUrl;
-            stsConfig.ServiceURL = awsOptions.ServiceUrl;
-        }
-
-        var sts = new AmazonSecurityTokenServiceClient(stsConfig);
-
-        // TODO: aws account from engiOptions.
-        var roleArn = string.Format("arn:aws:iam::{0}:role/{1}", "163803973373", engiOptions.AssumeRole);
-        logger.LogInformation("Assuming role with arn: {}", roleArn);
-
-        var rolesAssumed = await sts.AssumeRoleAsync(new AssumeRoleRequest {
-            DurationSeconds = 1600,
-            RoleSessionName = "EngineResponse",
-            RoleArn = roleArn,
-        }, stoppingToken);
-
-        var sqs = new AmazonSQSClient(rolesAssumed.Credentials, config);
-
-        if (string.IsNullOrEmpty(engiOptions.AssumeRole)) {
-            logger.LogInformation("Assume role is empty, using fallback");
-        } else {
-            logger.LogInformation("Using assume role role={role}", engiOptions.AssumeRole);
-        }
-        logger.LogInformation("Processing queue messages from engine. queue={queue}", engiOptions.EngineOutputQueueUrl);
         while (!stoppingToken.IsCancellationRequested)
         {
+            var credentials = await credentialsFactory();
+
+            var sqs = new AmazonSQSClient(credentials,
+                new AmazonSQSConfig().Apply(awsOptions));
+
             ReceiveMessageResponse batch;
 
             try
@@ -211,4 +184,9 @@ public class EngineResponseDequeueService : BackgroundService
 
         analysis.ProcessedOn = DateTime.UtcNow;
     }
+
+    private static readonly JsonSerializerOptions MessageSerializationOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 }

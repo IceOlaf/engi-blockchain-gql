@@ -1,8 +1,8 @@
 using System.Text;
 using Engi.Substrate.Identity;
+using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Github;
-using Engi.Substrate.Server.Indexing;
 using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
 using Microsoft.Extensions.Options;
@@ -27,17 +27,17 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
     public DistributeCodeService(
         IDocumentStore store,
         IServiceProvider serviceProvider,
-        IWebHostEnvironment env,
         IHub sentry,
         ILoggerFactory loggerFactory,
         IOptionsMonitor<ApplicationOptions> applicationOptions,
+        IOptions<EngiOptions> engiOptions,
         IOptionsMonitor<SubstrateClientOptions> substrateOptions)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     {
         this.applicationOptions = applicationOptions;
         this.substrateOptions = substrateOptions;
 
-        MaxDocumentsPerBatch = 1;
+        MaxDocumentsPerBatch = engiOptions.Value.ProcessRavenSubscriptionsMaxDocumentPerEngineBatch;
     }
 
     protected override string CreateQuery()
@@ -59,11 +59,15 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         {
             var command = item.Result;
 
-            string? prUrl;
-
             try
             {
-                prUrl = await ProcessAsync(command, session, serviceProvider);
+                string? prUrl = await ProcessAsync(command, session, serviceProvider);
+
+                if (prUrl != null)
+                {
+                    command.PullRequestUrl = prUrl;
+                    command.ProcessedOn = DateTime.UtcNow;
+                }
             }
             catch (Exception ex)
             {
@@ -75,18 +79,10 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
                 Logger.LogWarning(ex,
                     "Processing command {command} failed; sentry id={sentryId}.",
                     command.Id, command.SentryId);
-
-                continue;
             }
 
-            if (prUrl != null)
-            {
-                command.PullRequestUrl = prUrl;
-                command.ProcessedOn = DateTime.UtcNow;
-            }
+            await session.SaveChangesAsync();
         }
-
-        await session.SaveChangesAsync();
     }
 
     private async Task<string?> ProcessAsync(DistributeCodeCommand command,

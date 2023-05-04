@@ -15,9 +15,9 @@ public class EmailDispatchCommandProcessor : SubscriptionProcessingBase<EmailDis
         IDocumentStore store,
         IServiceProvider serviceProvider,
         IHub sentry,
-        IWebHostEnvironment env,
+        IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
-        : base(store, serviceProvider, env, sentry, loggerFactory)
+        : base(store, serviceProvider, sentry, engiOptions, loggerFactory)
     { }
 
     protected override string CreateQuery()

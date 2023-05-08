@@ -115,6 +115,7 @@ from ConsistencyCheckCommands as c where filter(c)
     private async Task<long> EnsureIndexingConsistencyAsync(ulong toInclusive)
     {
         long recovered = 0;
+        Logger.LogInformation("Indexing up to block {}", toInclusive);
 
         try
         {
@@ -163,6 +164,7 @@ from ConsistencyCheckCommands as c where filter(c)
         {
             return 0;
         }
+        Logger.LogInformation("Creating entries for missing keys {}", missingKeys.Length);
 
         foreach (var key in missingKeys)
         {

@@ -60,7 +60,6 @@ public class ChainObserverBackgroundService : BackgroundService
                 {
                     foreach (var request in observer.CreateRequests())
                     {
-                        logger.LogInformation("Observing {}", nameof(observer));
                         long requestId = await connection.SendJsonAsync(request, cancellation);
 
                         // if the request is a subscription, wait for the response now
@@ -69,7 +68,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
                         if (request.IsSubscription)
                         {
-                            logger.LogInformation("Observing sub {}", nameof(observer));
+                            logger.LogInformation("Observing sub {}", observer.GetType());
                             var unprocessedQueue = new List<JsonRpcResponse>();
 
                             while (true)
@@ -95,6 +94,7 @@ public class ChainObserverBackgroundService : BackgroundService
                                 unprocessedQueue.Add(response);
                             }
 
+                            logger.LogInformation("Observing process sub {}", observer.GetType());
                             foreach (var response in unprocessedQueue)
                             {
                                 await ProcessAsync(response);
@@ -102,7 +102,7 @@ public class ChainObserverBackgroundService : BackgroundService
                         }
                         else
                         {
-                            logger.LogInformation("Observing non-sub {}", nameof(observer));
+                            logger.LogInformation("Observing non-sub {}", observer.GetType());
                             requestRoutes.Add(requestId, new()
                             {
                                 Observer = observer,
@@ -114,7 +114,6 @@ public class ChainObserverBackgroundService : BackgroundService
                 
                 // start receiving messages
 
-                logger.LogInformation("Start receiving chain observations");
                 while (connection.IsOpen)
                 {
                     logger.LogInformation("Connection still open");

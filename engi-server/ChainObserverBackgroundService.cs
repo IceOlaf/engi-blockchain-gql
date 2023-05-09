@@ -153,11 +153,11 @@ public class ChainObserverBackgroundService : BackgroundService
 
     private async Task ProcessAsync(JsonRpcResponse response)
     {
-        logger.LogInformation("Got response to handle {}", response);
         // if the message has an id, it needs to be routed to the request table
 
         if (response.Id != null)
         {
+            logger.LogInformation("Got non-sub response to handle {}", response);
             bool found = requestRoutes.Remove(response.Id.Value, out var state);
 
             if (!found)
@@ -189,6 +189,7 @@ public class ChainObserverBackgroundService : BackgroundService
             // if not id, it must be a response to a sub
 
             string? subscriptionId = response.Parameters!.SubscriptionId;
+            logger.LogInformation("Got non-sub response to handle {} -- {}", subscriptionId, response);
 
             if (string.IsNullOrEmpty(subscriptionId))
             {

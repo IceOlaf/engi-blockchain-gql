@@ -67,7 +67,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                     session.Advanced.UseOptimisticConcurrency = true;
 
-                Logger.LogInformation("Creating expanded block");
+                    Logger.LogInformation("Creating expanded block");
                     var currentBlock = new ExpandedBlock(header);
 
                     await session.StoreAsync(currentBlock);

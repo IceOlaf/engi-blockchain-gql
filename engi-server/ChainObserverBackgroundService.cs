@@ -182,6 +182,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
             // pass to observer
 
+            logger.LogInformation("non-Subservising response");
             await state.Observer.ObserveAsync(state.Request, response);
         }
         else
@@ -189,7 +190,7 @@ public class ChainObserverBackgroundService : BackgroundService
             // if not id, it must be a response to a sub
 
             string? subscriptionId = response.Parameters!.SubscriptionId;
-            logger.LogInformation("Got non-sub response to handle {} -- {}", subscriptionId, response);
+            logger.LogInformation("Got sub response to handle {} -- {}", subscriptionId, response);
 
             if (string.IsNullOrEmpty(subscriptionId))
             {

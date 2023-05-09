@@ -51,6 +51,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () =>
             {
+                Logger.LogInformation("Headers finalized {}", header.Number);
                 if (header.Number == 0)
                 {
                     // this can only happen in a genesis, if that, but since it showed up once

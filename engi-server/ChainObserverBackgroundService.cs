@@ -208,6 +208,7 @@ public class ChainObserverBackgroundService : BackgroundService
                     $"Couldn't match observer for subscription id={response.Parameters.SubscriptionId}.");
             }
 
+            logger.LogInformation("Observising response");
             await state!.Observer.ObserveAsync(state.Request, response);
         }
     }

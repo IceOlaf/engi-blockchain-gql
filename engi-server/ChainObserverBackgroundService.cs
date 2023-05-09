@@ -98,6 +98,7 @@ public class ChainObserverBackgroundService : BackgroundService
                             {
                                 await ProcessAsync(response);
                             }
+                            logger.LogInformation("Done Observing process sub {}", observer.GetType());
                         }
                         else
                         {
@@ -119,6 +120,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
                     await ProcessAsync(response);
                 }
+                logger.LogInformation("Connection closed");
             }
             catch (OperationCanceledException)
                 when (cancellation.IsCancellationRequested)

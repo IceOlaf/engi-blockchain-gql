@@ -68,7 +68,6 @@ public class ChainObserverBackgroundService : BackgroundService
 
                         if (request.IsSubscription)
                         {
-                            logger.LogInformation("Observing sub {}", observer.GetType());
                             var unprocessedQueue = new List<JsonRpcResponse>();
 
                             while (true)
@@ -102,7 +101,6 @@ public class ChainObserverBackgroundService : BackgroundService
                         }
                         else
                         {
-                            logger.LogInformation("Observing non-sub {}", observer.GetType());
                             requestRoutes.Add(requestId, new()
                             {
                                 Observer = observer,
@@ -153,7 +151,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
     private async Task ProcessAsync(JsonRpcResponse response)
     {
-        logger.LogInformation("Got response to handle");
+        logger.LogInformation("Got response to handle {}", response);
         // if the message has an id, it needs to be routed to the request table
 
         if (response.Id != null)

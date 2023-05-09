@@ -51,7 +51,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () =>
             {
-                Logger.LogInformation("New ExpandaBlock processing");
                 if (header.Number == 0)
                 {
                     // this can only happen in a genesis, if that, but since it showed up once
@@ -67,7 +66,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                     session.Advanced.UseOptimisticConcurrency = true;
 
-                    Logger.LogInformation("Creating expanded block");
+                    Logger.LogInformation("Creating expanded block {}", header.Number);
                     var currentBlock = new ExpandedBlock(header);
 
                     await session.StoreAsync(currentBlock);

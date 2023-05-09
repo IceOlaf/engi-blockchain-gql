@@ -60,6 +60,7 @@ public class ChainObserverBackgroundService : BackgroundService
                 {
                     foreach (var request in observer.CreateRequests())
                     {
+                        logger.LogInformation("Observing {}", nameof(observer));
                         long requestId = await connection.SendJsonAsync(request, cancellation);
 
                         // if the request is a subscription, wait for the response now
@@ -68,6 +69,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
                         if (request.IsSubscription)
                         {
+                            logger.LogInformation("Observing sub {}", nameof(observer));
                             var unprocessedQueue = new List<JsonRpcResponse>();
 
                             while (true)
@@ -100,6 +102,7 @@ public class ChainObserverBackgroundService : BackgroundService
                         }
                         else
                         {
+                            logger.LogInformation("Observing non-sub {}", nameof(observer));
                             requestRoutes.Add(requestId, new()
                             {
                                 Observer = observer,
@@ -111,8 +114,10 @@ public class ChainObserverBackgroundService : BackgroundService
                 
                 // start receiving messages
 
+                logger.LogInformation("Start receiving chain observations");
                 while (connection.IsOpen)
                 {
+                    logger.LogInformation("Connection still open");
                     var response = await connection.ReadResponseAsync(cancellation);
 
                     await ProcessAsync(response);
@@ -149,6 +154,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
     private async Task ProcessAsync(JsonRpcResponse response)
     {
+        logger.LogInformation("Got response to handle");
         // if the message has an id, it needs to be routed to the request table
 
         if (response.Id != null)

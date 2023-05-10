@@ -1,14 +1,16 @@
 const AWS = require("aws-sdk");
+const { v4: uuid } = require("uuid");
 
-const endpoint = "http://localhost:4566"
+const endpoint = "http://localhost:4566";
+const region = "us-east-1";
 
-const sqs = new AWS.SQS({ endpoint });
-const sns = new AWS.SNS({ endpoint });
+const sqs = new AWS.SQS({ endpoint, region });
+const sns = new AWS.SNS({ endpoint, region });
 
 const incomingQueueUrl =
   "http://localhost:4566/000000000000/graphql-engine-in.fifo";
 
-const outgoingTopicArn = "arn:aws:sns:us-east-1:000000000000:graphql-engine-out.fifo";
+const outgoingTopicArn = `arn:aws:sns:${region}:000000000000:graphql-engine-out.fifo`;
 
 const exampleAnalysisResult = {
   repo: "https://github.com/engi-network/demo-csharp.git",
@@ -39,6 +41,12 @@ const exampleAnalysisResult = {
   ],
 };
 
+const testAddresses = [
+  "5EUJ3p7ds1436scqdA2n6ph9xVs6chshRP1ADjgK1Qj3Hqs2", // test-1
+  "5EyiGwuYPgGiEfwpPwXyH5TwXXEUFz6ZgPhzYik2fMCcbqMC", // test-2
+  "5G1GQ5bb1bjBUwjSBcArBkbK5gfrW9nTJLhnz3G3nLDo1g5n", // georgiosd
+];
+
 async function main() {
   while (true) {
     const data = await sqs
@@ -58,14 +66,56 @@ async function main() {
 
       console.log("received request", request);
 
+      const { command } = request;
+
+      let result = null;
+
+      if (command.indexOf("analyse") === 0) {
+        result = exampleAnalysisResult;
+      } else if (command.indexOf("job attempt") === 0) {
+        const [, , url] = command.split(" ");
+        const [, , , address] = url.split(/[\/\.]/);
+
+        result = {
+          attempt: {
+            tests: [
+              {
+                id: "test-1",
+                result: {
+                  Failed: "Failed test.",
+                }
+              },
+              {
+                id: "test-2",
+                result: {
+                  Failed: "Failed test.",
+                }
+              },
+            ],
+          },
+        };
+
+        const callerIndex = testAddresses.indexOf(address);
+
+        if (callerIndex === -1) {
+          console.log("Invalid message.");
+        } else if (callerIndex === 2) {
+          result.attempt.tests.forEach((x) => (x.result = "Passed"));
+        } else {
+          result.attempt.tests[callerIndex].result = "Passed";
+        }
+      }
+
       const response = {
         TopicArn: outgoingTopicArn,
         Message: JSON.stringify({
           identifier: request.identifier,
-          stdout: JSON.stringify(exampleAnalysisResult),
+          stdout: JSON.stringify(result),
           stderr: "",
           returnCode: 0,
         }),
+        MessageGroupId: request.identifier,
+        MessageDeduplicationId: uuid(),
       };
 
       await sns.publish(response).promise();

@@ -10,8 +10,6 @@ public class DistributeCodeCommand
 
     public string? PullRequestUrl { get; set; }
 
-    public DateTime? FirstDeferredOn { get; set; }
-
     public DateTime? ProcessedOn { get; set; }
 
     public string? SentryId { get; set; }

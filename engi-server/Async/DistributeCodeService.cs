@@ -101,21 +101,6 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
         if (job.Solution == null)
         {
-            // don't defer for ever, check time elapsed if previously deferred
-
-            if (command.FirstDeferredOn.HasValue)
-            {
-                var elapsed = DateTime.UtcNow - command.FirstDeferredOn.Value;
-
-                if (elapsed.TotalHours > 1)
-                {
-                    throw new InvalidOperationException(
-                        "Time out waiting for solution/job to appear.");
-                }
-            }
-
-            command.FirstDeferredOn ??= DateTime.UtcNow;
-
             Logger.LogWarning(
                 "Job or solution was not found, deferring; job={jobId} solution={solutionId}",
                 command.JobId, command.SolutionId);

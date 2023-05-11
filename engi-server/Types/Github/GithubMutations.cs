@@ -22,12 +22,6 @@ public class GithubMutations : ObjectGraphType
             .Argument<NonNullGraphType<GithubEnrollmentArgumentsGraphType>>("args")
             .ResolveAsync(EnrollAsync)
             .AuthorizeWithPolicy(PolicyNames.Authenticated);
-
-        Field<StringGraphType>("distributeCode")
-            .Description("Distribute the code for a job by opening a PR to the source repository, with the completed job's patch.")
-            .Argument<NonNullGraphType<DistributeCompletedJobCodeArgumentsGraphType>>("args")
-            .ResolveAsync(DistributeCodeAsync)
-            .AuthorizeWithPolicy(PolicyNames.Sudo);
     }
 
     private async Task<object?> EnrollAsync(IResolveFieldContext<object?> context)
@@ -106,38 +100,6 @@ public class GithubMutations : ObjectGraphType
         var githubAppInstallationUserReference = new GithubAppInstallationUserReference(installation, user);
 
         await session.StoreAsync(githubAppInstallationUserReference, null, githubAppInstallationUserReference.Id);
-
-        await session.SaveChangesAsync();
-
-        return null;
-    }
-
-    private async Task<object?> DistributeCodeAsync(IResolveFieldContext context)
-    {
-        var args = context.GetValidatedArgument<DistributeCompletedJobCodeArguments>("args");
-
-        await using var scope = context.RequestServices!.CreateAsyncScope();
-
-        // Ideally, when this called is made, the job will be solved. However, since
-        // both jobs and solutions are indexed first from the chain and then
-        // from Raven, there is a delay in this so it would be a race condition.
-        // Since this call is made from a trusted service, we'll only verify the job exists
-
-        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
-
-        var job = await session
-            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(args.JobId));
-
-        if (job == null)
-        {
-            throw new ExecutionError("Job not found.") { Code = "NOT_FOUND" };
-        }
-
-        await session.StoreAsync(new DistributeCodeCommand
-        {
-            JobId = args.JobId,
-            SolutionId = args.SolutionId
-        });
 
         await session.SaveChangesAsync();
 

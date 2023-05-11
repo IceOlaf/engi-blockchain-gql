@@ -237,6 +237,15 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 snapshot.IsCreation = jobIndexable.IsCreation;
 
                 results.Add(snapshot);
+
+                // if job was solved, add a snapshot to the solution
+
+                if(snapshot.Solution != null)
+                {
+                    var solutionSnapshot = new SolutionSnapshot(snapshot.Solution, block);
+
+                    results.Add(solutionSnapshot);
+                }
             }
             else if (indexable is AttemptIndexable attemptIndexable)
             {
@@ -260,7 +269,12 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 {
                     var solutionSnapshot = new SolutionSnapshot(solution!, block);
 
-                    results.Add(solutionSnapshot);
+                    // in case it was added from job.S  olution
+
+                    if (!results.Any(x => x is SolutionSnapshot existing && existing.SolutionId == solution!.SolutionId))
+                    {
+                        results.Add(solutionSnapshot);
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -36,14 +37,11 @@ public static class Program
         KeypairFactory.CreateFromAny("time treat merit corn crystal fiscal banner zoo jacket pulse frog long"),
         // 5EyiGwuYPgGiEfwpPwXyH5TwXXEUFz6ZgPhzYik2fMCcbqMC
         KeypairFactory.CreateFromAny("shove matter cousin govern glare space survey congress torch easy girl profit"),
-        // 5GEtgDZonat7cjAr4EM7h5M1qsELjEXZ9EwWFiSb2jGAUKJa
-        KeypairFactory.CreateFromAny("vocal awake scan share position often baby example segment skill perfect unique"),
-        // 5CUiNXkJjLnS7BpMYC6HLpsGQ9wnyNrZXHL45nDht1355CSp
-        KeypairFactory.CreateFromAny("build genre people salute buddy trash polar hero purse hire caught tail")
     };
 
     public static async Task Main()
-    {
+    { 
+        await JobWorkflowTestCaseAsync();
     }
 
     private static async Task IndexBlockAsync(string blockHash)
@@ -177,6 +175,7 @@ public static class Program
         // create a job
 
         await CreateJobAsync(GeorgiosdKeypair);
+        Console.WriteLine("Job created.");
 
         // wait while it is getting indexed
 
@@ -185,15 +184,17 @@ public static class Program
 
         var job = await session.LoadAsync<JobSnapshot>(jobDocumentChange.Id);
 
+        Console.WriteLine($"Job id={job.JobId} ({job.Id}) was indexed.");
+        AnyKey();
+
         // create attempts
 
-        var attemptIds = new ulong[TestKeypairs.Length];
+        var attemptKeypairs = TestKeypairs.Append(GeorgiosdKeypair).ToArray();
 
-        for (var index = 0; index < TestKeypairs.Length; index++)
+        foreach (var keypair in attemptKeypairs)
         {
-            var keypair = TestKeypairs[index];
-
             await AttemptJobAsync(job.JobId, keypair);
+            Console.WriteLine($"Created attempt from address={keypair.Address}.");
 
             var attemptDocumentChange = await store.Changes()
                 .ForDocumentsInCollection<JobAttemptedSnapshot>()
@@ -201,43 +202,19 @@ public static class Program
 
             var attempt = await session.LoadAsync<JobAttemptedSnapshot>(attemptDocumentChange.Id);
 
-            attemptIds[index] = attempt.AttemptId;
-        }
+            Console.WriteLine($"Attempt id={attempt.AttemptId} ({attempt.Id}) was indexed.");
 
-        // solve one test each
+            // wait for solutions
 
-        ulong solutionIdCounter = 0;
-
-        for (var index = 0; index < TestKeypairs.Length; index++)
-        {
-            var keypair = TestKeypairs[index];
-
-            await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), SudoKeypair, keypair.Address, tests =>
-            {
-                tests[index].Result = TestResult.Passed;
-                tests[index].FailedResultMessage = null;
-            });
-
-            var solutionChange = await store.Changes()
+            var solutionDocumentChange = await store.Changes()
                 .ForDocumentsInCollection<SolutionSnapshot>()
                 .FirstAsync();
 
-            var solution = await session.LoadAsync<SolutionSnapshot>(solutionChange.Id);
+            var solution = await session.LoadAsync<SolutionSnapshot>(solutionDocumentChange.Id);
+
+            Console.WriteLine($"Solution {solution.SolutionId} ({solution.Id}) was indexed.");
+            AnyKey();
         }
-
-        // finally pick a dude to solve all
-
-        var solver = TestKeypairs[RandomNumberGenerator.GetInt32(0, TestKeypairs.Length)];
-
-        await SolveJobAsync(job.JobId, Interlocked.Add(ref solutionIdCounter, 100), SudoKeypair, solver.Address,
-            tests =>
-            {
-                foreach (var test in tests)
-                {
-                    test.Result = TestResult.Passed;
-                    test.FailedResultMessage = null;
-                }
-            });
 
         return;
     }
@@ -334,7 +311,7 @@ public static class Program
         var args = new AttemptJobArguments
         {
             JobId = jobId,
-            SubmissionPatchFileUrl = $"https://localhost:8081/{Guid.NewGuid()}.patch"
+            SubmissionPatchFileUrl = $"https://localhost:8081/{sender.Address}.patch"
         };
 
         string result = await client.AuthorSubmitExtrinsicAsync(
@@ -344,7 +321,7 @@ public static class Program
         return;
     }
 
-    private static async Task CreateJobAsync(Keypair sender, int numberOfTests = 4)
+    private static async Task CreateJobAsync(Keypair sender, int numberOfTests = 2)
     {
         var client = new SubstrateClient(ChainUrl);
 
@@ -364,7 +341,8 @@ public static class Program
                 .Select(offset => new Test
                 {
                     Id = $"test-{offset + 1}",
-                    Result = TestResult.Passed,
+                    Result = TestResult.Failed,
+                    FailedResultMessage = "Failed",
                     Required = true
                 })
                 .ToArray(),
@@ -417,12 +395,9 @@ public static class Program
         return; // set breakpoint here
     }
 
-    private static async Task InspectWestendMetadataAsync()
+    private static void AnyKey()
     {
-        var client = new SubstrateClient("https://westend-rpc.polkadot.io");
-
-        var metadata = await client.GetStateMetadataAsync();
-
-        return; // set breakpoint here
+        Console.WriteLine("Press ENTER to continue...");
+        Console.ReadLine();
     }
 }

@@ -43,11 +43,11 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
     protected override string CreateQuery()
     {
         return @"
-            declare function filter(b) {
-                return b.ProcessedOn === null && b.SentryId === null
+            declare function filter(x) {
+                return b.Solution !== null
             }
 
-            from DistributeCodeCommands as c where filter(c)
+            from JobSnapshots as x where filter(x)
         ";
     }
 
@@ -61,13 +61,13 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
             try
             {
-                string? prUrl = await ProcessAsync(command, session, serviceProvider);
+                //string? prUrl = await ProcessAsync(command, session, serviceProvider);
 
-                if (prUrl != null)
-                {
-                    command.PullRequestUrl = prUrl;
-                    command.ProcessedOn = DateTime.UtcNow;
-                }
+                //if (prUrl != null)
+                //{
+                //    command.PullRequestUrl = prUrl;
+                //    command.ProcessedOn = DateTime.UtcNow;
+                //}
             }
             catch (Exception ex)
             {
@@ -101,21 +101,6 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
         if (job.Solution == null)
         {
-            // don't defer for ever, check time elapsed if previously deferred
-
-            if (command.FirstDeferredOn.HasValue)
-            {
-                var elapsed = DateTime.UtcNow - command.FirstDeferredOn.Value;
-
-                if (elapsed.TotalHours > 1)
-                {
-                    throw new InvalidOperationException(
-                        "Time out waiting for solution/job to appear.");
-                }
-            }
-
-            command.FirstDeferredOn ??= DateTime.UtcNow;
-
             Logger.LogWarning(
                 "Job or solution was not found, deferring; job={jobId} solution={solutionId}",
                 command.JobId, command.SolutionId);

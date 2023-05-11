@@ -338,10 +338,9 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
     builder.Services.PostConfigure<EngiOptions>(engiOptions =>
     {
         if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID"))
-            || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"))
-            || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")))
+            || string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
         {
-            Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION as described in DEVELOPMENT.md.");
+            Console.Error.WriteLine("Make sure to set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY as described in DEVELOPMENT.md.");
         }
 
         var iam = new AmazonIdentityManagementServiceClient(

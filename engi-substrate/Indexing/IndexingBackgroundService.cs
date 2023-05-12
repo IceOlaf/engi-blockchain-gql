@@ -269,7 +269,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 {
                     var solutionSnapshot = new SolutionSnapshot(solution!, block);
 
-                    // in case it was added from job.S  olution
+                    // in case it was added from job.Solution
 
                     if (!results.Any(x => x is SolutionSnapshot existing && existing.SolutionId == solution!.SolutionId))
                     {

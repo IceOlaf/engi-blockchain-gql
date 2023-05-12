@@ -43,11 +43,11 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
     protected override string CreateQuery()
     {
         return @"
-            declare function filter(x) {
-                return b.Solution !== null
+            declare function filter(b) {
+                return b.ProcessedOn === null && b.SentryId === null
             }
 
-            from JobSnapshots as x where filter(x)
+            from DistributeCodeCommands as c where filter(c)
         ";
     }
 
@@ -61,13 +61,13 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
             try
             {
-                //string? prUrl = await ProcessAsync(command, session, serviceProvider);
+                string? prUrl = await ProcessAsync(command, session, serviceProvider);
 
-                //if (prUrl != null)
-                //{
-                //    command.PullRequestUrl = prUrl;
-                //    command.ProcessedOn = DateTime.UtcNow;
-                //}
+                if (prUrl != null)
+                {
+                    command.PullRequestUrl = prUrl;
+                    command.ProcessedOn = DateTime.UtcNow;
+                }
             }
             catch (Exception ex)
             {

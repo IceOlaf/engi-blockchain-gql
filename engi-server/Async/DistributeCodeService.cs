@@ -11,8 +11,8 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Documents.Subscriptions;
 using Sentry;
-using Constants = Raven.Client.Constants;
 using FileMode = System.IO.FileMode;
+using InvalidOperationException = System.InvalidOperationException;
 using NotFoundException = Octokit.NotFoundException;
 using Repository = LibGit2Sharp.Repository;
 using User = Engi.Substrate.Identity.User;
@@ -47,7 +47,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
                 return b.ProcessedOn === null && b.SentryId === null
             }
 
-            from DistributeCodeCommands as c where filter(c)
+            from DistributeCodeCommands as c where filter(c) include c.JobSnapshotId
         ";
     }
 
@@ -59,9 +59,11 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         {
             var command = item.Result;
 
+            var job = await session.LoadAsync<JobSnapshot>(command.JobSnapshotId);
+
             try
             {
-                string? prUrl = await ProcessAsync(command, session, serviceProvider);
+                string? prUrl = await ProcessAsync(job, session, serviceProvider);
 
                 if (prUrl != null)
                 {
@@ -85,36 +87,17 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         }
     }
 
-    private async Task<string?> ProcessAsync(DistributeCodeCommand command,
+    private async Task<string?> ProcessAsync(
+        JobSnapshot job,
         IAsyncDocumentSession session,
         IServiceProvider serviceProvider)
     {
-        // get job, which should be solved
-
-        var jobReference = await session
-            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(command.JobId),
-                include => include.IncludeDocuments(x => x.ReduceOutputs));
-
-        var job = await session.LoadAsync<Job>(jobReference.ReduceOutputs.First());
-
-        // if job is not solved, assume it's because indexing hasn't caught up
+        // if job is not solved, that's an issue
 
         if (job.Solution == null)
         {
-            Logger.LogWarning(
-                "Job or solution was not found, deferring; job={jobId} solution={solutionId}",
-                command.JobId, command.SolutionId);
-
-            var meta = session.Advanced.GetMetadataFor(command);
-
-            meta[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddMinutes(1);
-
-            return null;
-        }
-
-        if (job.Solution.SolutionId != command.SolutionId)
-        {
-            throw new InvalidOperationException("Job solution id mismatch.");
+            throw new InvalidOperationException(
+                $"Cannot distribute code for a job ({job.JobId}) without a solution.");
         }
 
         // get participants
@@ -133,6 +116,12 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
         var creator = await session.LoadAsync<User>(participantReferences[creatorReferenceId].UserId);
         var author = await session.LoadAsync<User>(participantReferences[authorReferenceId].UserId);
+
+        if (creator == null || author == null)
+        {
+            throw new ChainAssumptionInconsistencyException(
+                $"Job creator or solution author not found as users; job={job.JobId} solution={job.Solution.SolutionId}.");
+        }
 
         var octokitFactory = serviceProvider.GetRequiredService<GithubClientFactory>();
 
@@ -238,7 +227,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         // open PR
 
         var block = await session
-            .LoadAsync<ExpandedBlock>(ExpandedBlock.KeyFrom(job.UpdatedOn.Number));
+            .LoadAsync<ExpandedBlock>(ExpandedBlock.KeyFrom(job.SnapshotOn.Number));
 
         var request = new NewPullRequest(title,
             workBranchName,
@@ -310,12 +299,12 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
         }
     }
 
-    private static string GetPullRequestTitle(Job job)
+    private static string GetPullRequestTitle(JobSnapshot job)
     {
         return $"👾 Completed Engi Job: {job.Name}";
     }
 
-    private string GetPullRequestBody(Job job, Solution solution, User solver, ExpandedBlock block)
+    private string GetPullRequestBody(JobSnapshot job, Solution solution, User solver, ExpandedBlock block)
     {
         string baseUrl = applicationOptions.CurrentValue.Url;
         string explorerUrl =

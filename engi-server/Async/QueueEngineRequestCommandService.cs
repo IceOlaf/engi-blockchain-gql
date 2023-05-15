@@ -83,12 +83,12 @@ public class QueueEngineRequestCommandService : SubscriptionProcessingBase<Queue
                     MessageDeduplicationId = CalculateSha256(json)
                 });
 
-                if(dispatched != null)
-                {
-                    dispatched.DispatchedOn = DateTime.UtcNow;
-                }
-
                 command.ProcessedOn = DateTime.UtcNow;
+
+                if (dispatched != null)
+                {
+                    dispatched.DispatchedOn = command.ProcessedOn;
+                }
 
                 Logger.LogInformation("Successfully published message to engine topic.");
                 Logger.LogTrace("Published message={message} topic={topic}", json, engiOptions.EngineInputTopicArn);

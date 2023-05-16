@@ -8,5 +8,7 @@ public class FacetResults
 
     public FacetResult Technologies { get; set; } = null!;
 
-    public FacetResult Organization { get; set; } = null!;
+    public FacetResult Repositories { get; set; } = null!;
+
+    public FacetResult Organizations { get; set; } = null!;
 }

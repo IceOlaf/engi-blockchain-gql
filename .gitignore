@@ -6,3 +6,5 @@ integration-test-results/
 *.swp
 node_modules/
 package-lock.json
+.env
+*-pyvenv

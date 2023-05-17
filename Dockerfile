@@ -3,6 +3,7 @@ ARG DOTNET_VERSION=6.0
 ARG DOTNET_VERSION_SHA256=19760ecbe8a7e911ae94baa9d084a0a5779fc8f24f8dc500e5cac86b077adbf9
 ARG BIN_DIR=/usr/local/bin
 ARG SRC_DIR=/source
+ARG CI_LINUX_VERSION=production
 
 FROM $DOTNET_CR/sdk:${DOTNET_VERSION}-alpine@sha256:${DOTNET_VERSION_SHA256} AS build
 ENV PATH="/root/.dotnet/tools:$PATH"
@@ -31,6 +32,13 @@ RUN setversion -r $BUILD_VERSION
 WORKDIR $SRC_DIR/engi-server
 RUN dotnet build -c release --no-restore
 
+FROM paritytech/ci-linux:$CI_LINUX_VERSION as rust_builder
+ARG SRC_DIR
+WORKDIR $SRC_DIR
+COPY engi-crypto/ .
+WORKDIR $SRC_DIR
+RUN cargo b -r
+
 FROM build AS test
 ARG BIN_DIR SRC_DIR
 WORKDIR $SRC_DIR
@@ -47,6 +55,7 @@ FROM build AS publish
 ARG SRC_DIR
 WORKDIR $SRC_DIR/engi-server
 RUN dotnet publish -c release --no-build -o /app
+COPY --from=rust_builder $SRC_DIR/target/release/libengi_crypto.so /app/lib
 
 FROM $DOTNET_CR/aspnet:$DOTNET_VERSION
 ARG BIN_DIR

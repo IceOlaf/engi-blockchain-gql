@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.IdentityManagement;
 using Amazon.Runtime;
 using Amazon.SecurityToken;
@@ -6,12 +8,14 @@ using Amazon.SimpleNotificationService;
 using Amazon.SQS;
 using Engi.Substrate;
 using Engi.Substrate.Indexing;
+using Engi.Substrate.Jobs;
 using Engi.Substrate.Observers;
 using Engi.Substrate.Server;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Authentication;
 using Engi.Substrate.Server.Email;
 using Engi.Substrate.Server.Github;
+using Engi.Substrate.Server.HealthChecks;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
 using GraphQL.Server.Transports.AspNetCore;
@@ -21,6 +25,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Polly;
@@ -39,7 +44,19 @@ builder.WebHost.UseSentry(options =>
 // services config
 
 builder.Services.AddCors();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddBackgroundServiceHealthCheck<ChainObserverBackgroundService>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<ConsistencyCheckService, ConsistencyCheckCommand>(HealthStatus.Degraded)
+    .AddRavenSubscriptionHealthCheck<DistributeCodeService, DistributeCodeCommand>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<EmailDispatchCommandProcessor, EmailDispatchCommand>(HealthStatus.Degraded)
+    .AddBackgroundServiceHealthCheck<EngineResponseDequeueService>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<JobAttemptQueueingService, JobAttemptedSnapshot>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<JobCompletedInitiateCodeDistributionService, JobSnapshot>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<IndexingBackgroundService, ExpandedBlock>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<QueueEngineRequestCommandService, QueueEngineRequestCommand>(HealthStatus.Unhealthy)
+    .AddRavenSubscriptionHealthCheck<RetrieveGithubReadmesService, JobSnapshot>(HealthStatus.Degraded)
+    .AddRavenSubscriptionHealthCheck<SolveJobService, SolveJobCommand>(HealthStatus.Unhealthy);
+
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
 
@@ -411,7 +428,16 @@ app.UseEndpoints(endpoints =>
 {
     const string graphQLEndpoint = "/api/graphql";
 
-    endpoints.MapHealthChecks("/api/health");
+    endpoints.MapHealthChecks("/api/health", new()
+    {
+        ResponseWriter = (context, report) => context.Response
+            .WriteAsJsonAsync(report, new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = { new JsonStringEnumConverter() }
+            })
+    });
+
     endpoints.MapGraphQL<CustomGraphQLHttpMiddleware>(graphQLEndpoint,
         new GraphQLHttpMiddlewareOptions());
     endpoints.MapGraphQLAltair(options: new()

@@ -19,7 +19,7 @@ public abstract class SubscriptionProcessingBase<T> : BackgroundService
         IOptions<EngiOptions> engiOptions,
         ILoggerFactory loggerFactory)
     {
-        Name = $"SubscriptionProcessor<{GetType().Name}>";
+        Name = SubscriptionConventions.GetName(GetType());
 
         Store = store;
         ServiceProvider = serviceProvider;

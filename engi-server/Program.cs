@@ -45,17 +45,26 @@ builder.WebHost.UseSentry(options =>
 
 builder.Services.AddCors();
 builder.Services.AddHealthChecks()
+    // background services
     .AddBackgroundServiceHealthCheck<ChainObserverBackgroundService>(HealthStatus.Unhealthy)
+    .AddBackgroundServiceHealthCheck<EngineResponseDequeueService>(HealthStatus.Unhealthy)
+    // subs
     .AddRavenSubscriptionHealthCheck<ConsistencyCheckService, ConsistencyCheckCommand>(HealthStatus.Degraded)
     .AddRavenSubscriptionHealthCheck<DistributeCodeService, DistributeCodeCommand>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<EmailDispatchCommandProcessor, EmailDispatchCommand>(HealthStatus.Degraded)
-    .AddBackgroundServiceHealthCheck<EngineResponseDequeueService>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<JobAttemptQueueingService, JobAttemptedSnapshot>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<JobCompletedInitiateCodeDistributionService, JobSnapshot>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<IndexingBackgroundService, ExpandedBlock>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<QueueEngineRequestCommandService, QueueEngineRequestCommand>(HealthStatus.Unhealthy)
     .AddRavenSubscriptionHealthCheck<RetrieveGithubReadmesService, JobSnapshot>(HealthStatus.Degraded)
-    .AddRavenSubscriptionHealthCheck<SolveJobService, SolveJobCommand>(HealthStatus.Unhealthy);
+    .AddRavenSubscriptionHealthCheck<SolveJobService, SolveJobCommand>(HealthStatus.Unhealthy)
+    // indexes
+    .AddRavenIndexHealthCheck<BlockIndex>()
+    .AddRavenIndexHealthCheck<JobIndex>()
+    .AddRavenIndexHealthCheck<JobAggregateIndex>()
+    .AddRavenIndexHealthCheck<JobUserAggregatesIndex>()
+    .AddRavenIndexHealthCheck<SolutionIndex>()
+    .AddRavenIndexHealthCheck<TransactionIndex>();
 
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();

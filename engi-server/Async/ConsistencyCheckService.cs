@@ -35,7 +35,7 @@ declare function filter(c) {
     return !c['@metadata'].hasOwnProperty('@refresh');
 }
 
-from ConsistencyCheckCommands as c where filter(c) 
+from ConsistencyCheckCommands as c where filter(c)
 ";
     }
 
@@ -82,7 +82,6 @@ from ConsistencyCheckCommands as c where filter(c)
     protected override async Task ProcessBatchAsync(SubscriptionBatch<ConsistencyCheckCommand> batch, IServiceProvider serviceProvider)
     {
         using var session = batch.OpenAsyncSession();
-        Logger.LogInformation("Starting Consistency Check");
 
         // if the consistency check is running but another process modifies the document
         // we want to allow the service to replace any changes (most likely made by nodes
@@ -92,7 +91,6 @@ from ConsistencyCheckCommands as c where filter(c)
 
         foreach (var item in batch.Items)
         {
-            Logger.LogInformation("Executing consistency check command");
             var command = item.Result;
 
             var headerObserver = serviceProvider.GetServices<IChainObserver>()
@@ -101,12 +99,9 @@ from ConsistencyCheckCommands as c where filter(c)
 
             if (headerObserver.LastFinalizedHeader != null)
             {
-                Logger.LogInformation("Got a new finalized header to process");
                 command.LastRecovered = await EnsureIndexingConsistencyAsync(headerObserver.LastFinalizedHeader.Number);
 
                 command.LastExecutedOn = DateTime.UtcNow;
-            } else {
-                Logger.LogInformation("No new finalized headers to process");
             }
 
             var meta = session.Advanced.GetMetadataFor(command);
@@ -120,7 +115,6 @@ from ConsistencyCheckCommands as c where filter(c)
     private async Task<long> EnsureIndexingConsistencyAsync(ulong toInclusive)
     {
         long recovered = 0;
-        Logger.LogInformation("Indexing up to block {}", toInclusive);
 
         try
         {
@@ -169,7 +163,6 @@ from ConsistencyCheckCommands as c where filter(c)
         {
             return 0;
         }
-        Logger.LogInformation("Creating entries for missing keys {}", missingKeys.Length);
 
         foreach (var key in missingKeys)
         {
@@ -201,11 +194,11 @@ from ConsistencyCheckCommands as c where filter(c)
                 new PatchRequest
                 {
                     Script =
-                        @"
-        for(var key in args.Block) {
-            this[key] = args.Block[key];
-        }
-    ",
+@"
+    for(var key in args.Block) {
+        this[key] = args.Block[key];
+    }
+",
                     Values = new Dictionary<string, object>
                     {
                         { "Block", session.Advanced.JsonConverter.ToBlittable(block, documentInfo) }

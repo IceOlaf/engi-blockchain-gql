@@ -51,7 +51,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () =>
             {
-                Logger.LogInformation("Headers finalized {}", header.Number);
                 if (header.Number == 0)
                 {
                     // this can only happen in a genesis, if that, but since it showed up once
@@ -67,7 +66,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
                     session.Advanced.UseOptimisticConcurrency = true;
 
-                    Logger.LogInformation("Creating expanded block {}", header.Number);
                     var currentBlock = new ExpandedBlock(header);
 
                     await session.StoreAsync(currentBlock);
@@ -102,7 +100,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
     protected override async Task ProcessBatchAsync(
         SubscriptionBatch<ExpandedBlock> batch, IServiceProvider serviceProvider)
     {
-        Logger.LogInformation("Processing a batch of blocks");
         var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
         var snapshotObserver = serviceProvider
@@ -128,7 +125,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         var metadataById = batch.Items
             .ToDictionary(x => x.Id, x => session.Advanced.GetMetadataFor(x.Result));
 
-        Logger.LogInformation("{} blocks to index", batch.Items.Count);
         await batch.Items.ParallelForEachAsync(async doc =>
         {
             var client = new SubstrateClient(httpClientFactory);
@@ -151,7 +147,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
 
             try
             {
-                Logger.LogInformation("Processing block {}", block.Number);
                 var results = await ProcessBatchItemAsync(block, previous, meta, client);
 
                 foreach (var result in results)
@@ -168,7 +163,7 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 Sentry.CaptureException(ex, ConfigureScope);
 
                 // then reschedule a try in 2 seconds
-                
+
                 metadata[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddSeconds(2);
             }
             catch (Exception ex) when (ExceptionUtils.IsTransient(ex))

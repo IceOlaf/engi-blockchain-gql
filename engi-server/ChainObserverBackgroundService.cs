@@ -55,7 +55,7 @@ public class ChainObserverBackgroundService : BackgroundService
 
                 requestRoutes.Clear();
                 subscriptionRoutes.Clear();
-                
+
                 foreach (var observer in observers)
                 {
                     foreach (var request in observer.CreateRequests())
@@ -84,21 +84,16 @@ public class ChainObserverBackgroundService : BackgroundService
                                         Observer = observer
                                     });
 
-                                    logger.LogDebug("Registration={type} received subscription key={key}",
-                                        observer.GetType(), subscriptionKey);
-
                                     break;
                                 }
 
                                 unprocessedQueue.Add(response);
                             }
 
-                            logger.LogInformation("Observing process sub {}", observer.GetType());
                             foreach (var response in unprocessedQueue)
                             {
                                 await ProcessAsync(response);
                             }
-                            logger.LogInformation("Done Observing process sub {}", observer.GetType());
                         }
                         else
                         {
@@ -110,17 +105,15 @@ public class ChainObserverBackgroundService : BackgroundService
                         }
                     }
                 }
-                
+
                 // start receiving messages
 
                 while (connection.IsOpen)
                 {
-                    logger.LogInformation("Connection still open");
                     var response = await connection.ReadResponseAsync(cancellation);
 
                     await ProcessAsync(response);
                 }
-                logger.LogInformation("Connection closed");
             }
             catch (OperationCanceledException)
                 when (cancellation.IsCancellationRequested)
@@ -137,14 +130,12 @@ public class ChainObserverBackgroundService : BackgroundService
 
                 if (isNetworkError)
                 {
-                    logger.Log(LogLevel.Warning,
-                        ex, "Reconnecting after network exception");
-                    
+                    logger.LogWarning(ex, "Reconnecting after network exception");
+
                     continue;
                 }
 
-                logger.Log(LogLevel.Critical,
-                    ex, "Aborting after unknown exception");
+                logger.LogCritical(ex, "Aborting after unknown exception");
 
                 throw;
             }
@@ -157,7 +148,6 @@ public class ChainObserverBackgroundService : BackgroundService
 
         if (response.Id != null)
         {
-            logger.LogInformation("Got non-sub response to handle {}", response);
             bool found = requestRoutes.Remove(response.Id.Value, out var state);
 
             if (!found)
@@ -172,7 +162,7 @@ public class ChainObserverBackgroundService : BackgroundService
                 throw new InvalidOperationException(
                     "Subscription response received out-of-turn.");
             }
-            
+
             // check for error
 
             if (response.Error != null)
@@ -182,7 +172,6 @@ public class ChainObserverBackgroundService : BackgroundService
 
             // pass to observer
 
-            logger.LogInformation("non-Subservising response");
             await state.Observer.ObserveAsync(state.Request, response);
         }
         else
@@ -190,12 +179,10 @@ public class ChainObserverBackgroundService : BackgroundService
             // if not id, it must be a response to a sub
 
             string? subscriptionId = response.Parameters!.SubscriptionId;
-            logger.LogInformation("Got sub response to handle {} -- {}", subscriptionId, response);
 
             if (string.IsNullOrEmpty(subscriptionId))
             {
-                throw new InvalidOperationException(
-                    "Expected a subscription but subscription id is null.")
+                throw new InvalidOperationException("Expected a subscription but subscription id is null.")
                 {
                     Data =
                     {
@@ -212,7 +199,6 @@ public class ChainObserverBackgroundService : BackgroundService
                     $"Couldn't match observer for subscription id={response.Parameters.SubscriptionId}.");
             }
 
-            logger.LogInformation("Observising response");
             await state!.Observer.ObserveAsync(state.Request, response);
         }
     }

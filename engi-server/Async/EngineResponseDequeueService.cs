@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Amazon.Runtime;
+using Amazon.SecurityToken.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Engi.Substrate.Jobs;
@@ -64,6 +65,12 @@ public class EngineResponseDequeueService : BackgroundService
             }
             catch (Exception ex)
             {
+                if (ex is AmazonSQSException sqsException && sqsException.Message.Contains("expired"))
+                {
+                    logger.LogDebug("SQS client credentials expired unexpectedly; expiration={}",
+                        credentials is Credentials withExp ? withExp.Expiration : null);
+                }
+
                 logger.LogCritical(ex, "Stopping engine response dequeueing service due to a failure.");
                 return;
             }

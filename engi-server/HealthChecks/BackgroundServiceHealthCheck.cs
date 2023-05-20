@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Collections.ObjectModel;
+using Engi.Substrate.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Engi.Substrate.Server.HealthChecks;
 
@@ -12,22 +14,34 @@ public class BackgroundServiceHealthCheck<T> : IHealthCheck
         this.serviceProvider = serviceProvider;
     }
 
-    public virtual Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         var backgroundService = serviceProvider.GetServices<IHostedService>()
-            .OfType<BackgroundService>()
-            .SingleOrDefault(x => x.GetType() == typeof(T));
+            .OfType<T>()
+            .SingleOrDefault();
 
         if (backgroundService == null)
         {
             return Task.FromResult(HealthCheckResult.Unhealthy("Background service is not registered."));
         }
 
-        if (backgroundService.ExecuteTask.IsCompleted)
+        var data = backgroundService is IHasHealthCheckData hasHealthCheckData
+            ? hasHealthCheckData.GetHealthCheckData()
+            : new Dictionary<string, object?>();
+
+        return CheckHealthAsync(backgroundService, data!, cancellationToken);
+    }
+
+    protected virtual Task<HealthCheckResult> CheckHealthAsync(
+        T service,
+        IReadOnlyDictionary<string, object> data,
+        CancellationToken cancellationToken)
+    {
+        if (service.ExecuteTask.IsCompleted)
         {
-            return Task.FromResult(HealthCheckResult.Unhealthy("Background service is not running."));
+            return Task.FromResult(HealthCheckResult.Unhealthy("Background service is not running.", data: data));
         }
 
-        return Task.FromResult(HealthCheckResult.Healthy());
+        return Task.FromResult(HealthCheckResult.Healthy(data: data));
     }
 }

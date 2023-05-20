@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Text;
 using Dasync.Collections;
+using Engi.Substrate.HealthChecks;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Metadata.V14;
 using Engi.Substrate.Observers;
@@ -16,9 +17,12 @@ using Constants = Raven.Client.Constants;
 
 namespace Engi.Substrate.Indexing;
 
-public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBlock>
+public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBlock>, IHasHealthCheckData
 {
     private IDisposable? headerObservable;
+    private Header? lastFinalizedHeader;
+    private ulong? lastIndexedBlock;
+    private ulong? maxIndexedBlock;
 
     public IndexingBackgroundService(
         IDocumentStore store,
@@ -40,6 +44,16 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         ";
     }
 
+    public IReadOnlyDictionary<string, object?> GetHealthCheckData()
+    {
+        return new Dictionary<string, object?>
+        {
+            [nameof(lastFinalizedHeader)] = lastFinalizedHeader?.Number,
+            [nameof(lastIndexedBlock)] = lastIndexedBlock,
+            [nameof(maxIndexedBlock)] = maxIndexedBlock
+        };
+    }
+
     protected override Task InitializeAsync()
     {
         var headObserver = ServiceProvider
@@ -51,6 +65,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
             // this Rx sequence makes sure that each handler is awaited before continuing
             .Select(header => Observable.FromAsync(async () =>
             {
+                lastFinalizedHeader = header;
+
                 if (header.Number == 0)
                 {
                     // this can only happen in a genesis, if that, but since it showed up once
@@ -155,6 +171,12 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                 }
 
                 block.IndexedOn = DateTime.UtcNow;
+
+                lastIndexedBlock = block.Number;
+
+                maxIndexedBlock = maxIndexedBlock.HasValue
+                    ? Math.Max(maxIndexedBlock.Value, block.Number)
+                    : block.Number;
             }
             catch (BlockHeaderNotFoundException ex)
             {
@@ -203,6 +225,8 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         }
 
         await session.SaveChangesAsync();
+
+
     }
 
     internal static async Task<IEnumerable<object>> ProcessBatchItemAsync(

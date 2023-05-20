@@ -5,8 +5,8 @@ using Raven.Client.Exceptions.Documents.Subscriptions;
 
 namespace Engi.Substrate.Server.HealthChecks;
 
-public class RavenSubscriptionServiceHealthCheck<TSubscription, T> : BackgroundServiceHealthCheck<TSubscription>
-    where TSubscription : SubscriptionProcessingBase<T>
+public class RavenSubscriptionServiceHealthCheck<TSubscriptionService, T> : BackgroundServiceHealthCheck<TSubscriptionService>
+    where TSubscriptionService : SubscriptionProcessingBase<T>
     where T : class
 {
     private readonly IDocumentStore store;
@@ -17,16 +17,17 @@ public class RavenSubscriptionServiceHealthCheck<TSubscription, T> : BackgroundS
         this.store = store;
     }
 
-    public override async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    protected override async Task<HealthCheckResult> CheckHealthAsync(TSubscriptionService service,
+        IReadOnlyDictionary<string, object> data, CancellationToken cancellationToken)
     {
-        var serviceResult = await base.CheckHealthAsync(context, cancellationToken);
+        var serviceResult = await base.CheckHealthAsync(service, data, cancellationToken);
 
         if (serviceResult.Status == HealthStatus.Healthy)
         {
             return serviceResult;
         }
 
-        string subscriptionName = SubscriptionConventions.GetName(typeof(TSubscription));
+        string subscriptionName = SubscriptionConventions.GetName(typeof(TSubscriptionService));
 
         SubscriptionState state;
 
@@ -37,14 +38,14 @@ public class RavenSubscriptionServiceHealthCheck<TSubscription, T> : BackgroundS
         }
         catch (SubscriptionDoesNotExistException)
         {
-            return HealthCheckResult.Unhealthy("Subscription does not exist.");
+            return HealthCheckResult.Unhealthy("Subscription does not exist.", data: data);
         }
 
         if (state.Disabled)
         {
-            return HealthCheckResult.Degraded("Subscription is disabled.");
+            return HealthCheckResult.Degraded("Subscription is disabled.", data: data);
         }
 
-        return HealthCheckResult.Healthy();
+        return HealthCheckResult.Healthy(data: data);
     }
 }

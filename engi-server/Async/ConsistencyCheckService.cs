@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Observers;
 using Microsoft.Extensions.Options;
@@ -88,53 +89,61 @@ from ConsistencyCheckCommands as c where filter(c)
         // executing InitializeAsync)
 
         session.Advanced.UseOptimisticConcurrency = false;
+        session.Advanced.MaxNumberOfRequestsPerSession = int.MaxValue;
 
-        foreach (var item in batch.Items)
+        var command = batch.Items.Single().Result;
+
+        var headerObserver = serviceProvider.GetServices<IChainObserver>()
+            .OfType<NewHeadChainObserver>()
+            .Single();
+
+        if (headerObserver.LastFinalizedHeader != null)
         {
-            var command = item.Result;
+            command.StartedOn = DateTime.UtcNow;
 
-            var headerObserver = serviceProvider.GetServices<IChainObserver>()
-                .OfType<NewHeadChainObserver>()
-                .Single();
+            await session.SaveChangesAsync();
 
-            if (headerObserver.LastFinalizedHeader != null)
+            List<ulong> recovered = new();
+
+            var sw = Stopwatch.StartNew();
+
+            try
             {
-                command.LastRecovered = await EnsureIndexingConsistencyAsync(headerObserver.LastFinalizedHeader.Number);
+                const int walkSize = 256;
 
-                command.LastExecutedOn = DateTime.UtcNow;
+                for (ulong number = 1; number <= headerObserver.LastFinalizedHeader.Number; number += walkSize)
+                {
+                    await EnsureIndexingConsistencyAsync(number,
+                        number + walkSize <= headerObserver.LastFinalizedHeader.Number
+                            ? number + walkSize
+                            : headerObserver.LastFinalizedHeader.Number, recovered);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed while executing consistency check.");
             }
 
-            var meta = session.Advanced.GetMetadataFor(command);
+            sw.Stop();
 
-            meta[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddMinutes(15);
+            command.LastRecoveredBlockNumbers = recovered.ToArray();
+            command.LastCompletedOn = DateTime.UtcNow;
+            command.LastCompletedDuration = sw.Elapsed;
         }
+
+        var meta = session.Advanced.GetMetadataFor(command);
+
+        meta[Constants.Documents.Metadata.Refresh] = DateTime.UtcNow.AddMinutes(15);
+
+        command.StartedOn = null;
 
         await session.SaveChangesAsync();
     }
 
-    private async Task<long> EnsureIndexingConsistencyAsync(ulong toInclusive)
-    {
-        long recovered = 0;
-
-        try
-        {
-            const int walkSize = 256;
-
-            for (ulong number = 1; number <= toInclusive; number += walkSize)
-            {
-                recovered += await EnsureIndexingConsistencyAsync(number,
-                    number + walkSize <= toInclusive ? number + walkSize : toInclusive);
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed while executing consistency check.");
-        }
-
-        return recovered;
-    }
-
-    private async Task<long> EnsureIndexingConsistencyAsync(ulong fromInclusive, ulong toInclusive)
+    private async Task EnsureIndexingConsistencyAsync(
+        ulong fromInclusive,
+        ulong toInclusive,
+        List<ulong> recovered)
     {
         var indexes = Enumerable.Range(0, (int)(toInclusive - fromInclusive))
             .Select(offset => fromInclusive + (ulong)offset)
@@ -142,7 +151,7 @@ from ConsistencyCheckCommands as c where filter(c)
 
         if (!indexes.Any())
         {
-            return 0;
+            return;
         }
 
         string[] keys = indexes
@@ -161,7 +170,7 @@ from ConsistencyCheckCommands as c where filter(c)
 
         if (!missingKeys.Any())
         {
-            return 0;
+            return;
         }
 
         foreach (var key in missingKeys)
@@ -175,6 +184,8 @@ from ConsistencyCheckCommands as c where filter(c)
 
                 continue;
             }
+
+            recovered.Add(number);
 
             var block = new ExpandedBlock(number);
 
@@ -207,7 +218,5 @@ from ConsistencyCheckCommands as c where filter(c)
         }
 
         await session.SaveChangesAsync();
-
-        return missingKeys.Length;
     }
 }

@@ -4,9 +4,16 @@ public class ConsistencyCheckCommand
 {
     public string Id { get; set; } = Key;
 
-    public DateTime? LastExecutedOn { get; set; }
+    public DateTime? StartedOn { get; set; }
 
-    public long? LastRecovered { get; set; }
+    public bool IsRunning => StartedOn.HasValue;
+
+    public DateTime? LastCompletedOn { get; set; }
+
+    public TimeSpan LastCompletedDuration { get; set; }
+
+    public ulong[] LastRecoveredBlockNumbers { get; set; } = null!;
+
 
     public const string Key = nameof(ConsistencyCheckCommand);
 }

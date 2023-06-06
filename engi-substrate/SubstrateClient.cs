@@ -107,6 +107,11 @@ public class SubstrateClient
 
                 throw new BlockHeaderNotFoundException(hash ?? "unknown", code.Value, message, data);
             }
+            else if (code == 1010)
+            {
+                var args = String.Join(", ", @params);
+                throw new InvalidOperationException($"{method} had a bad signature: args={args}");
+            }
 
             throw new InvalidOperationException(
                 $"Substrate error code={code?.ToString() ?? "unknown"}; message={message ?? "unknown"}: {data}")

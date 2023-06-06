@@ -69,6 +69,7 @@ from SolveJobCommands as c where filter(c) include c.JobAttemptedSnapshotId
                     ["command"] = command.Id
                 }).ToString();
 
+                Logger.LogWarning($"Sudoer pubkey {sudoer.Address}");
                 Logger.LogWarning(ex,
                     "Processing command {command} failed; sentry id={sentryId}.",
                     command.Id, command.SentryId);
@@ -107,9 +108,13 @@ from SolveJobCommands as c where filter(c) include c.JobAttemptedSnapshotId
 
         var sudoArgs = new SudoCallArguments(solveJobArgs);
 
-        var result = await client.AuthorSubmitExtrinsicAsync(
-            new SignedExtrinsicArguments<SudoCallArguments>(
-                sudoer, sudoArgs, account, ExtrinsicEra.CreateMortal(chainState.LatestFinalizedHeader, 55), chainState, 0), chainState.Metadata);
+        var signedExtrinsicArgs = new SignedExtrinsicArguments<SudoCallArguments>(
+            sudoer, sudoArgs, account,
+            ExtrinsicEra.CreateMortal(chainState.LatestFinalizedHeader, 55),
+            chainState, 0
+        );
+
+        var result = await client.AuthorSubmitExtrinsicAsync(signedExtrinsicArgs, chainState.Metadata);
 
         command.SolutionId = solutionId;
         command.ResultHash = result;

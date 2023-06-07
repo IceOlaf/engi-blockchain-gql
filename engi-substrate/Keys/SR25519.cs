@@ -13,6 +13,7 @@ internal static class SR25519
 
                 IntPtr Load(string filename)
                 {
+                    Console.WriteLine($"sr25519 library is being loaded: {filename}");
                     return NativeLibrary.Load(
                         Path.Combine(basePath, "lib", filename));
                 }

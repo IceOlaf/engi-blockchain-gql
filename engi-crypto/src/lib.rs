@@ -19,10 +19,10 @@ pub unsafe extern "C" fn sr25519_keypair_from_seed(seed_raw: *const u8, keypair_
 
 	match MiniSecretKey::from_bytes(seed) {
 		Ok(mini_secret) => {
-			let bytes = mini_secret
+			let ed_bytes = mini_secret
 				.expand_to_keypair(ExpansionMode::Ed25519)
-				.to_half_ed25519_bytes()
-				.as_mut_ptr();
+				.to_half_ed25519_bytes();
+            let bytes = ed_bytes.as_mut_ptr();
 			
 			ptr::copy_nonoverlapping(bytes, keypair_raw, 96);
 		},
@@ -41,10 +41,10 @@ pub unsafe extern "C" fn sr25519_keypair_from_secret(secret_key_raw: *const u8, 
 
 	match SecretKey::from_ed25519_bytes(secret_key) {
 		Ok(secret) => {
-			let bytes = secret
+			let ed_bytes = secret
 				.to_keypair()
-				.to_half_ed25519_bytes()
-				.as_mut_ptr();
+				.to_half_ed25519_bytes();
+            let bytes = ed_bytes.as_mut_ptr();
 			
 			ptr::copy_nonoverlapping(bytes, keypair_raw, 96);
 		},
@@ -73,8 +73,8 @@ pub unsafe extern "C" fn sr25519_sign(pub_key_raw: *const u8, secret_raw: *const
 			let signature = s
 				.sign_simple(CTX, message, &k)
 				.to_bytes()
-				.to_vec()
-				.as_ptr() as * const u8;
+				.to_vec();
+            let signature = signature.as_ptr() as * const u8;
 
 			ptr::copy_nonoverlapping(signature, signature_raw, 64);
 		},

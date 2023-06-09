@@ -19,7 +19,7 @@ pub unsafe extern "C" fn sr25519_keypair_from_seed(seed_raw: *const u8, keypair_
 
 	match MiniSecretKey::from_bytes(seed) {
 		Ok(mini_secret) => {
-			let ed_bytes = mini_secret
+			let mut ed_bytes = mini_secret
 				.expand_to_keypair(ExpansionMode::Ed25519)
 				.to_half_ed25519_bytes();
             let bytes = ed_bytes.as_mut_ptr();
@@ -41,7 +41,7 @@ pub unsafe extern "C" fn sr25519_keypair_from_secret(secret_key_raw: *const u8, 
 
 	match SecretKey::from_ed25519_bytes(secret_key) {
 		Ok(secret) => {
-			let ed_bytes = secret
+			let mut ed_bytes = secret
 				.to_keypair()
 				.to_half_ed25519_bytes();
             let bytes = ed_bytes.as_mut_ptr();

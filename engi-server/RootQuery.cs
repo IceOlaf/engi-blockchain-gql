@@ -360,6 +360,26 @@ public class RootQuery : ObjectGraphType
             query = query.Where(x => x.Type == args.Type);
         }
 
+        if (args.SortBy != null)
+        {
+            if ( args.SortBy == TransactionSortOrder.NewestFirst )
+            {
+                query = query.OrderBy(x => x.DateTime);
+            }
+            else if ( args.SortBy == TransactionSortOrder.OldestFirst )
+            {
+                query = query.OrderByDescending(x => x.DateTime);
+            }
+            else if ( args.SortBy == TransactionSortOrder.AmountAscending )
+            {
+                query = query.OrderBy(x => x.Amount);
+            }
+            else if ( args.SortBy == TransactionSortOrder.AmountDescending )
+            {
+                query = query.OrderByDescending(x => x.Amount);
+            }
+        }
+
         var results = await query
             .ProjectInto<TransactionIndex.Result>()
             .Statistics(out var stats)

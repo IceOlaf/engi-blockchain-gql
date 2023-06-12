@@ -10,4 +10,6 @@ public class TransactionsPagedQueryArguments : PagedQueryArguments
     public string AccountId { get; set; } = null!;
 
     public TransactionType? Type { get; set; }
+
+    public TransactionSortOrder? SortBy { get; set; }
 }

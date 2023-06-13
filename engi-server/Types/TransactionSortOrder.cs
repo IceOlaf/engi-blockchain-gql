@@ -2,8 +2,8 @@ namespace Engi.Substrate.Server.Types;
 
 public enum TransactionSortOrder
 {
-    NewestFirst,
-    OldestFirst,
+    CreatedAscending,
+    CreatedDescending,
     AmountAscending,
     AmountDescending
 }

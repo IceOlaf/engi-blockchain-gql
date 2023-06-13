@@ -362,11 +362,11 @@ public class RootQuery : ObjectGraphType
 
         if (args.SortBy != null)
         {
-            if ( args.SortBy == TransactionSortOrder.NewestFirst )
+            if ( args.SortBy == TransactionSortOrder.CreatedAscending )
             {
                 query = query.OrderBy(x => x.DateTime);
             }
-            else if ( args.SortBy == TransactionSortOrder.OldestFirst )
+            else if ( args.SortBy == TransactionSortOrder.CreatedDescending )
             {
                 query = query.OrderByDescending(x => x.DateTime);
             }

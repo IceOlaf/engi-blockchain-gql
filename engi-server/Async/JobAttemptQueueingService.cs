@@ -43,7 +43,7 @@ public class JobAttemptQueueingService : SubscriptionProcessingBase<JobAttempted
 
             var command = new QueueEngineRequestCommand
             {
-                Id = $"QueueEngineRequestCommand/for/{attempt.AttemptId}",
+                Id = QueueEngineRequestCommand.KeyFrom(attempt.AttemptId),
                 Identifier = attempt.Id,
                 CommandString = $"job attempt {attempt.PatchFileUrl} --job-id {attempt.JobId} --dry-run",
                 SourceId = attempt.Id

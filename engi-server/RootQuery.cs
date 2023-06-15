@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
+using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Types;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
@@ -58,6 +59,10 @@ public class RootQuery : ObjectGraphType
         Field<TransactionsPagedResult>("transactions")
             .Argument<TransactionsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetTransactionsAsync);
+
+        Field<JobSubmissionsGraphType>("submissions")
+            .Argument<NonNullGraphType<UInt64GraphType>>("id")
+            .ResolveAsync(GetJobSubmissionsAsync);
     }
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)
@@ -388,5 +393,90 @@ public class RootQuery : ObjectGraphType
             .ToArrayAsync();
         
         return new PagedResult<TransactionIndex.Result>(results, stats.LongTotalResults);
+    }
+
+    private async Task<object?> GetJobSubmissionsAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        ulong id = context.GetArgument<ulong>("id");
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var attemptId = JobAttemptedSnapshot.KeyFrom(id);
+
+        var query = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
+
+        if (query == null) {
+            return null;
+        }
+
+        var submission = new JobSubmissionsDetails { };
+
+        var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
+        var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
+
+        if (engine_cmd == null) {
+            return submission;
+        }
+
+        var attempt = new AttemptStage { };
+
+        submission.Status = SubmissionStatus.Attempting;
+        submission.Attempt = new AttemptStage { };
+
+        var commandResponseId = EngineCommandResponse.KeyFrom(attemptId);;
+        var engineResponse = await session.LoadAsync<EngineCommandResponse>(commandResponseId);
+
+        if (engineResponse == null)
+        {
+            return submission;
+        }
+
+        submission.Attempt.Results = engineResponse.ExecutionResult;
+
+        if (engineResponse.ExecutionResult.ReturnCode == 0)
+        {
+            submission.Attempt.Status = StageStatus.Passed;
+        }
+        else
+        {
+            submission.Attempt.Status = StageStatus.Failed;
+
+            return submission;
+        }
+
+
+        var solve = new SolveStage { };
+
+        submission.Solve = solve;
+
+        var solveCommandId = SolveJobCommand.KeyFrom(attemptId);
+        var solveCommand = await session.LoadAsync<SolveJobCommand>(solveCommandId);
+
+        if (solveCommand == null || solveCommand.ResultHash == null)
+        {
+            return submission;
+        }
+
+        submission.Status = SubmissionStatus.Solved;
+
+        var result = new SolutionResult {
+            SolutionId = solveCommand.SolutionId,
+            ResultHash = solveCommand.ResultHash
+        };
+
+        if (solveCommand.SolutionId == null)
+        {
+            submission.Solve.Status = StageStatus.Failed;
+        }
+        else
+        {
+            submission.Solve.Status = StageStatus.Passed;
+        }
+
+        submission.Solve.Results = result;
+
+        return submission;
     }
 }

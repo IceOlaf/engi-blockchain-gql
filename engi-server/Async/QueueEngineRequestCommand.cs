@@ -13,4 +13,8 @@ public class QueueEngineRequestCommand
     public DateTime? ProcessedOn { get; set; }
 
     public string? SentryId { get; set; }
+
+    public static string KeyFrom(ulong id) {
+        return $"QueueEngineRequestCommands/for/{id.ToString(StorageFormats.UInt64)}";
+    }
 }

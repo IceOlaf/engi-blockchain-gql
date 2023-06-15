@@ -17,4 +17,8 @@ public class SolveJobCommand
     public DateTime? ProcessedOn { get; set; }
 
     public string? SentryId { get; set; }
+
+    public static string KeyFrom(string attemptId) {
+        return $"SolveJobCommand/{attemptId}";
+    }
 }

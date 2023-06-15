@@ -11,6 +11,6 @@ public class TransactionsPagedQueryArgumentsGraphType : PagedQueryArgumentsGraph
         Field(x => x.Type, nullable: true)
             .Description("The type of transaction to filter for.");
         Field(x => x.SortBy, nullable: true)
-            .Description("Sort order: NEWEST_FIRST, OLDEST_FIRST, AMOUNT_ASCENDING, AMOUNT_DESCENDING");
+            .Description("Sort order: CREATED_ASCENDING, CREATED_DESCENDING, AMOUNT_ASCENDING, AMOUNT_DESCENDING");
     }
 }

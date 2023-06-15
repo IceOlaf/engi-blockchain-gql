@@ -100,6 +100,11 @@ public class EngineResponseDequeueService : BackgroundService
                     var executionResult = JsonSerializer
                         .Deserialize<CommandLineExecutionResult>(snsMessageBody, MessageSerializationOptions)!;
 
+                    await session.StoreAsync(new EngineCommandResponse {
+                        Id = EngineCommandResponse.KeyFrom(executionResult.Identifier),
+                        ExecutionResult = executionResult
+                    });
+
                     // load the object referenced by the identifier and see what it is
 
                     var identifiedObject = await session
@@ -127,6 +132,7 @@ public class EngineResponseDequeueService : BackgroundService
 
                         await session.StoreAsync(new SolveJobCommand
                         {
+                            Id = SolveJobCommand.KeyFrom(attemptSnapshot.Id),
                             JobAttemptedSnapshotId = attemptSnapshot.Id,
                             EngineResult = EngineJson.Deserialize<EngineAttemptResult>(attempt)
                         });

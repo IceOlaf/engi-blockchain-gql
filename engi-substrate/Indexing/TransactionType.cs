@@ -2,8 +2,8 @@ namespace Engi.Substrate.Indexing;
 
 public enum TransactionType
 {
-    Bridge,
-    Exchange,
+    Buy,
+    Sell,
     Transfer,
     Spend,
     Income

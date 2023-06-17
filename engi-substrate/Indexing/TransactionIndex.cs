@@ -63,7 +63,7 @@ namespace Engi.Substrate.Server.Indexing
     public enum TransactionType
     {
         Bridge,
-        Exchange,
+        Sell,
         Transfer,
         Spend,
         Income
@@ -107,7 +107,7 @@ namespace Engi.Substrate.Server.Indexing
 
             if(pallet == ""Exchange"" && call == ""sell"")
             {
-                return TransactionType.Exchange;
+                return TransactionType.Sell;
             }
 
             if(pallet == ""ChainBridge"" && call == ""acknowledge_proposal"")
@@ -149,7 +149,7 @@ namespace Engi.Substrate.Server.Indexing
 
         public static decimal GetAmount(TransactionType type, dynamic args, string callName)
         {
-            if(type == TransactionType.Exchange)
+            if(type == TransactionType.Sell)
             {
                 if(callName == ""sell"")
                 {

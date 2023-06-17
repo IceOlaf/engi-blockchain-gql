@@ -62,7 +62,8 @@ namespace Engi.Substrate.Server.Indexing
 {
     public enum TransactionType
     {
-        Exchange,
+        Bridge,
+        Sell,
         Transfer,
         Spend,
         Income
@@ -106,7 +107,7 @@ namespace Engi.Substrate.Server.Indexing
 
             if(pallet == ""Exchange"" && call == ""sell"")
             {
-                return TransactionType.Exchange;
+                return TransactionType.Sell;
             }
 
             if(pallet == ""ChainBridge"" && call == ""acknowledge_proposal"")
@@ -115,7 +116,7 @@ namespace Engi.Substrate.Server.Indexing
 
                 if(innerCall != null)
                 {
-                    return TransactionType.Exchange;
+                    return TransactionType.Bridge;
                 }
             }
 
@@ -138,13 +139,17 @@ namespace Engi.Substrate.Server.Indexing
                 
                 return new string[] { (string) dest.Value }; 
             }
+            else if(type == TransactionType.Bridge)
+            {
+                return new string[] { (string) args.call.Exchange.transfer[0] };
+            }
                 
             return new string[0];
         }
 
         public static decimal GetAmount(TransactionType type, dynamic args, string callName)
         {
-            if(type == TransactionType.Exchange)
+            if(type == TransactionType.Sell)
             {
                 if(callName == ""sell"")
                 {
@@ -162,6 +167,11 @@ namespace Engi.Substrate.Server.Indexing
             if(type == TransactionType.Spend)
             {
                 return decimal.Parse((string) args.funding);
+            }
+
+            if(type == TransactionType.Bridge)
+            {
+                return decimal.Parse((string) args.call.Exchange.transfer[1]);
             }
 
             return 0;

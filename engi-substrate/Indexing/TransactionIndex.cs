@@ -62,7 +62,7 @@ namespace Engi.Substrate.Server.Indexing
 {
     public enum TransactionType
     {
-        Bridge,
+        Buy,
         Sell,
         Transfer,
         Spend,
@@ -116,7 +116,7 @@ namespace Engi.Substrate.Server.Indexing
 
                 if(innerCall != null)
                 {
-                    return TransactionType.Bridge;
+                    return TransactionType.Buy;
                 }
             }
 
@@ -139,7 +139,7 @@ namespace Engi.Substrate.Server.Indexing
                 
                 return new string[] { (string) dest.Value }; 
             }
-            else if(type == TransactionType.Bridge)
+            else if(type == TransactionType.Buy)
             {
                 return new string[] { (string) args.call.Exchange.transfer[0] };
             }
@@ -169,7 +169,7 @@ namespace Engi.Substrate.Server.Indexing
                 return decimal.Parse((string) args.funding);
             }
 
-            if(type == TransactionType.Bridge)
+            if(type == TransactionType.Buy)
             {
                 return decimal.Parse((string) args.call.Exchange.transfer[1]);
             }

@@ -186,7 +186,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         Index(x => x.Technologies, FieldIndexing.Search);
         Index(x => x.Query, FieldIndexing.Search);
-        //Index(x => x.Complexity, FieldIndexing.Search);
+        Index(x => x.Complexity, FieldIndexing.Search);
 
         Suggestion(x => x.Query);
 

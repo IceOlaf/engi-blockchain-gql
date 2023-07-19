@@ -5,5 +5,5 @@ public enum JobsOrderByProperty
     CreatedOn,
     UpdatedOn,
     Funding,
-    Complexity
+    Sloc
 }

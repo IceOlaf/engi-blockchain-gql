@@ -59,6 +59,18 @@ public static class JobIndexQueryExtensions
                 .WhereLessThanOrEqual(x => x.Funding, args.MaxFunding.Value.ToString(StorageFormats.UInt128));
         }
 
+        if (args.MinSLOC != null)
+        {
+            query = query
+                .WhereGreaterThanOrEqual(x => x.Complexity.SLOC, args.MinSLOC.Value);
+        }
+
+        if (args.MaxSLOC != null)
+        {
+            query = query
+                .WhereLessThanOrEqual(x => x.Complexity.SLOC, args.MaxSLOC.Value);
+        }
+
         if (args.SolvedBy != null)
         {
             query = query
@@ -107,10 +119,10 @@ public static class JobIndexQueryExtensions
                     : query.OrderByDescending(x => x.Funding);
                 break;
 
-            case JobsOrderByProperty.Complexity:
+            case JobsOrderByProperty.Sloc:
                 query = args.OrderByDirection == OrderByDirection.Asc
-                    ? query.OrderBy(x => x.Complexity)
-                    : query.OrderByDescending(x => x.Complexity);
+                    ? query.OrderBy(x => x.Complexity.SLOC)
+                    : query.OrderByDescending(x => x.Complexity.SLOC);
                 break;
         }
 

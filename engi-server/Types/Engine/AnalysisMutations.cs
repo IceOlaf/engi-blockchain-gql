@@ -79,6 +79,7 @@ public class AnalysisMutations : ObjectGraphType
 
         var analysis = new RepositoryAnalysis
         {
+            JobId = 0,
             RepositoryUrl = args.Url,
             Branch = args.Branch,
             Commit = commit.Sha,

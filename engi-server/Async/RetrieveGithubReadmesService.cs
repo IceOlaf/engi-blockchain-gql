@@ -128,5 +128,22 @@ public class RetrieveGithubReadmesService : SubscriptionProcessingBase<JobSnapsh
 
         readme.RetrievedOn = DateTime.UtcNow;
         readme.Content = content.Content;
+
+        var analysis = new RepositoryAnalysis
+        {
+            JobId = job.JobId,
+            RepositoryUrl = job.Repository.Url,
+            Branch = job.Repository.Branch,
+            Commit = job.Repository.Commit,
+            CreatedBy = job.Creator
+        };
+
+        await session.StoreAsync(analysis);
+
+        await session.StoreAsync(new QueueEngineRequestCommand {
+            Identifier = analysis.Id,
+            CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}",
+            SourceId = analysis.Id
+        });
     }
 }

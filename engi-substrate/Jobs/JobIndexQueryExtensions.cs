@@ -106,6 +106,12 @@ public static class JobIndexQueryExtensions
                     ? query.OrderBy(x => x.Funding)
                     : query.OrderByDescending(x => x.Funding);
                 break;
+
+            case JobsOrderByProperty.Complexity:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.Complexity)
+                    : query.OrderByDescending(x => x.Complexity);
+                break;
         }
 
         return query

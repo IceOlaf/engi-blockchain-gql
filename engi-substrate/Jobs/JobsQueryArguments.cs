@@ -31,6 +31,10 @@ public class JobsQueryArguments : OrderedQueryArguments<JobsOrderByProperty>, IV
 
     public long? MaxSLOC { get; set; }
 
+    public long? MinCyclomatic { get; set; }
+
+    public long? MaxCyclomatic { get; set; }
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (CreatedOrSolvedBy != null && (Creator != null || SolvedBy != null))

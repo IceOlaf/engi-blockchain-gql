@@ -62,13 +62,25 @@ public static class JobIndexQueryExtensions
         if (args.MinSLOC != null)
         {
             query = query
-                .WhereGreaterThanOrEqual(x => x.Complexity.SLOC, args.MinSLOC.Value);
+                .WhereGreaterThanOrEqual(x => x.Complexity != null ? x.Complexity.SLOC : 0, args.MinSLOC.Value);
         }
 
         if (args.MaxSLOC != null)
         {
             query = query
-                .WhereLessThanOrEqual(x => x.Complexity.SLOC, args.MaxSLOC.Value);
+                .WhereLessThanOrEqual(x => x.Complexity != null ? x.Complexity.SLOC : 0, args.MaxSLOC.Value);
+        }
+
+        if (args.MinCyclomatic != null)
+        {
+            query = query
+                .WhereGreaterThanOrEqual(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0, args.MinCyclomatic.Value);
+        }
+
+        if (args.MaxCyclomatic != null)
+        {
+            query = query
+                .WhereLessThanOrEqual(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0, args.MaxCyclomatic.Value);
         }
 
         if (args.SolvedBy != null)
@@ -121,8 +133,14 @@ public static class JobIndexQueryExtensions
 
             case JobsOrderByProperty.Sloc:
                 query = args.OrderByDirection == OrderByDirection.Asc
-                    ? query.OrderBy(x => x.Complexity.SLOC)
-                    : query.OrderByDescending(x => x.Complexity.SLOC);
+                    ? query.OrderBy(x => x.Complexity != null ? x.Complexity.SLOC : 0)
+                    : query.OrderByDescending(x => x.Complexity != null ? x.Complexity.SLOC : 0);
+                break;
+
+            case JobsOrderByProperty.Cyclomatic:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0)
+                    : query.OrderByDescending(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0);
                 break;
         }
 

@@ -5,5 +5,6 @@ public enum JobsOrderByProperty
     CreatedOn,
     UpdatedOn,
     Funding,
-    Sloc
+    Sloc,
+    Cyclomatic
 }

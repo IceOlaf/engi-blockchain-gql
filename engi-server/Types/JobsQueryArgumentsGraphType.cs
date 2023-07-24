@@ -41,6 +41,12 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
 
         Field(x => x.RepositoryOrganization, nullable: true)
             .Description("The repository organization to search for. e.g. for https://github.com/engi-network/blockchain, 'engi-network'.");
+
+        Field(x => x.MinSLOC, nullable: true)
+            .Description("The minimum size (SLOC) to search for.");
+
+        Field(x => x.MaxSLOC, nullable: true)
+            .Description("The maximum size (SLOC) to search for.");
     }
 }
 

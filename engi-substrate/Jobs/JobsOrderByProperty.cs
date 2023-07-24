@@ -4,5 +4,7 @@ public enum JobsOrderByProperty
 {
     CreatedOn,
     UpdatedOn,
-    Funding
+    Funding,
+    Sloc,
+    Cyclomatic
 }

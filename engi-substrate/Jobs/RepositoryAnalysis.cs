@@ -4,6 +4,8 @@ public class RepositoryAnalysis : IDispatched
 {
     public string Id { get; set; } = null!;
 
+    public ulong JobId { get; set; }
+
     public string RepositoryUrl { get; set; } = null!;
 
     public string Branch { get; set; } = null!;

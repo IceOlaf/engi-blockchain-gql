@@ -59,6 +59,30 @@ public static class JobIndexQueryExtensions
                 .WhereLessThanOrEqual(x => x.Funding, args.MaxFunding.Value.ToString(StorageFormats.UInt128));
         }
 
+        if (args.MinSLOC != null)
+        {
+            query = query
+                .WhereGreaterThanOrEqual(x => x.Complexity != null ? x.Complexity.SLOC : 0, args.MinSLOC.Value);
+        }
+
+        if (args.MaxSLOC != null)
+        {
+            query = query
+                .WhereLessThanOrEqual(x => x.Complexity != null ? x.Complexity.SLOC : 0, args.MaxSLOC.Value);
+        }
+
+        if (args.MinCyclomatic != null)
+        {
+            query = query
+                .WhereGreaterThanOrEqual(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0, args.MinCyclomatic.Value);
+        }
+
+        if (args.MaxCyclomatic != null)
+        {
+            query = query
+                .WhereLessThanOrEqual(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0, args.MaxCyclomatic.Value);
+        }
+
         if (args.SolvedBy != null)
         {
             query = query
@@ -105,6 +129,18 @@ public static class JobIndexQueryExtensions
                 query = args.OrderByDirection == OrderByDirection.Asc
                     ? query.OrderBy(x => x.Funding)
                     : query.OrderByDescending(x => x.Funding);
+                break;
+
+            case JobsOrderByProperty.Sloc:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.Complexity != null ? x.Complexity.SLOC : 0)
+                    : query.OrderByDescending(x => x.Complexity != null ? x.Complexity.SLOC : 0);
+                break;
+
+            case JobsOrderByProperty.Cyclomatic:
+                query = args.OrderByDirection == OrderByDirection.Asc
+                    ? query.OrderBy(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0)
+                    : query.OrderByDescending(x => x.Complexity != null ? x.Complexity.Cyclomatic : 0);
                 break;
         }
 

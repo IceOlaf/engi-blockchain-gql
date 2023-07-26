@@ -21,6 +21,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
         public string? Repository_Organization { get; set; }
 
         public string[] SolutionIds { get; set; } = null!;
+
+        public RepositoryComplexity? Complexity { get; set; }
     }
 
     public JobIndex()
@@ -58,7 +60,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Repository_Organization = snapshot.Repository.Organization,
                 SolvedBy = new string[0],
                 SolutionIds = new string[0],
-                Status = JobStatus.None
+                Status = JobStatus.None,
+                Complexity = null
             });
 
         AddMap<JobAttemptedSnapshot>(attempts => from attempt in attempts
@@ -85,7 +88,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Repository_Organization = null,
                  SolvedBy = new string[0],
                  SolutionIds = new string[0],
-                 Status = JobStatus.None
+                 Status = JobStatus.None,
+                 Complexity = null
              });
 
         AddMap<SolutionSnapshot>(solutions => from solution in solutions
@@ -112,16 +116,47 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
                   SolutionIds = new [] { solution.Id },
-                  Status = JobStatus.None
+                  Status = JobStatus.None,
+                  Complexity = null
+              });
+
+        AddMap<RepositoryAnalysis>(analyses => from analysis in analyses
+              where analysis.ProcessedOn != null
+              select new Result
+              {
+                  JobId = analysis.JobId,
+                  Creator = null!,
+                  Funding = null!,
+                  Repository = null!,
+                  Technologies = new Technology[0],
+                  Name = null!,
+                  Tests = null!,
+                  Requirements = null!,
+                  Solution = null,
+                  AttemptCount = 0,
+                  SolutionUserCount = 0,
+                  CreatedOn = null!,
+                  UpdatedOn = null!,
+                  Query = null!,
+                  CreatedOn_DateTime = null,
+                  UpdatedOn_DateTime = analysis.ProcessedOn,
+                  UpdatedOn_Date = null,
+                  Repository_FullName = null,
+                  Repository_Organization = null,
+                  SolvedBy = new string[0],
+                  SolutionIds = new string[0],
+                  Status = JobStatus.None,
+                  Complexity = analysis.Complexity
               });
 
         Reduce = results => from result in results
             group result by result.JobId
             into g
-            let latest = g.OrderByDescending(x => x.UpdatedOn.DateTime).First()
+            let latest = g.Where(x => x.Complexity == null).OrderByDescending(x => x.UpdatedOn.DateTime).First()
             let first = g.First(x => x.CreatedOn != null)
-            let solvedBy = g.SelectMany(x => x.SolvedBy).Distinct().ToArray()
+            let solvedBy = g.Where(x => x.Complexity == null).SelectMany(x => x.SolvedBy).Distinct().ToArray()
             let attemptCount = g.Sum(x => x.AttemptCount)
+            let analysis = g.First(x => x.Complexity != null)
             select new Result
             {
                 JobId = g.Key,
@@ -145,11 +180,13 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Repository_Organization = first.Repository_Organization,
                 SolvedBy = solvedBy,
                 SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
-                Status = CalculateStatus(latest.Solution, attemptCount)
+                Status = CalculateStatus(latest.Solution, attemptCount),
+                Complexity = (analysis != null) ? analysis.Complexity : latest.Complexity
             };
 
         Index(x => x.Technologies, FieldIndexing.Search);
         Index(x => x.Query, FieldIndexing.Search);
+        Index(x => x.Complexity, FieldIndexing.Search);
 
         Suggestion(x => x.Query);
 

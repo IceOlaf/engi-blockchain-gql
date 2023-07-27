@@ -196,9 +196,21 @@ public class RootQuery : ObjectGraphType
             return null;
         }
 
+        var index = await session
+            .Query<JobIndex.Result, JobIndex>()
+            .Where(x => x.JobId == jobId)
+            .ProjectInto<JobIndex.Result>()
+            .FirstOrDefaultAsync();
+
         var job = await session
             .LoadAsync<Job>(reference.ReduceOutputs.First(),
                 include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
+
+        if (index != null && index.AttemptIds.Length > 0)
+        {
+            var attempts = await session.LoadAsync<JobAttemptedSnapshot>(index.AttemptIds);
+            job.PopulateAttempts(attempts.Values);
+        }
 
         var creatorAggregatesReference = await session
             .LoadAsync<ReduceOutputReference>(
@@ -265,6 +277,7 @@ public class RootQuery : ObjectGraphType
 
         var resultsLazy = query
             .Include(x => x.SolutionIds)
+            .Include(x => x.AttemptIds)
             .LazilyAsync();
 
         var now = DateTime.UtcNow;
@@ -301,11 +314,16 @@ public class RootQuery : ObjectGraphType
         var solutionsByJobId = resultsLazy.Value.Result
             .ToDictionary(x => x.JobId, x => session.LoadAsync<SolutionSnapshot>(x.SolutionIds).Result.Values);
 
+        var attemptsByJobId = resultsLazy.Value.Result
+            .ToDictionary(x => x.JobId, x => session.LoadAsync<JobAttemptedSnapshot>(x.AttemptIds).Result.Values);
+
         foreach (var job in resultsLazy.Value.Result)
         {
             var solutions = solutionsByJobId[job.JobId];
+            var attempts = attemptsByJobId[job.JobId];
 
             job.PopulateSolutions(null, solutions);
+            job.PopulateAttempts(attempts);
         }
 
         return new JobsQueryResult

@@ -211,9 +211,6 @@ public class RootQuery : ObjectGraphType
             var tasks = index.AttemptIds.Select( async id => await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), session) ).ToList();
             var completed = await Task.WhenAll(tasks);
             List<JobSubmissionsDetails> submissions = completed.OfType<JobSubmissionsDetails>().ToList();
-            Console.WriteLine("Lisst of Job Singgs ");
-            Console.WriteLine(submissions.Count);
-            Console.WriteLine("Lisst of Job Singgs ");
 
             job.PopulateSubmissions(submissions);
         }
@@ -313,22 +310,18 @@ public class RootQuery : ObjectGraphType
                     .ToList()
             })
             .ExecuteLazyAsync();
-        Console.WriteLine("DuStoopheaux");
 
         await session.Advanced.Eagerly
             .ExecuteAllPendingLazyOperationsAsync();
 
-        Console.WriteLine("DurrpStoopheaux");
         var solutionsByJobId = resultsLazy.Value.Result
             .ToDictionary(x => x.JobId, x => session.LoadAsync<SolutionSnapshot>(x.SolutionIds).Result.Values);
 
-        Console.WriteLine("SlurrpDurrpStoopheaux");
         var submissionsByJobId = resultsLazy.Value.Result
             .ToDictionary(
                 x => x.JobId,
                 x => x.AttemptIds.Select( async id => await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), session) ).ToList()
             );
-        Console.WriteLine("DehDuStoopheaux");
 
         foreach (var job in resultsLazy.Value.Result)
         {
@@ -340,7 +333,6 @@ public class RootQuery : ObjectGraphType
             job.PopulateSubmissions(submissions);
         }
 
-        Console.WriteLine("DehDuStoopheaux");
         return new JobsQueryResult
         {
             Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.LongTotalResults),

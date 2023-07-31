@@ -38,6 +38,8 @@ public class Job
 
     public JobStatus Status { get; set; }
 
+    public RepositoryComplexity? Complexity { get; set; }
+
     private int CountPassedTests(Solution solution)
     {
         return solution.Attempt.Tests.Count(submittedTest =>

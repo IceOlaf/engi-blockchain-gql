@@ -1,6 +1,4 @@
-using Engi.Substrate.Jobs;
-
-namespace Engi.Substrate.Server.Types;
+namespace Engi.Substrate.Jobs;
 
 public class JobSubmissionsDetails
 {

@@ -30,7 +30,7 @@ public class Job
 
     public Solution? CurrentUserSolution { get; set; }
 
-    public JobAttemptedSnapshot[]? CurrentUserSubmissions { get; set; }
+    public JobSubmissionsDetails[]? CurrentUserSubmissions { get; set; }
 
     public Fractional? AverageProgress { get; set; }
 
@@ -78,9 +78,9 @@ public class Job
         };
     }
 
-    public void PopulateAttempts(ICollection<JobAttemptedSnapshot> attempts)
+    public void PopulateSubmissions(ICollection<JobSubmissionsDetails> submissions)
     {
-        CurrentUserSubmissions = attempts.ToArray();
+        CurrentUserSubmissions = submissions.ToArray();
     }
 
     public void PopulateSolutions(

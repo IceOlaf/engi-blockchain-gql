@@ -43,5 +43,7 @@ public class JobGraphType : ObjectGraphType<Job>
             .Description("Information about the last block that updated this job.");
         Field(x => x.Status)
             .Description("The current job status; Open, Active, or Complete.");
+        Field(x => x.Complexity, nullable: true, type: typeof(RepositoryComplexityGraphType))
+            .Description("Complexity metrics of the job");
     }
 }

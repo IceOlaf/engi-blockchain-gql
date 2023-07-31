@@ -260,6 +260,7 @@ public class RootQuery : ObjectGraphType
 
         var resultsLazy = query
             .Include(x => x.SolutionIds)
+            .Include(x => x.Complexity)
             .LazilyAsync();
 
         var now = DateTime.UtcNow;

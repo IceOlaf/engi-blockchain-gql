@@ -47,6 +47,10 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
 
         Field(x => x.MaxSLOC, nullable: true)
             .Description("The maximum size (SLOC) to search for.");
+        Field(x => x.MinCyclomatic, nullable: true)
+            .Description("The minimum cyclomatic complexity to search for.");
+        Field(x => x.MaxCyclomatic, nullable: true)
+            .Description("The maximum cyclomatic complexity to search for.");
     }
 }
 

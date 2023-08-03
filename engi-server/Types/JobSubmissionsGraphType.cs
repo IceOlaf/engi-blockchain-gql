@@ -10,6 +10,9 @@ public class JobSubmissionsGraphType : ObjectGraphType<JobSubmissionsDetails>
         Field(x => x.Status)
             .Description("Submission status.");
 
+        Field(x => x.AttemptId)
+            .Description("Attempt id.");
+
         Field(x => x.Attempt, type: typeof(AttemptStageGraphType))
             .Description("Attempt stage status.");
 

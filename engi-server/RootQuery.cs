@@ -510,6 +510,7 @@ public class RootQuery : ObjectGraphType
         }
 
         var submission = new JobSubmissionsDetails { };
+        submission.AttemptId = id;
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);

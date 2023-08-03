@@ -4,6 +4,8 @@ services:
   ravendb:
     container_name: ravendb
     image: ravendb/ravendb:5.4-ubuntu-latest
+    ## For mac M1, use this image
+    # image: ravendb/ravendb:5.4-ubuntu-arm64v8-latest
     environment:
       - RAVEN_ARGS=--Setup.Mode=None
       - RAVEN_Security_UnsecuredAccessAllowed=PrivateNetwork

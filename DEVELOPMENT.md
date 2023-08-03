@@ -29,6 +29,8 @@ To run:
 docker-compose -f docker-compose-dev.yml up --exit-code-from api
 ```
 
+For mac M1 machines, you will need to use the `ubuntu-arm64v8-latest` version of ravendb image.
+
 To develop against another `engi-node`:
 1. Comment out the `substrate` section of `docker-compose-dev.yml`.
 2. Change the `SUBSTRATE__*` environment variables in `docker-compose-services.yml` and remove `substrate:*` from `WAIT_HOSTS`.

@@ -521,7 +521,7 @@ public class RootQuery : ObjectGraphType
 
         var attempt = new AttemptStage { };
 
-        submission.Status = SubmissionStatus.Attempting;
+        submission.Status = SubmissionStatus.EngineAttempting;
         submission.Attempt = new AttemptStage { };
 
         var commandResponseId = EngineCommandResponse.KeyFrom(attemptId);;
@@ -558,7 +558,7 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
-        submission.Status = SubmissionStatus.Solved;
+        submission.Status = SubmissionStatus.SolvedOnChain;
 
         var result = new SolutionResult {
             SolutionId = solveCommand.SolutionId,

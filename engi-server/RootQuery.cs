@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
+using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Types;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
@@ -58,6 +59,14 @@ public class RootQuery : ObjectGraphType
         Field<TransactionsPagedResult>("transactions")
             .Argument<TransactionsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetTransactionsAsync);
+
+        Field<JobSubmissionsGraphType>("submission")
+            .Argument<NonNullGraphType<UInt64GraphType>>("id")
+            .ResolveAsync(GetSubmissionAsync);
+
+        Field<JobSubmissionsDetailsPagedResult>("submissions")
+            .Argument<JobSubmissionsDetailsPagedQueryArgumentsGraphType>("query")
+            .ResolveAsync(GetSubmissionsAsync);
     }
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)
@@ -182,6 +191,9 @@ public class RootQuery : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+        var userAddress = user!.Address;
+
         var reference = await session
             .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
                 include => include.IncludeDocuments(x => x.ReduceOutputs));
@@ -191,9 +203,31 @@ public class RootQuery : ObjectGraphType
             return null;
         }
 
+        var index = await session
+            .Query<JobIndex.Result, JobIndex>()
+            .Where(x => x.JobId == jobId)
+            .ProjectInto<JobIndex.Result>()
+            .FirstOrDefaultAsync();
+
         var job = await session
             .LoadAsync<Job>(reference.ReduceOutputs.First(),
                 include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
+
+        if (index != null && index.AttemptIds.Length > 0 && userAddress != null)
+        {
+            List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
+            foreach (var id in index.AttemptIds)
+            {
+                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+
+                if (submission != null)
+                {
+                    submissions.Add(submission);
+                }
+            }
+
+            job.PopulateSubmissions(submissions);
+        }
 
         var creatorAggregatesReference = await session
             .LoadAsync<ReduceOutputReference>(
@@ -239,6 +273,9 @@ public class RootQuery : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+        var userAddress = user!.Address;
+
         var query = session
             .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>()
             .Search(args, out var stats);
@@ -260,6 +297,7 @@ public class RootQuery : ObjectGraphType
 
         var resultsLazy = query
             .Include(x => x.SolutionIds)
+            .Include(x => x.AttemptIds)
             .Include(x => x.Complexity)
             .LazilyAsync();
 
@@ -297,11 +335,32 @@ public class RootQuery : ObjectGraphType
         var solutionsByJobId = resultsLazy.Value.Result
             .ToDictionary(x => x.JobId, x => session.LoadAsync<SolutionSnapshot>(x.SolutionIds).Result.Values);
 
+        Dictionary<ulong, List<JobSubmissionsDetails>> submissionsByJobId = new Dictionary<ulong, List<JobSubmissionsDetails>>();
+
+        foreach (var job in resultsLazy.Value.Result)
+        {
+            List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
+
+            foreach (var id in job.AttemptIds)
+            {
+                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+
+                if (submission != null)
+                {
+                    submissions.Add(submission);
+                }
+            }
+
+            submissionsByJobId[job.JobId] = submissions;
+        }
+
         foreach (var job in resultsLazy.Value.Result)
         {
             var solutions = solutionsByJobId[job.JobId];
+            var submissions = submissionsByJobId[job.JobId];
 
             job.PopulateSolutions(null, solutions);
+            job.PopulateSubmissions(submissions);
         }
 
         return new JobsQueryResult
@@ -389,5 +448,134 @@ public class RootQuery : ObjectGraphType
             .ToArrayAsync();
         
         return new PagedResult<TransactionIndex.Result>(results, stats.LongTotalResults);
+    }
+
+    private async Task<object?> GetSubmissionAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        ulong id = context.GetArgument<ulong>("id");
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        return await GetJobSubmissionsDetailsAsync(id, null, session);
+    }
+
+    private async Task<object?> GetSubmissionsAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        var args = context.GetValidatedArgument<JobSubmissionsDetailsPagedQueryArguments>("query");
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var index = await session
+            .Query<JobIndex.Result, JobIndex>()
+            .Where(x => x.JobId == args.JobId)
+            .ProjectInto<JobIndex.Result>()
+            .Statistics(out var stats)
+            .Skip(args.Skip)
+            .Take(args.Limit)
+            .FirstOrDefaultAsync();
+
+        if (index != null && index.AttemptIds.Length > 0)
+        {
+            List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
+            foreach (var id in index.AttemptIds)
+            {
+                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), null, session);
+                if (submission != null)
+                {
+                    submissions.Add(submission);
+                }
+            }
+            return new PagedResult<JobSubmissionsDetails>(submissions, stats.LongTotalResults);
+        }
+
+        return new PagedResult<JobSubmissionsDetails>(new JobSubmissionsDetails[] {}, 0);
+    }
+
+    private async Task<JobSubmissionsDetails?> GetJobSubmissionsDetailsAsync(ulong id, Address? filterAddress, IAsyncDocumentSession session)
+    {
+        var attemptId = JobAttemptedSnapshot.KeyFrom(id);
+
+        var query = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
+
+        if (query == null) {
+            return null;
+        }
+
+        if (filterAddress != null && filterAddress != query.Attempter) {
+            return null;
+        }
+
+        var submission = new JobSubmissionsDetails { };
+        submission.AttemptId = id;
+
+        var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
+        var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
+
+        if (engine_cmd == null) {
+            return submission;
+        }
+
+        var attempt = new AttemptStage { };
+
+        submission.Status = SubmissionStatus.EngineAttempting;
+        submission.Attempt = new AttemptStage { };
+
+        var commandResponseId = EngineCommandResponse.KeyFrom(attemptId);;
+        var engineResponse = await session.LoadAsync<EngineCommandResponse>(commandResponseId);
+
+        if (engineResponse == null)
+        {
+            return submission;
+        }
+
+        submission.Attempt.Results = engineResponse.ExecutionResult;
+
+        if (engineResponse.ExecutionResult.ReturnCode == 0)
+        {
+            submission.Attempt.Status = StageStatus.Passed;
+        }
+        else
+        {
+            submission.Attempt.Status = StageStatus.Failed;
+
+            return submission;
+        }
+
+
+        var solve = new SolveStage { };
+
+        submission.Solve = solve;
+
+        var solveCommandId = SolveJobCommand.KeyFrom(attemptId);
+        var solveCommand = await session.LoadAsync<SolveJobCommand>(solveCommandId);
+
+        if (solveCommand == null || solveCommand.ResultHash == null)
+        {
+            return submission;
+        }
+
+        submission.Status = SubmissionStatus.SolvedOnChain;
+
+        var result = new SolutionResult {
+            SolutionId = solveCommand.SolutionId,
+            ResultHash = solveCommand.ResultHash
+        };
+
+        if (solveCommand.SolutionId == null)
+        {
+            submission.Solve.Status = StageStatus.Failed;
+        }
+        else
+        {
+            submission.Solve.Status = StageStatus.Passed;
+        }
+
+        submission.Solve.Results = result;
+
+        return submission;
     }
 }

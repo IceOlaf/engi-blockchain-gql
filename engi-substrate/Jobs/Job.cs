@@ -30,6 +30,8 @@ public class Job
 
     public Solution? CurrentUserSolution { get; set; }
 
+    public JobSubmissionsDetails[]? CurrentUserSubmissions { get; set; }
+
     public Fractional? AverageProgress { get; set; }
 
     public BlockReference CreatedOn { get; set; } = null!;
@@ -76,6 +78,11 @@ public class Job
             Numerator = numerator,
             Denominator = Tests.Length
         };
+    }
+
+    public void PopulateSubmissions(ICollection<JobSubmissionsDetails> submissions)
+    {
+        CurrentUserSubmissions = submissions.ToArray();
     }
 
     public void PopulateSolutions(

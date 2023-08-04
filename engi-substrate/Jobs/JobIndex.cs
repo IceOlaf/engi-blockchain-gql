@@ -22,6 +22,8 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
 
         public string[] SolutionIds { get; set; } = null!;
 
+        public string[] AttemptIds { get; set; } = null!;
+
         public RepositoryComplexity? Complexity { get; set; }
     }
 
@@ -60,6 +62,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Repository_Organization = snapshot.Repository.Organization,
                 SolvedBy = new string[0],
                 SolutionIds = new string[0],
+                AttemptIds = new string[0],
                 Status = JobStatus.None,
                 Complexity = null
             });
@@ -88,6 +91,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Repository_Organization = null,
                  SolvedBy = new string[0],
                  SolutionIds = new string[0],
+                 AttemptIds = new string[] { Convert.ToString(attempt.AttemptId) },
                  Status = JobStatus.None,
                  Complexity = null
              });
@@ -116,6 +120,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
                   SolutionIds = new [] { solution.Id },
+                  AttemptIds = new string[0],
                   Status = JobStatus.None,
                   Complexity = null
               });
@@ -145,6 +150,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Repository_Organization = null,
                   SolvedBy = new string[0],
                   SolutionIds = new string[0],
+                  AttemptIds = new string[0],
                   Status = JobStatus.None,
                   Complexity = analysis.Complexity
               });
@@ -180,6 +186,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 Repository_Organization = first.Repository_Organization,
                 SolvedBy = solvedBy,
                 SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
+                AttemptIds = g.SelectMany(x => x.AttemptIds).Distinct().ToArray(),
                 Status = CalculateStatus(latest.Solution, attemptCount),
                 Complexity = (analysis != null) ? analysis.Complexity : latest.Complexity
             };

@@ -35,6 +35,8 @@ public class JobGraphType : ObjectGraphType<Job>
             .Description("The leading solution for this job.");
         Field(x => x.CurrentUserSolution, nullable: true, type: typeof(SolutionGraphType))
             .Description("The solution by the current user, if any.");
+        Field(x => x.CurrentUserSubmissions, nullable: true, type: typeof(ListGraphType<JobSubmissionsGraphType>))
+            .Description("The attempts by the current user, if any.");
         Field(x => x.AverageProgress, nullable: true, type: typeof(FractionalGraphType))
             .Description("The average (median) progress of the best solution by each author. If this job has no solutions, this field will be null.");
         Field(x => x.CreatedOn, type: typeof(BlockReferenceGraphType))

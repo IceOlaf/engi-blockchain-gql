@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Engi.Substrate.Identity;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Async;
@@ -509,8 +510,11 @@ public class RootQuery : ObjectGraphType
             return null;
         }
 
-        var submission = new JobSubmissionsDetails { };
-        submission.AttemptId = id;
+        var addressKey = UserAddressReference.KeyFrom(query.Attempter);
+        var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
+        var user = await session.LoadAsync<User>(addressReference.UserId);
+
+        var submission = new JobSubmissionsDetails(user.Display, query.Attempter, user.ProfileImageUrl, id);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);

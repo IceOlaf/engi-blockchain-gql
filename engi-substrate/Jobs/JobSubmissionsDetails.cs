@@ -4,11 +4,7 @@ public class JobSubmissionsDetails
 {
     public SubmissionStatus Status { get; set; } = SubmissionStatus.AttemptedOnChain;
 
-    public string UserName { get; set; }
-
-    public Address Address { get; set; }
-
-    public string? ProfileImageUrl { get; set; }
+    public UserInfo UserInfo { get; set; }
 
     public ulong AttemptId { get; set; }
 
@@ -16,12 +12,10 @@ public class JobSubmissionsDetails
 
     public SolveStage? Solve { get; set; } = null;
 
-    public JobSubmissionsDetails(string userName, Address address, string imageUrl, ulong attemptId)
+    public JobSubmissionsDetails(UserInfo userInfo, ulong attemptId)
     {
         Status = SubmissionStatus.AttemptedOnChain;
-        UserName = userName;
-        Address = address;
-        ProfileImageUrl = imageUrl;
+        UserInfo = userInfo;
         AttemptId = attemptId;
     }
 }

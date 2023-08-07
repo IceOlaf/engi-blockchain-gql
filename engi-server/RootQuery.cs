@@ -513,8 +513,21 @@ public class RootQuery : ObjectGraphType
         var addressKey = UserAddressReference.KeyFrom(query.Attempter);
         var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
         var user = await session.LoadAsync<User>(addressReference.UserId);
+        var creatorAggregates = await session
+                .Query<JobUserAggregatesIndex.Result>()
+                .Where(x => x.UserId == addressReference.UserId)
+                .FirstOrDefaultAsync();
 
-        var submission = new JobSubmissionsDetails(user.Display, query.Attempter, user.ProfileImageUrl, id);
+
+        UserInfo userInfo = new () {
+            Address = query.Attempter,
+            Display = user.Display,
+            ProfileImageUrl = user.ProfileImageUrl,
+            CreatedOn = user.CreatedOn,
+            CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
+            SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
+        };
+        var submission = new JobSubmissionsDetails(userInfo, id);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);

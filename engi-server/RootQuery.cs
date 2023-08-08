@@ -192,9 +192,6 @@ public class RootQuery : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
-        var userAddress = user!.Address;
-
         var reference = await session
             .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
                 include => include.IncludeDocuments(x => x.ReduceOutputs));
@@ -214,20 +211,26 @@ public class RootQuery : ObjectGraphType
             .LoadAsync<Job>(reference.ReduceOutputs.First(),
                 include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
 
-        if (index != null && index.AttemptIds.Length > 0 && userAddress != null)
+        if (context.User!.Identity!.Name != null)
         {
-            List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
-            foreach (var id in index.AttemptIds)
+            var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+            var userAddress = user!.Address;
+
+            if (index != null && index.AttemptIds.Length > 0 && userAddress != null)
             {
-                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
-
-                if (submission != null)
+                List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
+                foreach (var id in index.AttemptIds)
                 {
-                    submissions.Add(submission);
-                }
-            }
+                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
 
-            job.PopulateSubmissions(submissions);
+                    if (submission != null)
+                    {
+                        submissions.Add(submission);
+                    }
+                }
+
+                job.PopulateSubmissions(submissions);
+            }
         }
 
         var creatorAggregatesReference = await session
@@ -273,9 +276,6 @@ public class RootQuery : ObjectGraphType
         var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
-
-        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
-        var userAddress = user!.Address;
 
         var query = session
             .Advanced.AsyncDocumentQuery<JobIndex.Result, JobIndex>()
@@ -336,32 +336,41 @@ public class RootQuery : ObjectGraphType
         var solutionsByJobId = resultsLazy.Value.Result
             .ToDictionary(x => x.JobId, x => session.LoadAsync<SolutionSnapshot>(x.SolutionIds).Result.Values);
 
-        Dictionary<ulong, List<JobSubmissionsDetails>> submissionsByJobId = new Dictionary<ulong, List<JobSubmissionsDetails>>();
-
-        foreach (var job in resultsLazy.Value.Result)
+        if (context.User!.Identity!.Name != null)
         {
-            List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
+            Dictionary<ulong, List<JobSubmissionsDetails>> submissionsByJobId = new Dictionary<ulong, List<JobSubmissionsDetails>>();
 
-            foreach (var id in job.AttemptIds)
+            var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+            var userAddress = user!.Address;
+
+            foreach (var job in resultsLazy.Value.Result)
             {
-                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+                List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
 
-                if (submission != null)
+                foreach (var id in job.AttemptIds)
                 {
-                    submissions.Add(submission);
+                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+
+                    if (submission != null)
+                    {
+                        submissions.Add(submission);
+                    }
                 }
+
+                submissionsByJobId[job.JobId] = submissions;
             }
 
-            submissionsByJobId[job.JobId] = submissions;
+            foreach (var job in resultsLazy.Value.Result)
+            {
+                var submissions = submissionsByJobId[job.JobId];
+                job.PopulateSubmissions(submissions);
+            }
         }
 
         foreach (var job in resultsLazy.Value.Result)
         {
             var solutions = solutionsByJobId[job.JobId];
-            var submissions = submissionsByJobId[job.JobId];
-
             job.PopulateSolutions(null, solutions);
-            job.PopulateSubmissions(submissions);
         }
 
         return new JobsQueryResult

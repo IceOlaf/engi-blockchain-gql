@@ -24,6 +24,16 @@ By default it will run:
 - `engi-node` with ports `9933` and `9944` exposed to the host so you can connect with Polkadot UI.
 - The API itself, exposed on port `5000`.
 
+First, [authenticate Docker to access our ECR images](https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html).
+
+```bash
+aws ecr get-login-password \
+--region us-west-2 \
+| docker login \
+--username AWS \
+--password-stdin 163803973373.dkr.ecr.us-west-2.amazonaws.com
+```
+
 To run:
 ```
 docker-compose -f docker-compose-dev.yml up --exit-code-from api
@@ -113,8 +123,6 @@ Hints:
 disable indexing by setting `Engi:DisableChainObserver = true` in `appsettings.json`.
 
 ## Running the tests
-
-First, [https://docs.aws.amazon.com/cli/latest/reference/ecr/get-login-password.html](authenticate ECR image download service.)
 
 Tests include both unit and integrations tests.
 

@@ -1,5 +1,7 @@
 using System;
 using Engi.Substrate.Jobs;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace Engi.Substrate.Indexing;
@@ -11,6 +13,7 @@ public class JobPopulateSolutionsTests
 
     private Job CreateJob()
     {
+        var mockLogger = new Mock<ILogger>();
         var job = new Job
         {
             Tests = new[]
@@ -79,7 +82,7 @@ public class JobPopulateSolutionsTests
                     DateTime = new DateTime(2022, 9, 6, 2, 0, 0)
                 }
             }
-        });
+        }, mockLogger.Object);
 
         return job;
     }
@@ -114,6 +117,7 @@ public class JobPopulateSolutionsTests
     [Fact]
     public void IgnoresNotRequiredTests()
     {
+        var mockLogger = new Mock<ILogger>();
         var jobWithSomeTestsNotRequired = new Job
         {
             Tests = new[]
@@ -144,7 +148,7 @@ public class JobPopulateSolutionsTests
                     DateTime = new DateTime(2022, 9, 6, 0, 0, 0)
                 }
             }
-        });
+        }, mockLogger.Object);
 
         Assert.Equal(1UL, jobWithSomeTestsNotRequired.LeadingSolution!.SolutionId);
         Assert.Equal(1UL, jobWithSomeTestsNotRequired.CurrentUserSolution!.SolutionId);

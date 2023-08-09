@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace Engi.Substrate.Jobs;
 
 public class Job
@@ -42,24 +44,31 @@ public class Job
 
     public RepositoryComplexity? Complexity { get; set; }
 
-    private int CountPassedTests(Solution solution)
+    private int CountPassedTests(Solution solution, ILogger logger)
     {
         return solution.Attempt.Tests.Count(submittedTest =>
         {
-            var test = Tests.First(x => x.Id == submittedTest.Id);
-
-            // test not in original bounty.
-            if (test == null)
+            try
             {
+                var test = Tests.Single(x => x.Id == submittedTest.Id);
+
+                return test.Required
+                    && submittedTest.Result == TestResult.Passed;
+            }
+            catch (ArgumentNullException e)
+            {
+                logger.LogInformation(e, "SolutionId: {0} Tests are null.", solution.SolutionId);
                 return false;
             }
-
-            return test.Required
-                && submittedTest.Result == TestResult.Passed;
+            catch (InvalidOperationException e)
+            {
+                logger.LogInformation(e, "SolutionId: {0} Invalid operation.", solution.SolutionId);
+                return false;
+            }
         });
     }
 
-    private Fractional? GetAverageProgress(ICollection<SolutionSnapshot> solutions)
+    private Fractional? GetAverageProgress(ICollection<SolutionSnapshot> solutions, ILogger logger)
     {
         if (!solutions.Any())
         {
@@ -68,7 +77,7 @@ public class Job
 
         var bestPassedCountByAuthor = solutions
             .GroupBy(x => x.Author)
-            .Select(x => x.Max(CountPassedTests))
+            .Select(x => x.Max(x => CountPassedTests(x, logger)))
             .ToArray();
 
         Array.Sort(bestPassedCountByAuthor);
@@ -93,10 +102,10 @@ public class Job
 
     public void PopulateSolutions(
         Address? currentUser,
-        ICollection<SolutionSnapshot> solutions)
+        ICollection<SolutionSnapshot> solutions, ILogger logger)
     {
         LeadingSolution = solutions
-            .OrderByDescending(CountPassedTests)
+            .OrderByDescending(x => CountPassedTests(x, logger))
             .ThenBy(solution => solution.SnapshotOn.DateTime)
             .FirstOrDefault();
 
@@ -104,9 +113,9 @@ public class Job
         {
             CurrentUserSolution = solutions
                 .Where(x => x.Author.Equals(currentUser))
-                .MaxBy(CountPassedTests);
+                .MaxBy(x => CountPassedTests(x, logger));
         }
 
-        AverageProgress = GetAverageProgress(solutions);
+        AverageProgress = GetAverageProgress(solutions, logger);
     }
 }

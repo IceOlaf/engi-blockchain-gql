@@ -272,6 +272,8 @@ public class RootQuery : ObjectGraphType
     private async Task<object?> GetJobsAsync(IResolveFieldContext context)
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
+        var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger(GetType());
 
         var args = context.GetOptionalValidatedArgument<JobsQueryArguments>("query");
 
@@ -370,7 +372,7 @@ public class RootQuery : ObjectGraphType
         foreach (var job in resultsLazy.Value.Result)
         {
             var solutions = solutionsByJobId[job.JobId];
-            job.PopulateSolutions(null, solutions);
+            job.PopulateSolutions(null, solutions, logger);
         }
 
         return new JobsQueryResult

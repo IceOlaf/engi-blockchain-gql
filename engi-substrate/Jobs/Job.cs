@@ -48,6 +48,12 @@ public class Job
         {
             var test = Tests.First(x => x.Id == submittedTest.Id);
 
+            // test not in original bounty.
+            if (test == null)
+            {
+                return false;
+            }
+
             return test.Required
                 && submittedTest.Result == TestResult.Passed;
         });

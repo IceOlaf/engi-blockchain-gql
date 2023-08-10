@@ -201,14 +201,8 @@ public class RootQuery : ObjectGraphType
             return null;
         }
 
-        var index = await session
-            .Query<JobIndex.Result, JobIndex>()
-            .Where(x => x.JobId == jobId)
-            .ProjectInto<JobIndex.Result>()
-            .FirstOrDefaultAsync();
-
         var job = await session
-            .LoadAsync<Job>(reference.ReduceOutputs.First(),
+            .LoadAsync<JobIndex.Result>(reference.ReduceOutputs.First(),
                 include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
 
         if (context.User!.Identity!.Name != null)
@@ -216,10 +210,10 @@ public class RootQuery : ObjectGraphType
             var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
             var userAddress = user!.Address;
 
-            if (index != null && index.AttemptIds.Length > 0 && userAddress != null)
+            if (job.AttemptIds.Length > 0 && userAddress != null)
             {
                 List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
-                foreach (var id in index.AttemptIds)
+                foreach (var id in job.AttemptIds)
                 {
                     var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
 
@@ -481,19 +475,23 @@ public class RootQuery : ObjectGraphType
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
-        var index = await session
-            .Query<JobIndex.Result, JobIndex>()
-            .Where(x => x.JobId == args.JobId)
-            .ProjectInto<JobIndex.Result>()
-            .Statistics(out var stats)
-            .Skip(args.Skip)
-            .Take(args.Limit)
-            .FirstOrDefaultAsync();
+        var reference = await session
+            .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(args.JobId),
+                include => include.IncludeDocuments(x => x.ReduceOutputs));
 
-        if (index != null && index.AttemptIds.Length > 0)
+        if (reference == null)
+        {
+            return null;
+        }
+
+        var job = await session
+            .LoadAsync<JobIndex.Result>(reference.ReduceOutputs.First(),
+                include => include.IncludeDocuments<JobUserAggregatesIndex.Result>(x => $"JobUserAggregates/{x.Creator}"));
+
+        if (job.AttemptIds.Length > 0)
         {
             List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
-            foreach (var id in index.AttemptIds)
+            foreach (var id in job.AttemptIds)
             {
                 var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), null, session);
                 if (submission != null)
@@ -501,7 +499,7 @@ public class RootQuery : ObjectGraphType
                     submissions.Add(submission);
                 }
             }
-            return new PagedResult<JobSubmissionsDetails>(submissions, stats.LongTotalResults);
+            return new PagedResult<JobSubmissionsDetails>(submissions, submissions.Count);
         }
 
         return new PagedResult<JobSubmissionsDetails>(new JobSubmissionsDetails[] {}, 0);

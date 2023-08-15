@@ -17,4 +17,10 @@ npm install
 
 node setup.js
 
+while true
+do
+    echo "Waiting for test completion"
+    sleep 10
+done
+
 echo "HERE!!!"

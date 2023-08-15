@@ -25,5 +25,4 @@ async function setup_raven() {
 
 (async () => {
     await setup_raven();
-    process.exit();
 })()

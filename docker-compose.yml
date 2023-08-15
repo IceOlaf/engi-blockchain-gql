@@ -1,5 +1,7 @@
 version: "3.8"
 
+x-test-framework: dotnet
+
 services:
   localstack:
     image: localstack/localstack

@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack
+    ports:
+      - "4566:4566"
+    environment:
+      - LOCALSTACK_HOST=localstack
+      - TEST_AWS_ACCOUNT_ID=000000000000
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "./localstack-up.sh:/etc/localstack/init/ready.d/init-aws.sh"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+  ravendb:
+    extends:
+      file: docker-compose-services.yml
+      service: ravendb
+    ports:
+      - "8088:8080"
+  substrate:
+    extends:
+      file: docker-compose-services.yml
+      service: substrate
+    ports:
+      - "9933:9933"
+      - "9944:9944"
+  setup:
+    build:
+      context: .
+      dockerfile: Dockerfile.setuptools
+    command: ./scripts/setup.sh
+    depends_on:
+      - api
+  api:
+    extends:
+      file: docker-compose-services.yml
+      service: api
+    ports:
+      - "8000:8000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_DEFAULT_REGION=us-west-2
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS__SERVICEURL=http://localstack:4566
+      - LOGGING__LOGLEVEL__DEFAULT=Information
+      - RAVEN__URLS=http://ravendb:8080
+      - WAIT_HOSTS=substrate:9933, substrate:9944, ravendb:8080, ravendb:38888, localstack:4566
+  tests:
+    build:
+      context: .
+      target: test
+    environment:
+      - WAIT_HOSTS=api:8000
+      - WAIT_TIMEOUT=90
+    volumes:
+      - ./integration-test-results/:/source/engi-tests/TestResults/
+
+volumes:
+  integration-test-results:

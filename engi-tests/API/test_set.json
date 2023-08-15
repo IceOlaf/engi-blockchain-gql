@@ -1,0 +1,13 @@
+[
+  {
+    "query": "{ \"query\": \"query Engineer($id: UInt64!) { engineer(id: $id) { displayName profileImageUrl email balance bountiesSolved bountiesCreated earnings { pastDay pastWeek pastMonth lifetime } techologies repositoriesWorkedOn rootOrganisation } }\", \"variables\": \"5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY\" }",
+    "expected": "{ \"data\": { \"engineer\": { \"displayname\": \"Alice\", \"profileimageurl\": \"https://some.url.com/blehblahblah\", \"email\": \"alice@engi.network\", \"balance\": 1234, \"bountiessolved\": 12, \"bountiescreated\": 12, \"earnings\": { \"pastday\": 3, \"pastweek\": 45, \"pastmonth\": 234, \"lifetime\": 899 }, \"technologies\": [\"CSharp\", \"Python\"], \"repositoriesworkedon\": [\"https://github.com/engi-network/engi-blockchain-gql\"], \"rootorganization\": \"Engi\" } } }"
+    },
+  {
+    "query": "{ \"query\": \"query Engineer($id: UInt64!) { engineer(id: $id) { displayName profileImageUrl email balance bountiesSolved bountiesCreated earnings { pastDay pastWeek pastMonth lifetime } techologies repositoriesWorkedOn rootOrganisation } }\", \"variables\": \"5FX1SLRwxXcevbyQ2NsgXWdWXyQZLRcRphq8XTrRMNCPrNmc\" }",
+    "expected": "{ \"data\": { \"engineer\": null  } }"
+  }
+]
+
+
+

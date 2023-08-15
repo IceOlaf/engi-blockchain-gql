@@ -48,8 +48,6 @@ RUN dotnet build -c release
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
 COPY scripts/aws-ecs-env $BIN_DIR/aws-ecs-env
-ENTRYPOINT ["dotnet", "test", "--filter", "FullyQualifiedName~Engi.Substrate.Integration", "--logger:trx", "--no-build", "-c", "release"]
-#CMD ["/wait && dotnet test --logger:trx --no-build -c release"]
 
 FROM build AS publish
 ARG SRC_DIR

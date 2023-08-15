@@ -54,6 +54,7 @@ services:
     build:
       context: .
       target: test
+    command: dotnet test --filter 'FullyQualifiedName~Engi.Substrate.Integration' --logger:trx --no-build -c release
     environment:
       - WAIT_HOSTS=api:8000
       - WAIT_TIMEOUT=90

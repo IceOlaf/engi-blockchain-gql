@@ -39,6 +39,10 @@ services:
     extends:
       file: docker-compose-services.yml
       service: api
+    depends_on:
+      - localstack
+      - ravendb
+      - substrate
     ports:
       - "8000:8000"
     environment:
@@ -54,12 +58,19 @@ services:
     build:
       context: .
       target: test
-    command: dotnet test --filter 'FullyQualifiedName~Engi.Substrate.Integration' --logger:trx --no-build -c release
+    command: dotnet test --filter FullyQualifiedName~Engi.Substrate.Integration --logger "trx;LogFileName=$ENGI_WORKING_DIR/dotnet_test.trx" -r .
+    depends_on:
+      - api
+      - setup
     environment:
       - WAIT_HOSTS=api:8000
       - WAIT_TIMEOUT=90
     volumes:
-      - ./integration-test-results/:/source/engi-tests/TestResults/
+      - type: volume
+        source: output
+        target: $ENGI_WORKING_DIR
 
 volumes:
-  integration-test-results:
+  output:
+    external: true
+    name: $ENGI_WORKING_VOL

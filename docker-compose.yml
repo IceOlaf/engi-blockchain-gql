@@ -39,6 +39,13 @@ services:
     extends:
       file: docker-compose-services.yml
       service: api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
     depends_on:
       - localstack
       - ravendb
@@ -60,8 +67,10 @@ services:
       target: test
     command: dotnet test --filter FullyQualifiedName~Engi.Substrate.Integration --logger "trx;LogFileName=$ENGI_WORKING_DIR/dotnet_test.trx" -r .
     depends_on:
-      - api
-      - setup
+      api:
+        condition: service_healthy
+      setup:
+        condition: service_started
     environment:
       - WAIT_HOSTS=api:8000
       - WAIT_TIMEOUT=90

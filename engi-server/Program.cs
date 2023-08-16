@@ -411,12 +411,12 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
 
         engiOptions.AssumeRoleArn = iamRole.Arn;
 
-        var inTopic = sns.FindTopicAsync("graphql-engine-in.fifo").GetAwaiter().GetResult();
+        var inTopic = sns.FindTopicAsync("graphql-engine-in-test.fifo").GetAwaiter().GetResult();
 
         engiOptions.EngineInputTopicArn = inTopic.TopicArn;
-        engiOptions.EngineOutputTopicName = "graphql-engine-out.fifo";
+        engiOptions.EngineOutputTopicName = "graphql-engine-out-test.fifo";
 
-        var outQueue = sqs.GetQueueUrlAsync("graphql-engine-out.fifo").GetAwaiter().GetResult();
+        var outQueue = sqs.GetQueueUrlAsync("graphql-engine-out-test.fifo").GetAwaiter().GetResult();
 
         engiOptions.EngineOutputQueueUrl = outQueue.QueueUrl;
     });

@@ -54,7 +54,7 @@ up_sns_sqs_pair() {
 }
 
 up_iam
-up_sns_sqs_pair "graphql-engine-in.fifo"
-up_sns_sqs_pair "graphql-engine-out.fifo"
+up_sns_sqs_pair "graphql-engine-in-test.fifo"
+up_sns_sqs_pair "graphql-engine-out-test.fifo"
 
 rm ./policy.json

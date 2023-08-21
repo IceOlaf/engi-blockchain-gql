@@ -558,7 +558,12 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
+        var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout);
+        var attempt = rawResult.GetProperty("attempt");
+        var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attempt).Tests;
+
         submission.Attempt.Results = engineResponse.ExecutionResult;
+        submission.Attempt.Tests = testAttempts;
 
         if (engineResponse.ExecutionResult.ReturnCode == 0)
         {

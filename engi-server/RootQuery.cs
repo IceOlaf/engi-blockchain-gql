@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Linq.Expressions;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Indexing;
@@ -559,8 +560,8 @@ public class RootQuery : ObjectGraphType
         }
 
         var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout);
-        var attempt = rawResult.GetProperty("attempt");
-        var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attempt).Tests;
+        var attemptJson = rawResult.GetProperty("attempt");
+        var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attemptJson).Tests;
 
         submission.Attempt.Results = engineResponse.ExecutionResult;
         submission.Attempt.Tests = testAttempts;

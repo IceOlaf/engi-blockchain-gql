@@ -13,9 +13,6 @@ then
     apt update && apt install jq gettext -y
 fi
 
-POLICY=`echo '{ "Version": "2012-10-17", "Statement": { "Effect": "Allow", "Principal": "*", "Action": "SQS:SendMessage", "Resource": "${QUEUE_ARN}", "Condition": { "ArnEquals": { "aws:SourceArn": "${TOPIC_ARN}" } } } }' | envsubst`
-echo $POLICY > ./policy.json
-
 up_iam() {
   ROLE_POLICY='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
   awslocal iam create-role --role-name graphql-testing --assume-role-policy-document "${ROLE_POLICY}"
@@ -42,7 +39,9 @@ up_sns_sqs_pair() {
     export QUEUE_ARN=`awslocal sqs get-queue-attributes --queue-url $QUEUE_URL --attribute-names QueueArn | jq -r .Attributes.QueueArn`
     export TOPIC_ARN=`awslocal sns create-topic --name $TOPIC_NAME --attributes FifoTopic=true | jq -r .TopicArn`
 
-    awslocal sqs set-queue-attributes --queue-url $QUEUE_URL --attributes Policy=file://./policy.json
+    POLICY=`echo '{ "Version": "2012-10-17", "Statement": [{ "Sid": "QueueSID", "Effect": "Allow", "Principal": "*", "Action": "SQS:SendMessage", "Resource": "${QUEUE_ARN}", "Condition": { "ArnEquals": { "aws:SourceArn": "${TOPIC_ARN}" } } }] }' | envsubst`
+
+    awslocal sqs set-queue-attributes --queue-url $QUEUE_URL --attributes Policy="'${POLICY}'"
 
     awslocal sns add-permission --topic-arn $TOPIC_ARN --label queue-permission --action-name Publish --aws-account-id 000000000000
 
@@ -56,5 +55,3 @@ up_sns_sqs_pair() {
 up_iam
 up_sns_sqs_pair "graphql-engine-in.fifo"
 up_sns_sqs_pair "graphql-engine-out.fifo"
-
-rm ./policy.json

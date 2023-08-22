@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Authentication;
 using System.Security.Claims;
@@ -29,14 +30,6 @@ public class AuthMutations : ObjectGraphType
             ")
             .Argument<NonNullGraphType<LoginArgumentsGraphType>>("args")
             .ResolveAsync(LoginAsync);
-
-        Field<AuthenticationTokenPairGraphType>("refresh")
-            .Description(@"
-                This mutation will return a new access token for the user, if the transmitted
-                refresh token (secure cookie) is valid and hasn't expired. AUTHENTICATION_FAILED is
-                returned otherwise.
-            ")
-            .ResolveAsync(RefreshAsync);
 
         Field<IdGraphType>("register")
             .Description(@"
@@ -125,9 +118,6 @@ public class AuthMutations : ObjectGraphType
         using var session = scope.ServiceProvider
             .GetRequiredService<IAsyncDocumentSession>();
 
-        var jwtOptions = scope.ServiceProvider
-            .GetRequiredService<IOptions<JwtOptions>>();
-
         var userAddressRef = await session
             .LoadAsync<UserAddressReference>(UserAddressReference.KeyFrom(args.Address),
                 include => include.IncludeDocuments(x => x.UserId));
@@ -149,151 +139,17 @@ public class AuthMutations : ObjectGraphType
             };
         }
 
-        var refreshToken = BuildRefreshToken(user, jwtOptions.Value);
+        var sessionToken = BuildSessionToken(user);
 
         // TODO: fix
         //session.Advanced.Patch(user,
         //    x => x.Tokens,
         //    tokens => tokens.Add(refreshToken));
 
-        for(int i = 0; i < 10; ++i)
-        {
-            try
-            {
-                user.Tokens.Add(refreshToken);
-
-                user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
-
-                await session.SaveChangesAsync();
-
-                break;
-            }
-            catch (ConcurrencyException)
-            {
-                if (i == 9)
-                {
-                    throw;
-                }
-
-                await session.Advanced.RefreshAsync(user);
-            }
-        }
-
         return new LoginResult
         {
-            AccessToken = BuildAccessToken(user, jwtOptions.Value),
-            RefreshToken = refreshToken,
+            SessionToken = sessionToken,
             User = user
-        };
-    }
-
-    private async Task<object?> RefreshAsync(IResolveFieldContext context)
-    {
-        var cookies = (IRequestCookieCollection) context.UserContext["cookies"]!;
-
-        var jwtOptions = context.RequestServices!
-            .GetRequiredService<IOptions<JwtOptions>>();
-
-        // verify refresh token from cookie
-
-        string? refreshTokenValue = cookies["refreshToken"];
-
-        if (string.IsNullOrEmpty(refreshTokenValue))
-        {
-            throw new AuthenticationError();
-        }
-
-        // load user and check refresh token exists on this user
-
-        string? userId = RefreshToken.DecryptUserId(refreshTokenValue, jwtOptions.Value.IssuerSigningKey);
-
-        if (userId == null)
-        {
-            throw new AuthenticationError();
-        }
-
-        using var session = context.RequestServices!
-            .GetRequiredService<IAsyncDocumentSession>();
-
-        var user = await session
-            .LoadAsync<User>(userId);
-
-        if (user == null)
-        {
-            throw new AuthenticationError();
-        }
-
-        var refreshToken = user.Tokens
-            .OfType<RefreshToken>()
-            .FirstOrDefault(x => x.Value == refreshTokenValue);
-
-        if (refreshToken == null)
-        {
-            throw new AuthenticationError();
-        }
-
-        // if expired, remove
-
-        if (refreshToken.ExpiresOn! < DateTime.UtcNow)
-        {
-            //session.Advanced.Patch(user,
-            //    x => x.Tokens,
-            //    tokens => tokens
-            //        .RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow));
-
-            user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
-
-            try
-            {
-                await session.SaveChangesAsync();
-            }
-            catch (ConcurrencyException)
-            {
-                // this is just cleanup, dont need to retry
-            }
-
-            throw new AuthenticationException();
-        }
-
-        // replace
-
-        var newRefreshToken = BuildRefreshToken(user, jwtOptions.Value);
-
-        //session.Advanced.Patch(user,
-        //    x => x.Tokens,
-        //    tokens => tokens.RemoveAll(t => t.Id == refreshToken.Id) || t.ExpiresOn <= DateTime.UtcNow));
-
-        //session.Advanced.Patch(user,
-        //    x => x.Tokens,
-        //    tokens => tokens.Add(newRefreshToken));
-
-        for (int i = 0; i < 10; ++i)
-        {
-            try
-            {
-                user.Tokens.RemoveAll(t => t.ExpiresOn <= DateTime.UtcNow);
-
-                user.Tokens.Add(newRefreshToken);
-
-                await session.SaveChangesAsync();
-
-                break;
-            }
-            catch (ConcurrencyException)
-            {
-                if (i == 9)
-                {
-                    throw;
-                }
-
-                await session.Advanced.RefreshAsync(user);
-            }
-        }
-        
-        return new AuthenticationTokenPair
-        {
-            AccessToken = BuildAccessToken(user, jwtOptions.Value),
-            RefreshToken = newRefreshToken
         };
     }
 
@@ -404,46 +260,10 @@ public class AuthMutations : ObjectGraphType
 
     // helpers
 
-    private string BuildAccessToken(User user, JwtOptions jwtOptions)
+    private string BuildSessionToken(User user)
     {
-        var iat = DateTime.UtcNow;
-
-        var claims = GetClaimsForUser(user, iat).ToArray();
-
-        TimeSpan accessTokenValidFor = jwtOptions.AccessTokenValidFor;
-
-        var descriptor = new SecurityTokenDescriptor
-        {
-            Issuer = jwtOptions.Issuer,
-            Audience = jwtOptions.Audience,
-            Subject = new ClaimsIdentity(claims),
-            IssuedAt = iat,
-            Expires = iat + accessTokenValidFor,
-            SigningCredentials = new SigningCredentials(new RsaSecurityKey(jwtOptions.IssuerSigningKey), "RS256")
-        };
-
-        var tokenHandler = new JwtSecurityTokenHandler();
-
-        var jwt = tokenHandler.CreateJwtSecurityToken(descriptor);
-
-        return tokenHandler.WriteToken(jwt);
-    }
-
-    private RefreshToken BuildRefreshToken(User user, JwtOptions jwtOptions)
-    {
-        return RefreshToken.Encrypt(user.Id, jwtOptions.IssuerSigningKey, jwtOptions.RefreshTokenValidFor);
-    }
-
-    private IEnumerable<Claim> GetClaimsForUser(User user, DateTimeOffset iat)
-    {
-        yield return new Claim("sub", user.Id);
-        yield return new Claim("jti", Guid.NewGuid().ToString());
-        yield return new Claim("iat", iat.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64);
-        yield return new Claim(ClaimTypes.Name, user.Id);
-
-        foreach (var role in user.SystemRoles)
-        {
-            yield return new Claim(ClaimTypes.Role, role);
-        }
+        return JsonSerializer.Serialize( new SessionInfo {
+            UserId = user.Id,
+        });
     }
 }

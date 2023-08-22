@@ -127,62 +127,6 @@ builder.Services.AddOptions<EngiOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-var jwtSection = builder.Configuration.GetRequiredSection("Jwt");
-var jwtOptions = jwtSection.Get<JwtOptions>();
-var jwtTokenValidationParameters = new TokenValidationParameters
-{
-    RequireExpirationTime = true,
-    RequireAudience = true,
-    RequireSignedTokens = true,
-    ClockSkew = TimeSpan.FromSeconds(15.0),
-    IssuerSigningKey = new RsaSecurityKey(jwtOptions.IssuerSigningKey),
-    ValidIssuer = jwtOptions.Issuer,
-    ValidAudience = jwtOptions.Audience,
-    ValidateAudience = true,
-    ValidateIssuer = true,
-    ValidateIssuerSigningKey = true,
-    ValidateLifetime = true
-};
-
-builder.Services.AddOptions<JwtOptions>()
-    .Bind(jwtSection)
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
-
-builder.Services.AddSingleton(jwtOptions);
-builder.Services.AddSingleton(jwtTokenValidationParameters);
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = AuthenticationSchemes.Jwt;
-    options.DefaultChallengeScheme = AuthenticationSchemes.Jwt;
-    options.DefaultScheme = AuthenticationSchemes.Jwt;
-})
-.AddJwtBearer(options =>
-{
-    options.Audience = jwtOptions.Audience;
-    options.ClaimsIssuer = jwtOptions.Issuer;
-    options.TokenValidationParameters = jwtTokenValidationParameters;
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-            {
-                context.Response.Headers.Add("Token-Expired", "true");
-            }
-
-            return Task.CompletedTask;
-        }
-    };
-})
-.AddScheme<SudoApiKeyAuthenticationOptions, SudoApiKeyAuthenticationHandler>(AuthenticationSchemes.ApiKey, options =>
-{
-    var engiOptions = engiSection.Get<EngiOptions>();
-
-    options.ApiKey = engiOptions.SudoApiKey;
-});
-
 builder.Services.AddCors(cors =>
 {
     var application = applicationSection.Get<ApplicationOptions>();
@@ -210,28 +154,6 @@ builder.Services.AddCors(cors =>
 
 builder.Services.AddDataProtection()
     .PersistKeysToRaven();
-
-var authenticatedPolicy = new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-    .RequireAuthenticatedUser()
-    .AddRequirements(new NonSudoAuthorizationRequirement())
-    .Build();
-
-builder.Services.AddSingleton<IAuthorizationHandler, NonSudoAuthorizationRequirement>();
-builder.Services.AddAuthorization(options =>
-{
-    options.DefaultPolicy = authenticatedPolicy;
-
-    options.AddPolicy(PolicyNames.Authenticated, authenticatedPolicy);
-    options.AddPolicy(PolicyNames.Sudo,
-        builder => builder.AddAuthenticationSchemes(AuthenticationSchemes.ApiKey).RequireRole(Roles.Sudo));
-});
-
-builder.Services.AddControllers(options =>
-{
-    // require auth by default
-
-    options.Filters.Add(new AuthorizeFilter(authenticatedPolicy));
-});
 
 builder.Host.ConfigureHostOptions(options =>
 {
@@ -264,8 +186,8 @@ builder.Services.AddGraphQL(graphql => graphql
         options.ExposeData = true;
         options.ExposeExceptionDetails = builder.Environment.IsDevelopment();
     })
-    .AddAuthorizationRule()
-    .AddWebSocketAuthentication<JwtWebSocketAuthenticationService>());
+    .AddAuthorizationRule());
+    //.AddWebSocketAuthentication<JwtWebSocketAuthenticationService>());
 
 // email
 
@@ -411,16 +333,26 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
 
         engiOptions.AssumeRoleArn = iamRole.Arn;
 
-        var inTopic = sns.FindTopicAsync("graphql-engine-in.fifo").GetAwaiter().GetResult();
+        var inTopic = sns.FindTopicAsync("graphql-engine-in-test.fifo").GetAwaiter().GetResult();
 
         engiOptions.EngineInputTopicArn = inTopic.TopicArn;
-        engiOptions.EngineOutputTopicName = "graphql-engine-out.fifo";
+        engiOptions.EngineOutputTopicName = "graphql-engine-out-test.fifo";
 
-        var outQueue = sqs.GetQueueUrlAsync("graphql-engine-out.fifo").GetAwaiter().GetResult();
+        var outQueue = sqs.GetQueueUrlAsync("graphql-engine-out-test.fifo").GetAwaiter().GetResult();
 
         engiOptions.EngineOutputQueueUrl = outQueue.QueueUrl;
     });
 }
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = "User.Session";
+    options.IdleTimeout = TimeSpan.FromSeconds(10);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 // pipeline
 
@@ -432,6 +364,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseRouting();
 app.UseAuthorization();
+app.UseSession();
 
 app.UseEndpoints(endpoints =>
 {

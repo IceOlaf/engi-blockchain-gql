@@ -15,6 +15,7 @@ namespace Engi.Substrate.Server;
 
 public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
 {
+    private const string SessionKey = "User.Session";
     private readonly GraphQLHttpMiddlewareOptions options;
     private readonly ApplicationOptions apiOptions;
     private readonly IHub sentry;
@@ -43,7 +44,11 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
         var userContext = await base.BuildUserContextAsync(context, payload)
             ?? new Dictionary<string, object?>();
 
-        userContext["cookies"] = context.Request.Cookies;
+        var userData = context.Session.GetString(SessionKey);
+        if (userData != null)
+        {
+            userContext["session"] = JsonSerializer.Deserialize<SessionInfo>(userData);
+        }
 
         return userContext;
     }
@@ -95,15 +100,9 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
                 && result.Data is ObjectExecutionNode { SubFields.Length: > 0 } rootNode
                 && rootNode.SubFields![0] is ObjectExecutionNode childNode
                 && childNode.FieldDefinition.ResolvedType is AuthMutations
-                && childNode.SubFields![0].Result is AuthenticationTokenPair tokenPair)
+                && childNode.SubFields![0].Result is LoginResult loginResult)
             {
-                context.Response.Cookies.Append("refreshToken", tokenPair.RefreshToken.Value!, new()
-                {
-                    Domain = apiOptions.ApiDomain,
-                    HttpOnly = true,
-                    Secure = !environment.IsDevelopment(),
-                    Expires = tokenPair.RefreshToken.ExpiresOn
-                });
+                context.Session.SetString(SessionKey, loginResult.SessionToken);
             }
         }
 

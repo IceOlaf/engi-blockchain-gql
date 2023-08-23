@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon.IdentityManagement;
@@ -18,6 +19,7 @@ using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.HealthChecks;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
+using GraphQL.Validation;
 using GraphQL.Server.Transports.AspNetCore;
 using GraphQL.SystemTextJson;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -162,6 +164,15 @@ builder.Host.ConfigureHostOptions(options =>
 
 // GraphQL
 
+builder.Services.AddHttpContextAccessor()
+    .AddTransient<IValidationRule, AuthorizationValidationRule>()
+    .AddAuthorizationCore(core =>
+    {
+        core.AddPolicy(PolicyNames.Authenticated, p => p
+            .RequireAuthenticatedUser()
+            .RequireClaim("role", "User"));
+    });
+
 builder.Services.AddGraphQL(graphql => graphql
     .AddSchema<RootSchema>()
     .ConfigureExecutionOptions(options =>
@@ -186,8 +197,14 @@ builder.Services.AddGraphQL(graphql => graphql
         options.ExposeData = true;
         options.ExposeExceptionDetails = builder.Environment.IsDevelopment();
     })
-    .AddAuthorizationRule());
-    //.AddWebSocketAuthentication<JwtWebSocketAuthenticationService>());
+    .AddUserContextBuilder(context =>
+    {
+        GraphQLUserContext userContext = new GraphQLUserContext
+        {
+            User = context.User
+        };
+        return userContext;
+    }));
 
 // email
 
@@ -345,13 +362,17 @@ if (builder.Environment.IsDevelopment() && engiOptions.DisableEngineIntegration 
 }
 
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = "User.Session";
     options.IdleTimeout = TimeSpan.FromSeconds(10);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+});
+
+builder.Services.AddAuthorization(options =>
+{
+   options.AddPolicy(PolicyNames.Authenticated, policy => policy.RequireClaim(ClaimTypes.Name));
 });
 
 // pipeline

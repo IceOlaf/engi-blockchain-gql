@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Engi.Substrate.Server.Types.Authentication;
@@ -47,7 +48,16 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
         var userData = context.Session.GetString(SessionKey);
         if (userData != null)
         {
-            userContext["session"] = JsonSerializer.Deserialize<SessionInfo>(userData);
+            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData);
+
+            var principal = new ClaimsPrincipal();
+            var identity = new ClaimsIdentity();
+            identity.AddClaim(new Claim(ClaimTypes.Name, sessionInfo.UserId));
+            identity.AddClaim(new Claim("role", sessionInfo.Role));
+            principal.AddIdentity(identity);
+
+            userContext["session"] = sessionInfo;
+            context.User = principal;
         }
 
         return userContext;

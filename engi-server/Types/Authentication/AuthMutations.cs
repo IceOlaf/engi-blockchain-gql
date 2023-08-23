@@ -264,6 +264,7 @@ public class AuthMutations : ObjectGraphType
     {
         return JsonSerializer.Serialize( new SessionInfo {
             UserId = user.Id,
+            Role = "User",
         });
     }
 }

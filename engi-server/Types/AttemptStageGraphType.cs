@@ -12,5 +12,8 @@ public class AttemptStageGraphType : ObjectGraphType<AttemptStage>
 
         Field(x => x.Results, type: typeof(CommandLineExecutionResultGraphType), nullable: true)
             .Description("Attempt stage results.");
+
+        Field(x => x.Tests, type: typeof(ListGraphType<TestAttemptGraphType>), nullable: true)
+            .Description("Test attempt results");
     }
 }

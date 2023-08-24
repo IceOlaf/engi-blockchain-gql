@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Linq.Expressions;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Indexing;
@@ -536,7 +537,7 @@ public class RootQuery : ObjectGraphType
             CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
             SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
         };
-        var submission = new JobSubmissionsDetails(userInfo, id);
+        var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
@@ -558,7 +559,12 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
+        var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout);
+        var attemptJson = rawResult.GetProperty("attempt");
+        var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attemptJson).Tests;
+
         submission.Attempt.Results = engineResponse.ExecutionResult;
+        submission.Attempt.Tests = testAttempts;
 
         if (engineResponse.ExecutionResult.ReturnCode == 0)
         {

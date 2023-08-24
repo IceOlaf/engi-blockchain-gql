@@ -4,6 +4,8 @@ public class JobSubmissionsDetails
 {
     public SubmissionStatus Status { get; set; } = SubmissionStatus.AttemptedOnChain;
 
+    public DateTime AttemptCreated { get; set; }
+
     public UserInfo UserInfo { get; set; }
 
     public ulong AttemptId { get; set; }
@@ -12,10 +14,11 @@ public class JobSubmissionsDetails
 
     public SolveStage? Solve { get; set; } = null;
 
-    public JobSubmissionsDetails(UserInfo userInfo, ulong attemptId)
+    public JobSubmissionsDetails(UserInfo userInfo, ulong attemptId, DateTime createdOn)
     {
         Status = SubmissionStatus.AttemptedOnChain;
         UserInfo = userInfo;
         AttemptId = attemptId;
+        AttemptCreated = createdOn;
     }
 }

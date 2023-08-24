@@ -537,7 +537,7 @@ public class RootQuery : ObjectGraphType
             CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
             SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
         };
-        var submission = new JobSubmissionsDetails(userInfo, id);
+        var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);

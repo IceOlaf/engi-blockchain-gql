@@ -34,6 +34,8 @@ aws ecr get-login-password \
 --password-stdin 163803973373.dkr.ecr.us-west-2.amazonaws.com
 ```
 
+You may have to add as a second flag, `--profile [PROFILE]`, to the `get-login-password` command.
+
 To run:
 ```
 docker-compose -f docker-compose-dev.yml up --exit-code-from api

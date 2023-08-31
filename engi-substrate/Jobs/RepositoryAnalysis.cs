@@ -31,4 +31,19 @@ public class RepositoryAnalysis : IDispatched
     public CommandLineExecutionResult? ExecutionResult { get; set; }
 
     public DateTime? ProcessedOn { get; set; }
+
+    [Newtonsoft.Json.JsonIgnore]
+    public List<DirectoryEntry> DirectoryEntries {
+        get {
+            if (this.Files != null)
+            {
+                return DirectoryEntry.DirectoryEntries(this.Files);
+            }
+            else
+            {
+                return new List<DirectoryEntry>();
+            }
+        }
+        protected set { }
+    }
 }

@@ -5,6 +5,7 @@ using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Types;
+using Engi.Substrate.Server.Types.Engine;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
@@ -31,6 +32,9 @@ public class RootQuery : ObjectGraphType
             .ResolveAsync(GetAccountAsync);
 
         Field<AccountsQuery>("accounts")
+            .Resolve(_ => new { });
+
+        Field<AnalysisQuery>("analysis")
             .Resolve(_ => new { });
 
         Field<ActivityGraphType>("activity")

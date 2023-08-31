@@ -32,7 +32,7 @@ public class RepositoryAnalysisGraphType : ObjectGraphType<RepositoryAnalysis>
         Field(x => x.Technologies, type: typeof(ListGraphType<EnumerationGraphType<Technology>>), nullable: true)
             .Description("If the analysis was completed, the dominant language of the repository.");
 
-        Field(x => x.DirectoryEntries, nullable: true, type: typeof(ListGraphType<DirectoryEntryGraphType>))
+        Field(x => x.DirectoryEntries, nullable: true)
             .Description("If the analysis was completed, the list of files processed.");
 
         Field(x => x.Complexity, type: typeof(RepositoryComplexityGraphType), nullable: true)

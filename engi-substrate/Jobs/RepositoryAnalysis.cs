@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace Engi.Substrate.Jobs;
 
 public class RepositoryAnalysis : IDispatched
@@ -33,15 +36,16 @@ public class RepositoryAnalysis : IDispatched
     public DateTime? ProcessedOn { get; set; }
 
     [Newtonsoft.Json.JsonIgnore]
-    public List<DirectoryEntry> DirectoryEntries {
+    public string DirectoryEntries {
         get {
             if (this.Files != null)
             {
-                return DirectoryEntry.DirectoryEntries(this.Files);
+                var result = DirectoryEntry.DirectoryEntries(this.Files);
+                return JsonSerializer.Serialize(result);
             }
             else
             {
-                return new List<DirectoryEntry>();
+                return JsonSerializer.Serialize(new List<DirectoryEntry>());
             }
         }
         protected set { }

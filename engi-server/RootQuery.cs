@@ -48,6 +48,10 @@ public class RootQuery : ObjectGraphType
         Field<GithubQuery>("github")
             .Resolve(_ => new { });
 
+        Field<JobDraftGraphType>("draft")
+            .Argument<NonNullGraphType<StringGraphType>>("id")
+            .Resolve(GetJobDraft);
+
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
 
@@ -73,6 +77,18 @@ public class RootQuery : ObjectGraphType
         Field<JobSubmissionsDetailsPagedResult>("submissions")
             .Argument<JobSubmissionsDetailsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetSubmissionsAsync);
+    }
+
+    private async Task<object?> GetJobDraft(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+        string id = context.GetArgument<string>("id");
+
+        var draft = await session.LoadAsync<JobDraft>(id);
+
+        return draft;
     }
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)

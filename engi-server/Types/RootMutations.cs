@@ -9,7 +9,7 @@ public class RootMutations : ObjectGraphType
 {
     public RootMutations()
     {
-        Field<AnalysisMutations>("analysis")
+        Field<DraftMutations>("draft")
             .Resolve(_ => new { });
 
         Field<AuthMutations>("auth")

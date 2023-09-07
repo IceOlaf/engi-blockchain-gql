@@ -11,27 +11,27 @@ using Repository = Octokit.Repository;
 
 namespace Engi.Substrate.Server.Types.Engine;
 
-public class AnalysisMutations : ObjectGraphType
+public class DraftMutations : ObjectGraphType
 {
-    public AnalysisMutations()
+    public DraftMutations()
     {
         Field<IdGraphType>("submit")
             .Description(@"
                 Submit an analysis request to the analysis engine.
-                If the mutation completes successfully, it will return the id of the analysis document.
+                If the mutation completes successfully, it will return the id of the draft document.
                 If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
             ")
-            .Argument<NonNullGraphType<SubmitAnalysisArgumentsGraphType>>("args")
+            .Argument<NonNullGraphType<SubmitDraftArgumentsGraphType>>("args")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .AuthorizeWithPolicy(PolicyNames.Authenticated)
-            .ResolveAsync(SubmitAnalysisAsync);
+            .ResolveAsync(SubmitDraftAsync);
     }
 
-    private async Task<object?> SubmitAnalysisAsync(IResolveFieldContext context)
+    private async Task<object?> SubmitDraftAsync(IResolveFieldContext context)
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var args = context.GetValidatedArgument<SubmitAnalysisArguments>("args");
+        var args = context.GetValidatedArgument<SubmitDraftArguments>("args");
         var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
@@ -88,15 +88,29 @@ public class AnalysisMutations : ObjectGraphType
 
         await session.StoreAsync(analysis);
 
+        var draft = new JobDraft
+        {
+            Tests = args.Tests,
+            CreatedBy = user.Address,
+            IsEditable = args.IsEditable,
+            IsAddable = args.IsAddable,
+            IsDeletable = args.IsDeletable,
+            Funding = args.Funding,
+            Name = args.Name,
+            AnalysisId = analysis.Id,
+        };
+
+        await session.StoreAsync(draft);
+
         await session.StoreAsync(new QueueEngineRequestCommand
         {
-            Identifier = analysis.Id,
+            Identifier = draft.Id,
             CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}",
             SourceId = analysis.Id
         });
 
         await session.SaveChangesAsync();
 
-        return analysis.Id;
+        return draft.Id;
     }
 }

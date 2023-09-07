@@ -116,7 +116,14 @@ public class EngineResponseDequeueService : BackgroundService
                             $"Identified object with identifier={executionResult.Identifier} was not found on the return path from the engine.");
                     }
 
-                    if(identifiedObject is RepositoryAnalysis analysis)
+                    if(identifiedObject is JobDraft draft)
+                    {
+                        var analysis = await session.LoadAsync<RepositoryAnalysis>(draft.AnalysisId);
+                        draft.Completed = true;
+
+                        ProcessAnalysis(analysis, executionResult);
+                    }
+                    else if(identifiedObject is RepositoryAnalysis analysis)
                     {
                         ProcessAnalysis(analysis, executionResult);
                     }

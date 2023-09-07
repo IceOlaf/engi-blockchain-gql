@@ -29,14 +29,14 @@ public class RootSubscriptions : ObjectGraphType
                 return newHeadObserver.FinalizedHeaders;
             });
 
-        Field<RepositoryAnalysisGraphType>("analysisUpdates")
+        Field<JobDraftGraphType>("draftUpdates")
             .Argument<NonNullGraphType<StringGraphType>>("id")
             .Resolve(context => context.Source)
-            .ResolveStreamAsync(SubscribeToAnalysisUpdatesAsync)
+            .ResolveStreamAsync(SubscribeToJobDraftUpdatesAsync);
             .AuthorizeWithPolicy(PolicyNames.Authenticated);
     }
 
-    private async Task<IObservable<object?>> SubscribeToAnalysisUpdatesAsync(IResolveFieldContext<object?> context)
+    private async Task<IObservable<object?>> SubscribeToJobDraftUpdatesAsync(IResolveFieldContext<object?> context)
     {
         string id = context.GetArgument<string>("id");
 
@@ -51,7 +51,7 @@ public class RootSubscriptions : ObjectGraphType
         var objects = await session
             .LoadAsync<object>(new[] { id, currentUserId });
 
-        var analysis = (RepositoryAnalysis?)objects[id];
+        var analysis = (JobDraft?)objects[id];
         var currentUser = (User)objects[currentUserId];
 
         if (analysis == null)
@@ -73,7 +73,7 @@ public class RootSubscriptions : ObjectGraphType
             {
                 using var session = store.OpenAsyncSession();
 
-                return await session.LoadAsync<RepositoryAnalysis>(change.Id);
+                return await session.LoadAsync<JobDraft>(change.Id);
             })
             .Select(task => task.ToObservable())
             .Concat();

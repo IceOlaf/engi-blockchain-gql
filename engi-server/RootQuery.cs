@@ -50,7 +50,7 @@ public class RootQuery : ObjectGraphType
 
         Field<JobDraftGraphType>("draft")
             .Argument<NonNullGraphType<StringGraphType>>("id")
-            .Resolve(GetJobDraft);
+            .ResolveAsync(GetJobDraft);
 
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);

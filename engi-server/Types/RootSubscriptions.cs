@@ -32,7 +32,7 @@ public class RootSubscriptions : ObjectGraphType
         Field<JobDraftGraphType>("draftUpdates")
             .Argument<NonNullGraphType<StringGraphType>>("id")
             .Resolve(context => context.Source)
-            .ResolveStreamAsync(SubscribeToJobDraftUpdatesAsync);
+            .ResolveStreamAsync(SubscribeToJobDraftUpdatesAsync)
             .AuthorizeWithPolicy(PolicyNames.Authenticated);
     }
 

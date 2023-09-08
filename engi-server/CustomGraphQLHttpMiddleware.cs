@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Engi.Substrate.Server.Types.Authentication;
@@ -15,6 +16,7 @@ namespace Engi.Substrate.Server;
 
 public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
 {
+    private const string SessionKey = "User.Session";
     private readonly GraphQLHttpMiddlewareOptions options;
     private readonly ApplicationOptions apiOptions;
     private readonly IHub sentry;
@@ -43,7 +45,20 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
         var userContext = await base.BuildUserContextAsync(context, payload)
             ?? new Dictionary<string, object?>();
 
-        userContext["cookies"] = context.Request.Cookies;
+        var userData = context.Session.GetString(SessionKey);
+        if (userData != null)
+        {
+            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData);
+
+            var principal = new ClaimsPrincipal();
+            var identity = new ClaimsIdentity();
+            identity.AddClaim(new Claim(ClaimTypes.Name, sessionInfo.UserId));
+            identity.AddClaim(new Claim("role", sessionInfo.Role));
+            principal.AddIdentity(identity);
+
+            userContext["session"] = sessionInfo;
+            context.User = principal;
+        }
 
         return userContext;
     }
@@ -94,16 +109,16 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
             else if (result.Operation?.Operation == OperationType.Mutation
                 && result.Data is ObjectExecutionNode { SubFields.Length: > 0 } rootNode
                 && rootNode.SubFields![0] is ObjectExecutionNode childNode
-                && childNode.FieldDefinition.ResolvedType is AuthMutations
-                && childNode.SubFields![0].Result is AuthenticationTokenPair tokenPair)
+                && childNode.FieldDefinition.ResolvedType is AuthMutations)
             {
-                context.Response.Cookies.Append("refreshToken", tokenPair.RefreshToken.Value!, new()
+                if (childNode.SubFields![0].Result is LoginResult loginResult)
                 {
-                    Domain = apiOptions.ApiDomain,
-                    HttpOnly = true,
-                    Secure = !environment.IsDevelopment(),
-                    Expires = tokenPair.RefreshToken.ExpiresOn
-                });
+                    context.Session.SetString(SessionKey, loginResult.SessionToken);
+                }
+                else if (childNode.SubFields![0].Result is LogoutResult logoutResult)
+                {
+                    context.Session.Remove(SessionKey);
+                }
             }
         }
 

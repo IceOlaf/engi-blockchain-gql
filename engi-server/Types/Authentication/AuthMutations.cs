@@ -59,6 +59,10 @@ public class AuthMutations : ObjectGraphType
             ")
             .Argument<NonNullGraphType<StringGraphType>>("address")
             .ResolveAsync(ResendConfirmationEmailAsync);
+
+        Field<LogoutResultGraphType>("logout")
+            .AuthorizeWithPolicy(PolicyNames.Authenticated)
+            .Resolve(_ => new LogoutResult());
     }
 
     private async Task<object?> ConfirmEmailAsync(IResolveFieldContext context)

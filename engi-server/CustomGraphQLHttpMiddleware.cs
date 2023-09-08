@@ -109,10 +109,16 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
             else if (result.Operation?.Operation == OperationType.Mutation
                 && result.Data is ObjectExecutionNode { SubFields.Length: > 0 } rootNode
                 && rootNode.SubFields![0] is ObjectExecutionNode childNode
-                && childNode.FieldDefinition.ResolvedType is AuthMutations
-                && childNode.SubFields![0].Result is LoginResult loginResult)
+                && childNode.FieldDefinition.ResolvedType is AuthMutations)
             {
-                context.Session.SetString(SessionKey, loginResult.SessionToken);
+                if (childNode.SubFields![0].Result is LoginResult loginResult)
+                {
+                    context.Session.SetString(SessionKey, loginResult.SessionToken);
+                }
+                else if (childNode.SubFields![0].Result is LogoutResult logoutResult)
+                {
+                    context.Session.Remove(SessionKey);
+                }
             }
         }
 

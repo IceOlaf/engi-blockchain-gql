@@ -11,22 +11,22 @@ public class JobDraftGraphType : ObjectGraphType<JobDraft>
     {
         Field(x => x.Id);
 
-        Field(x => x.Tests, type: typeof(ListGraphType<StringGraphType>))
+        Field(x => x.Tests, nullable: true, type: typeof(ListGraphType<StringGraphType>))
             .Description("The test list that must be passing.");
 
-        Field(x => x.IsEditable)
+        Field(x => x.IsEditable, nullable: true)
             .Description("Glob pattern for editable files");
 
-        Field(x => x.IsAddable)
+        Field(x => x.IsAddable, nullable: true)
             .Description("Glob pattern for addable files");
 
-        Field(x => x.IsDeletable)
+        Field(x => x.IsDeletable, nullable: true)
             .Description("Glob pattern for deletable files");
 
-        Field(x => x.Funding)
+        Field(x => x.Funding, nullable: true)
             .Description("How much to award.");
 
-        Field(x => x.Name)
+        Field(x => x.Name, nullable: true)
             .Description("Job name.");
 
         Field<RepositoryAnalysisGraphType>("Analysis")

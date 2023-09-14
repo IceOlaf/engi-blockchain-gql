@@ -15,23 +15,93 @@ public class DraftMutations : ObjectGraphType
 {
     public DraftMutations()
     {
-        Field<IdGraphType>("submit")
+        Field<IdGraphType>("create")
             .Description(@"
-                Submit an analysis request to the analysis engine.
+                Create an analysis request to the analysis engine.
                 If the mutation completes successfully, it will return the id of the draft document.
                 If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
             ")
-            .Argument<NonNullGraphType<SubmitDraftArgumentsGraphType>>("args")
+            .Argument<NonNullGraphType<CreateDraftArgumentsGraphType>>("args")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .AuthorizeWithPolicy(PolicyNames.Authenticated)
-            .ResolveAsync(SubmitDraftAsync);
+            .ResolveAsync(CreateDraftAsync);
+
+        Field<IdGraphType>("update")
+            .Description(@"
+                Update an analysis request to the analysis engine.
+                If the mutation completes successfully, it will return the id of the draft document.
+                If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
+            ")
+            .Argument<NonNullGraphType<UpdateDraftArgumentsGraphType>>("args")
+            .AuthorizeWithPolicy(PolicyNames.Authenticated)
+            .ResolveAsync(UpdateDraftAsync);
     }
 
-    private async Task<object?> SubmitDraftAsync(IResolveFieldContext context)
+    private async Task<object?> UpdateDraftAsync(IResolveFieldContext context)
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var args = context.GetValidatedArgument<SubmitDraftArguments>("args");
+        var args = context.GetValidatedArgument<UpdateDraftArguments>("args");
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<Identity.User>(context.User!.Identity!.Name);
+
+        var draft = await session.LoadAsync<JobDraft>(args.Id);
+
+        if (draft.CreatedBy != user.Address)
+        {
+            return null;
+        }
+
+        if (args.Tests != null)
+        {
+            draft.Tests = args.Tests;
+        }
+
+        if (args.Tests != null)
+        {
+            draft.CreatedBy = user.Address;
+        }
+
+        if (args.IsEditable != null)
+        {
+            draft.IsEditable = args.IsEditable;
+        }
+
+        if (args.IsAddable != null)
+        {
+            draft.IsAddable = args.IsAddable;
+        }
+
+        if (args.IsDeletable != null)
+        {
+            draft.IsDeletable = args.IsDeletable;
+        }
+
+        if (args.Funding != null)
+        {
+            draft.Funding = args.Funding;
+        }
+
+        if (args.Name != null)
+        {
+            draft.Name = args.Name;
+        }
+
+
+        await session.StoreAsync(draft);
+
+        await session.SaveChangesAsync();
+
+        return draft.Id;
+    }
+
+    private async Task<object?> CreateDraftAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        var args = context.GetValidatedArgument<CreateDraftArguments>("args");
         var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
@@ -90,13 +160,7 @@ public class DraftMutations : ObjectGraphType
 
         var draft = new JobDraft
         {
-            Tests = args.Tests,
             CreatedBy = user.Address,
-            IsEditable = args.IsEditable,
-            IsAddable = args.IsAddable,
-            IsDeletable = args.IsDeletable,
-            Funding = args.Funding,
-            Name = args.Name,
             AnalysisId = analysis.Id,
         };
 

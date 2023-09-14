@@ -52,6 +52,10 @@ public class RootQuery : ObjectGraphType
             .Argument<NonNullGraphType<StringGraphType>>("id")
             .ResolveAsync(GetJobDraft);
 
+        Field<ListGraphType<JobDraftGraphType>>("drafts")
+            .Argument<ListDraftsArgumentsGraphType>("args")
+            .ResolveAsync(GetJobDrafts);
+
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
 
@@ -77,6 +81,26 @@ public class RootQuery : ObjectGraphType
         Field<JobSubmissionsDetailsPagedResult>("submissions")
             .Argument<JobSubmissionsDetailsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetSubmissionsAsync);
+    }
+
+    private async Task<object?> GetJobDrafts(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+        var args = context.GetOptionalValidatedArgument<ListDraftsArguments>("args") ?? new();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+        var userAddress = user!.Address;
+
+        var drafts = await session
+            .Query<JobDraft>()
+            .Where(x => x.CreatedBy == userAddress)
+            .Skip(args.Skip)
+            .Take(args.Take)
+            .ToListAsync();
+
+        return drafts;
     }
 
     private async Task<object?> GetJobDraft(IResolveFieldContext context)

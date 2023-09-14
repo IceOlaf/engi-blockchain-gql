@@ -11,17 +11,17 @@ public class JobDraft : IDispatched
 
     public string CreatedBy { get; set; } = null!;
 
-    public string[] Tests { get; set; } = null!;
+    public string[]? Tests { get; set; } = null;
 
-    public string IsEditable { get; set; }
+    public string? IsEditable { get; set; } = null;
 
-    public string IsAddable { get; set; }
+    public string? IsAddable { get; set; } = null;
 
-    public string IsDeletable { get; set; }
+    public string? IsDeletable { get; set; } = null;
 
-    public ulong Funding { get; set; }
+    public ulong? Funding { get; set; } = null;
 
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; } = null;
 
     public string AnalysisId { get; set; } = null!;
 

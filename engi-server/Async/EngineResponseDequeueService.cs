@@ -194,12 +194,21 @@ public class EngineResponseDequeueService : BackgroundService
 
         if (analysis.Status == RepositoryAnalysisStatus.Completed)
         {
-            var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
+            try
+            {
+                var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
 
-            analysis.Technologies = result.Technologies;
-            analysis.Files = result.Files;
-            analysis.Complexity = result.Complexity;
-            analysis.Tests = result.Tests;
+                analysis.Technologies = result.Technologies;
+                analysis.Files = result.Files;
+                analysis.Complexity = result.Complexity;
+                analysis.Tests = result.Tests;
+            }
+            catch (Exception ex)
+            {
+                analysis.Status = RepositoryAnalysisStatus.Failed;
+                analysis.FailedReason = "Unable to decode execution result";
+                logger.LogError(ex, analysis.FailedReason);
+            }
         }
 
         analysis.ProcessedOn = DateTime.UtcNow;

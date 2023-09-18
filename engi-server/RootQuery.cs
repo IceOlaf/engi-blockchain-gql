@@ -91,6 +91,12 @@ public class RootQuery : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        if (user == null)
+        {
+            return new List<JobDraft>();
+        }
+
         var userAddress = user!.Address;
 
         var drafts = await session

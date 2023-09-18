@@ -33,6 +33,8 @@ public class RepositoryAnalysis : IDispatched
 
     public CommandLineExecutionResult? ExecutionResult { get; set; }
 
+    public string? FailedReason { get; set; } = null;
+
     public DateTime? ProcessedOn { get; set; }
 
     [Newtonsoft.Json.JsonIgnore]

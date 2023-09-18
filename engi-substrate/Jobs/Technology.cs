@@ -16,4 +16,6 @@ public enum Technology
     SameStory = 11,
     CSS = 12,
     Docker = 13,
+    HTML = 14,
+    MDX = 15,
 }

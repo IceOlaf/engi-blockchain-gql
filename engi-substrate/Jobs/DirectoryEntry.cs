@@ -8,6 +8,30 @@ public class DirectoryEntry
     public string? Extension { get; set; } = null;
     public List<DirectoryEntry> Children { get; set; } = null!;
 
+    public static string FileType(string path)
+    {
+        if (System.IO.Path.HasExtension(path))
+        {
+            return "file";
+        }
+        else
+        {
+            return "directory";
+        }
+    }
+
+    public static string FileExtension(string path)
+    {
+        if (System.IO.Path.HasExtension(path))
+        {
+            return System.IO.Path.GetExtension(path);
+        }
+        else
+        {
+            return null;
+        }
+    }
+
     public static List<DirectoryEntry> DirectoryEntries(string[] files)
     {
         Dictionary<string, DirectoryEntry> entries = new Dictionary<string, DirectoryEntry>();
@@ -23,7 +47,7 @@ public class DirectoryEntry
                 var val = new DirectoryEntry {
                     Path = path,
                     Name = path,
-                    Type = "guess",
+                    Type = FileType(path),
                     Children = new List<DirectoryEntry>(),
                 };
 
@@ -44,7 +68,8 @@ public class DirectoryEntry
                 var child = new DirectoryEntry {
                     Path = path,
                     Name = component,
-                    Type = "guess",
+                    Type = FileType(component),
+                    Extension = FileExtension(component),
                     Children = new List<DirectoryEntry>(),
                 };
 

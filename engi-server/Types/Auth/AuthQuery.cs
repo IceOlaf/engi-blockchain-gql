@@ -21,9 +21,26 @@ public class AuthQuery : ObjectGraphType
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+        var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
 
-        return (CurrentUserInfo) user;
+        if (user == null)
+        {
+            return null;
+        }
+
+        var address = Address.Parse(user.Address);
+
+        try
+        {
+            var info = await substrate.GetSystemAccountAsync(address);
+
+            return new CurrentUserInfo(user, address, info);
+        }
+        catch (KeyNotFoundException)
+        {
+            return new CurrentUserInfo(user, address, null);
+        }
     }
 }

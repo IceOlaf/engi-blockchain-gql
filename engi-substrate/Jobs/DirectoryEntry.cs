@@ -2,11 +2,11 @@ namespace Engi.Substrate.Jobs;
 
 public class DirectoryEntry
 {
-    public string Path { get; set; } = null!;
-    public string Name { get; set; } = null!;
-    public string Type { get; set; } = null!;
-    public string? Extension { get; set; } = null;
-    public List<DirectoryEntry> Children { get; set; } = null!;
+    public string path { get; set; } = null!;
+    public string name { get; set; } = null!;
+    public string type { get; set; } = null!;
+    public string? extension { get; set; } = null;
+    public List<DirectoryEntry> children { get; set; } = null!;
 
     public static string FileType(string path)
     {
@@ -45,10 +45,10 @@ public class DirectoryEntry
             if (!entries.ContainsKey(path))
             {
                 var val = new DirectoryEntry {
-                    Path = path,
-                    Name = path,
-                    Type = FileType(path),
-                    Children = new List<DirectoryEntry>(),
+                    path = path,
+                    name = path,
+                    type = FileType(path),
+                    children = new List<DirectoryEntry>(),
                 };
 
                 entries.Add(path, val);
@@ -66,15 +66,15 @@ public class DirectoryEntry
                 }
 
                 var child = new DirectoryEntry {
-                    Path = path,
-                    Name = component,
-                    Type = FileType(component),
-                    Extension = FileExtension(component),
-                    Children = new List<DirectoryEntry>(),
+                    path = path,
+                    name = component,
+                    type = FileType(component),
+                    extension = FileExtension(component),
+                    children = new List<DirectoryEntry>(),
                 };
 
                 entries.Add(path, child);
-                parent.Children.Add(child);
+                parent.children.Add(child);
             }
         }
 

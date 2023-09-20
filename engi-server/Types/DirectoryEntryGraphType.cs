@@ -9,19 +9,19 @@ public class DirectoryEntryGraphType: ObjectGraphType<DirectoryEntry>
     {
         Description = "A directory entry.";
 
-        Field(x => x.Path)
+        Field(x => x.path)
             .Description("Path for this directory component.");
 
-        Field(x => x.Name)
+        Field(x => x.name)
             .Description("Name for this directory component.");
 
-        Field(x => x.Type)
+        Field(x => x.type)
             .Description("Type for this directory component.");
 
-        Field(x => x.Extension, nullable: true)
+        Field(x => x.extension, nullable: true)
             .Description("File extension for this directory component.");
 
-        Field(x => x.Children, type: typeof(ListGraphType<DirectoryEntryGraphType>))
+        Field(x => x.children, type: typeof(ListGraphType<DirectoryEntryGraphType>))
             .Description("Children of this component.");
     }
 }

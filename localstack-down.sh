@@ -32,5 +32,5 @@ down_sns_sqs_pair() {
 }
 
 down_iam
-down_sns_sqs_pair "graphql-engine-in.fifo"
-down_sns_sqs_pair "graphql-engine-out.fifo"
+down_sns_sqs_pair "graphql-engine-in-test.fifo"
+down_sns_sqs_pair "graphql-engine-out-test.fifo"

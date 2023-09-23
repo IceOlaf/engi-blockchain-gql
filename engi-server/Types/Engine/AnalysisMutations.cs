@@ -11,27 +11,97 @@ using Repository = Octokit.Repository;
 
 namespace Engi.Substrate.Server.Types.Engine;
 
-public class AnalysisMutations : ObjectGraphType
+public class DraftMutations : ObjectGraphType
 {
-    public AnalysisMutations()
+    public DraftMutations()
     {
-        Field<IdGraphType>("submit")
+        Field<IdGraphType>("create")
             .Description(@"
-                Submit an analysis request to the analysis engine.
-                If the mutation completes successfully, it will return the id of the analysis document.
+                Create an analysis request to the analysis engine.
+                If the mutation completes successfully, it will return the id of the draft document.
                 If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
             ")
-            .Argument<NonNullGraphType<SubmitAnalysisArgumentsGraphType>>("args")
+            .Argument<NonNullGraphType<CreateDraftArgumentsGraphType>>("args")
             .Argument<NonNullGraphType<SignatureArgumentsGraphType>>("signature")
             .AuthorizeWithPolicy(PolicyNames.Authenticated)
-            .ResolveAsync(SubmitAnalysisAsync);
+            .ResolveAsync(CreateDraftAsync);
+
+        Field<IdGraphType>("update")
+            .Description(@"
+                Update an analysis request to the analysis engine.
+                If the mutation completes successfully, it will return the id of the draft document.
+                If any of the repository URL, branch or commit, the mutation will return error code = NOT_FOUND.
+            ")
+            .Argument<NonNullGraphType<UpdateDraftArgumentsGraphType>>("args")
+            .AuthorizeWithPolicy(PolicyNames.Authenticated)
+            .ResolveAsync(UpdateDraftAsync);
     }
 
-    private async Task<object?> SubmitAnalysisAsync(IResolveFieldContext context)
+    private async Task<object?> UpdateDraftAsync(IResolveFieldContext context)
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        var args = context.GetValidatedArgument<SubmitAnalysisArguments>("args");
+        var args = context.GetValidatedArgument<UpdateDraftArguments>("args");
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<Identity.User>(context.User!.Identity!.Name);
+
+        var draft = await session.LoadAsync<JobDraft>(args.Id);
+
+        if (draft.CreatedBy != user.Address)
+        {
+            return null;
+        }
+
+        if (args.Tests != null)
+        {
+            draft.Tests = args.Tests;
+        }
+
+        if (args.Tests != null)
+        {
+            draft.CreatedBy = user.Address;
+        }
+
+        if (args.IsEditable != null)
+        {
+            draft.IsEditable = args.IsEditable;
+        }
+
+        if (args.IsAddable != null)
+        {
+            draft.IsAddable = args.IsAddable;
+        }
+
+        if (args.IsDeletable != null)
+        {
+            draft.IsDeletable = args.IsDeletable;
+        }
+
+        if (args.Funding != null)
+        {
+            draft.Funding = args.Funding;
+        }
+
+        if (args.Name != null)
+        {
+            draft.Name = args.Name;
+        }
+
+
+        await session.StoreAsync(draft);
+
+        await session.SaveChangesAsync();
+
+        return draft.Id;
+    }
+
+    private async Task<object?> CreateDraftAsync(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        var args = context.GetValidatedArgument<CreateDraftArguments>("args");
         var signature = context.GetValidatedArgument<SignatureArguments>("signature");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
@@ -88,15 +158,23 @@ public class AnalysisMutations : ObjectGraphType
 
         await session.StoreAsync(analysis);
 
+        var draft = new JobDraft
+        {
+            CreatedBy = user.Address,
+            AnalysisId = analysis.Id,
+        };
+
+        await session.StoreAsync(draft);
+
         await session.StoreAsync(new QueueEngineRequestCommand
         {
-            Identifier = analysis.Id,
+            Identifier = draft.Id,
             CommandString = $"analyse {analysis.RepositoryUrl} --branch {analysis.Branch} --commit {analysis.Commit}",
             SourceId = analysis.Id
         });
 
         await session.SaveChangesAsync();
 
-        return analysis.Id;
+        return draft.Id;
     }
 }

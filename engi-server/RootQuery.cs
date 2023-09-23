@@ -5,6 +5,7 @@ using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Types;
+using Engi.Substrate.Server.Types.Engine;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
@@ -33,6 +34,9 @@ public class RootQuery : ObjectGraphType
         Field<AccountsQuery>("accounts")
             .Resolve(_ => new { });
 
+        Field<AnalysisQuery>("analysis")
+            .Resolve(_ => new { });
+
         Field<ActivityGraphType>("activity")
             .Argument<ActivityArgumentsGraphType>("args")
             .ResolveAsync(GetActivityAsync)
@@ -43,6 +47,14 @@ public class RootQuery : ObjectGraphType
 
         Field<GithubQuery>("github")
             .Resolve(_ => new { });
+
+        Field<JobDraftGraphType>("draft")
+            .Argument<NonNullGraphType<StringGraphType>>("id")
+            .ResolveAsync(GetJobDraft);
+
+        Field<ListGraphType<JobDraftGraphType>>("drafts")
+            .Argument<ListDraftsArgumentsGraphType>("args")
+            .ResolveAsync(GetJobDrafts);
 
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
@@ -69,6 +81,44 @@ public class RootQuery : ObjectGraphType
         Field<JobSubmissionsDetailsPagedResult>("submissions")
             .Argument<JobSubmissionsDetailsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetSubmissionsAsync);
+    }
+
+    private async Task<object?> GetJobDrafts(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+        var args = context.GetOptionalValidatedArgument<ListDraftsArguments>("args") ?? new();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        if (user == null)
+        {
+            return new List<JobDraft>();
+        }
+
+        var userAddress = user!.Address;
+
+        var drafts = await session
+            .Query<JobDraft>()
+            .Where(x => x.CreatedBy == userAddress)
+            .Skip(args.Skip)
+            .Take(args.Take)
+            .ToListAsync();
+
+        return drafts;
+    }
+
+    private async Task<object?> GetJobDraft(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+        string id = context.GetArgument<string>("id");
+
+        var draft = await session.LoadAsync<JobDraft>(id);
+
+        return draft;
     }
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)

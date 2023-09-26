@@ -126,7 +126,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
               });
 
         AddMap<RepositoryAnalysis>(analyses => from analysis in analyses
-              where analysis.ProcessedOn != null
+              where analysis.ProcessedOn != null && analysis.JobId != 0
               select new Result
               {
                   JobId = analysis.JobId,

@@ -10,10 +10,10 @@ public class CommandLineExecutionResultGraphType : ObjectGraphType<CommandLineEx
         Field(x => x.Identifier)
             .Description("Id of the command being executed");
 
-        Field(x => x.Stdout)
+        Field(x => x.Stdout, nullable: true)
             .Description("Stdout of the engine command");
 
-        Field(x => x.Stderr)
+        Field(x => x.Stderr, nullable: true)
             .Description("Stderr of the engine command");
 
         Field(x => x.ReturnCode)

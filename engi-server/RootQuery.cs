@@ -9,6 +9,7 @@ using Engi.Substrate.Server.Types.Engine;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Types;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
@@ -94,7 +95,7 @@ public class RootQuery : ObjectGraphType
 
         if (user == null)
         {
-            return new List<JobDraft>();
+            throw new AccessDeniedError("User not logged in.");
         }
 
         var userAddress = user!.Address;

@@ -21,7 +21,7 @@ public class JobsQueryArgumentsGraphType : OrderedQueryArgumentsGraphType<JobsQu
         Field(x => x.Search, nullable: true)
             .Description("Search terms to query for in; fields indexed: chain id, name, repository. The query is treated as separated words and the last word is treated as `startsWith`.");
 
-        Field(x => x.Technologies, nullable: true, type: typeof(ListGraphType<EnumerationGraphType<Technology>>))
+        Field(x => x.Technologies, nullable: true, type: typeof(ListGraphType<TechnologyEnumGraphType>))
             .Description("Filter by one or more job technologies.");
 
         Field(x => x.MinFunding, nullable: true, type: typeof(UInt128GraphType))

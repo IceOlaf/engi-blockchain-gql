@@ -29,7 +29,7 @@ public class RepositoryAnalysisGraphType : ObjectGraphType<RepositoryAnalysis>
         Field(x => x.Status)
             .Description("The status denoting the current state of the analysis.");
 
-        Field(x => x.Technologies, type: typeof(ListGraphType<EnumerationGraphType<Technology>>), nullable: true)
+        Field(x => x.Technologies, type: typeof(ListGraphType<TechnologyEnumGraphType>), nullable: true)
             .Description("If the analysis was completed, the dominant language of the repository.");
 
         Field(x => x.DirectoryEntries, nullable: true)

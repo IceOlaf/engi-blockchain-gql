@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Engi.Substrate.Server.Types.Engine;
 
-public class SubmitAnalysisArguments
+public class CreateDraftArguments
 {
     [Required, HttpUrl]
     public string Url { get; set; } = null!;

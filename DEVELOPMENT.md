@@ -34,6 +34,8 @@ aws ecr get-login-password \
 --password-stdin 163803973373.dkr.ecr.us-west-2.amazonaws.com
 ```
 
+You may have to add as a second flag, `--profile [PROFILE]`, to the `get-login-password` command.
+
 To run:
 ```
 docker-compose -f docker-compose-dev.yml up --exit-code-from api
@@ -175,3 +177,62 @@ npm install -g http-server
 cd engi-server/wwwroot/docs/
 http-server
 ```
+
+## Local development with creating bounties
+1. Create a GitHub app with the following settings:
+  ```
+  Name: <YOUR_APP_NAME> (e.g. my-engi-app)
+  Homepage: https://engi.network
+  Callback URL: http://localhost:3000/oauth/github/callback
+  [x] Request user authorization (OAuth) during installation
+
+  Read/Write permissions:
+  Contents
+  Discussions
+  Issues
+  Pull Requests
+  Webhooks
+  ```
+  
+2. Update these fields in `appsettings.json` with the GitHub settings.
+  ```
+    "GithubAppId": <APP_ID>,
+    "GithubAppPrivateKey": <PRIVATE_KEY>,
+  ```
+3. Log out and log back in on the locally-run website to refresh your session cookie. It has a TTL of 1 hour.
+4. Navigate to https://github.com/apps/<YOUR_APP_NAME>/installations/select_target?state=uuid to install the app. This will open the callback URL and you will successfully be enrolled.
+
+## Troubleshooting
+> I'm getting a `Not Found` error from GitHub API.
+>  ```json
+>  {
+>    "message": "Not Found",
+>    "documentation_url": "https://docs.github.com/rest/apps/apps#get-an-installation-for-the-authenticated-app"
+>  }
+>  ```
+Your private key is not configured properly for your GitHub app. In `GitHubClientFactory.cs`, use `FilePrivateKeySource` and specify the key file by name instead of loading it from options as a string.
+```csharp
+var generator = new GitHubJwt.GitHubJwtFactory(
+    new FilePrivateKeySource("./<YOUR_PRIVATE_KEY>.pem"),
+    // new Base64PrivateKeySource(options.GithubAppPrivateKey),
+    new GitHubJwt.GitHubJwtFactoryOptions
+    {
+        AppIntegrationId = options.GithubAppId,
+        ExpirationSeconds = 600
+    }
+);
+```
+
+---
+
+> I'm getting a null reference error.
+> ```
+> fail: Engi.Substrate.Server.RootSchema[0]
+>     Error occurred: Object reference not set to an instance of an object.
+>     System.NullReferenceException: Object reference not set to an instance of an object.
+>        at Engi.Substrate.Server.Types.Github.GithubMutations.EnrollAsync(IResolveFieldContext`1 context)
+>        at Engi.Substrate.Server.Types.Github.GithubMutations.EnrollAsync(IResolveFieldContext`1 context)
+>        at Engi.Substrate.Server.Types.Validation.ValidationMiddleware.ResolveAsync(IResolveFieldContext context, FieldMiddlewareDelegate next)
+>        at GraphQL.Execution.ExecutionStrategy.ExecuteNodeAsync(ExecutionContext context, ExecutionNode node) in /_/src/GraphQL/Execution/ExecutionStrategy.cs:line 502
+> ```
+Your session cookie has expired and the API is failing to fetch your user. Log out and log back in. Refresh the callback URL and your enrollment will work.

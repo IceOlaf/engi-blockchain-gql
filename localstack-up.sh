@@ -13,7 +13,6 @@ then
     apt update && apt install jq gettext -y
 fi
 
-
 up_iam() {
   ROLE_POLICY='{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}'
   awslocal iam create-role --role-name graphql-testing --assume-role-policy-document "${ROLE_POLICY}"

@@ -116,7 +116,14 @@ public class EngineResponseDequeueService : BackgroundService
                             $"Identified object with identifier={executionResult.Identifier} was not found on the return path from the engine.");
                     }
 
-                    if(identifiedObject is RepositoryAnalysis analysis)
+                    if(identifiedObject is JobDraft draft)
+                    {
+                        var analysis = await session.LoadAsync<RepositoryAnalysis>(draft.AnalysisId);
+                        draft.Completed = true;
+
+                        ProcessAnalysis(analysis, executionResult);
+                    }
+                    else if(identifiedObject is RepositoryAnalysis analysis)
                     {
                         ProcessAnalysis(analysis, executionResult);
                     }
@@ -187,12 +194,21 @@ public class EngineResponseDequeueService : BackgroundService
 
         if (analysis.Status == RepositoryAnalysisStatus.Completed)
         {
-            var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
+            try
+            {
+                var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
 
-            analysis.Technologies = result.Technologies;
-            analysis.Files = result.Files;
-            analysis.Complexity = result.Complexity;
-            analysis.Tests = result.Tests;
+                analysis.Technologies = result.Technologies;
+                analysis.Files = result.Files;
+                analysis.Complexity = result.Complexity;
+                analysis.Tests = result.Tests;
+            }
+            catch (Exception ex)
+            {
+                analysis.Status = RepositoryAnalysisStatus.Failed;
+                analysis.FailedReason = "Unable to decode execution result";
+                logger.LogError(ex, analysis.FailedReason);
+            }
         }
 
         analysis.ProcessedOn = DateTime.UtcNow;

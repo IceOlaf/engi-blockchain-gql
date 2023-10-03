@@ -29,5 +29,11 @@ public class CurrentUserInfoGraphType : ObjectGraphType<CurrentUserInfo>
 
         Field(x => x.GithubEnrollments, type: typeof(ListGraphType<UserGithubEnrollmentGraphType>))
             .Description("The Github enrollments for this user.");
+
+        Field(x => x.Balance, nullable: true, type: typeof(BigIntGraphType))
+            .Description("Balance for this wallet address.");
+
+        Field(x => x.Wallet, nullable: true, type: typeof(AddressGraphType))
+            .Description("Wallet address for this user.");
     }
 }

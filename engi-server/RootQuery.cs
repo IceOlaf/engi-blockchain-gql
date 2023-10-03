@@ -1,12 +1,15 @@
+using System.Text.Json;
 using System.Linq.Expressions;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Indexing;
 using Engi.Substrate.Jobs;
 using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Types;
+using Engi.Substrate.Server.Types.Engine;
 using Engi.Substrate.Server.Types.Github;
 using Engi.Substrate.Server.Types.Validation;
 using GraphQL;
+using GraphQL.Server.Transports.AspNetCore.Errors;
 using GraphQL.Types;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Linq;
@@ -32,6 +35,9 @@ public class RootQuery : ObjectGraphType
         Field<AccountsQuery>("accounts")
             .Resolve(_ => new { });
 
+        Field<AnalysisQuery>("analysis")
+            .Resolve(_ => new { });
+
         Field<ActivityGraphType>("activity")
             .Argument<ActivityArgumentsGraphType>("args")
             .ResolveAsync(GetActivityAsync)
@@ -42,6 +48,14 @@ public class RootQuery : ObjectGraphType
 
         Field<GithubQuery>("github")
             .Resolve(_ => new { });
+
+        Field<JobDraftGraphType>("draft")
+            .Argument<NonNullGraphType<StringGraphType>>("id")
+            .ResolveAsync(GetJobDraft);
+
+        Field<ListGraphType<JobDraftGraphType>>("drafts")
+            .Argument<ListDraftsArgumentsGraphType>("args")
+            .ResolveAsync(GetJobDrafts);
 
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
@@ -68,6 +82,44 @@ public class RootQuery : ObjectGraphType
         Field<JobSubmissionsDetailsPagedResult>("submissions")
             .Argument<JobSubmissionsDetailsPagedQueryArgumentsGraphType>("query")
             .ResolveAsync(GetSubmissionsAsync);
+    }
+
+    private async Task<object?> GetJobDrafts(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+        var args = context.GetOptionalValidatedArgument<ListDraftsArguments>("args") ?? new();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        if (user == null)
+        {
+            throw new AccessDeniedError("User not logged in.");
+        }
+
+        var userAddress = user!.Address;
+
+        var drafts = await session
+            .Query<JobDraft>()
+            .Where(x => x.CreatedBy == userAddress)
+            .Skip(args.Skip)
+            .Take(args.Take)
+            .ToListAsync();
+
+        return drafts;
+    }
+
+    private async Task<object?> GetJobDraft(IResolveFieldContext context)
+    {
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+        string id = context.GetArgument<string>("id");
+
+        var draft = await session.LoadAsync<JobDraft>(id);
+
+        return draft;
     }
 
     private async Task<object?> GetAccountAsync(IResolveFieldContext context)
@@ -536,7 +588,7 @@ public class RootQuery : ObjectGraphType
             CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
             SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
         };
-        var submission = new JobSubmissionsDetails(userInfo, id);
+        var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
         var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
@@ -558,7 +610,12 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
+        var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout);
+        var attemptJson = rawResult.GetProperty("attempt");
+        var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attemptJson).Tests;
+
         submission.Attempt.Results = engineResponse.ExecutionResult;
+        submission.Attempt.Tests = testAttempts;
 
         if (engineResponse.ExecutionResult.ReturnCode == 0)
         {

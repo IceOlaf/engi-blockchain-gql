@@ -1,4 +1,6 @@
 using Engi.Substrate.Identity;
+using Engi.Substrate.Pallets;
+using System.Numerics;
 
 namespace Engi.Substrate.Server.Types;
 
@@ -20,18 +22,26 @@ public class CurrentUserInfo
 
     public UserGithubEnrollment[] GithubEnrollments { get; set; } = null!;
 
+    public BigInteger? Balance { get; set; }
+
+    public Address? Wallet { get; set; }
+
     public static implicit operator CurrentUserInfo(User user)
     {
-        return new CurrentUserInfo
-        {
-            Email = user.Email,
-            Display = user.Display,
-            ProfileImageUrl = user.ProfileImageUrl,
-            FreelancerSettings = user.FreelancerSettings,
-            BusinessSettings = user.BusinessSettings,
-            EmailSettings = user.EmailSettings,
-            CreatedOn = user.CreatedOn,
-            GithubEnrollments = user.GithubEnrollments.Values.ToArray()
-        };
+        return new CurrentUserInfo(user, null, null);
+    }
+
+    public CurrentUserInfo(User user, Address? address, AccountInfo? info)
+    {
+        Email = user.Email;
+        Display = user.Display;
+        ProfileImageUrl = user.ProfileImageUrl;
+        FreelancerSettings = user.FreelancerSettings;
+        BusinessSettings = user.BusinessSettings;
+        EmailSettings = user.EmailSettings;
+        CreatedOn = user.CreatedOn;
+        GithubEnrollments = user.GithubEnrollments.Values.ToArray();
+        Balance = info == null ? 0 : info.Data.Free;
+        Wallet = address;
     }
 }

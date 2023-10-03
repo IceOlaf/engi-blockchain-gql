@@ -2,9 +2,9 @@ using GraphQL.Types;
 
 namespace Engi.Substrate.Server.Types.Engine;
 
-public class SubmitAnalysisArgumentsGraphType : InputObjectGraphType<SubmitAnalysisArguments>
+public class CreateDraftArgumentsGraphType : InputObjectGraphType<CreateDraftArguments>
 {
-    public SubmitAnalysisArgumentsGraphType()
+    public CreateDraftArgumentsGraphType()
     {
         Field(x => x.Url)
             .Description("The repository URL. Only Github repositories currently supported.");

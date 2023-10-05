@@ -243,6 +243,8 @@ public class RootQuery : ObjectGraphType
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+        var loggerFactory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
+        var logger = loggerFactory.CreateLogger(GetType());
 
         var reference = await session
             .LoadAsync<ReduceOutputReference>(JobIndex.ReferenceKeyFrom(jobId),
@@ -278,6 +280,8 @@ public class RootQuery : ObjectGraphType
                 job.PopulateSubmissions(submissions);
             }
         }
+        var solutions = await session.LoadAsync<SolutionSnapshot>(job.SolutionIds);
+        job.PopulateSolutions(null, solutions.Values, logger);
 
         var creatorAggregatesReference = await session
             .LoadAsync<ReduceOutputReference>(

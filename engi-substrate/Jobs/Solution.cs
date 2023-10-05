@@ -10,7 +10,7 @@ public class Solution
 
     public string PatchUrl { get; set; } = null!;
 
-    public string PullRequestUrl { get; set; } = null!;
+    public string? PullRequestUrl { get; set; } = null;
 
     public Attempt Attempt { get; set; } = null!;
 

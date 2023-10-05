@@ -119,6 +119,7 @@ public class GithubQuery : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<RootSchema>>();
 
         var octokitFactory = scope.ServiceProvider.GetRequiredService<GithubClientFactory>();
 
@@ -133,11 +134,17 @@ public class GithubQuery : ObjectGraphType
                 var octokit = await octokitFactory.CreateForAsync(matchingEnrollment.InstallationId);
 
                 commits = await octokit.Repository.Commit.GetAll(matchingRepo!.Id, new CommitRequest { Sha = branch });
+                logger.LogInformation($"Commits fetched for {repoOwner} {repoName}.");
+            }
+            else
+            {
+                logger.LogInformation($"No matching enrollment for {repoOwner} {repoName}.");
             }
         }
 
         if (commits == null)
         {
+            logger.LogInformation($"No matching enrollment for {repoOwner} {repoName}, trying as public repo.");
             // try as a public repo
 
             var octokit = octokitFactory.CreateAnonymous();
@@ -157,6 +164,11 @@ public class GithubQuery : ObjectGraphType
             }
 
             commits = await octokit.Repository.Commit.GetAll(repository.Id, new CommitRequest { Sha = branch });
+        }
+
+        if (commits == null)
+        {
+            logger.LogInformation($"Commits is still null for {repoOwner} {repoName}.");
         }
 
         return commits

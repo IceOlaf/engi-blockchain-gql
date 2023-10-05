@@ -6,8 +6,6 @@ public class SolutionSnapshot : Solution, IBlockSnapshot
 
     public BlockReference SnapshotOn { get; set; } = null!;
 
-    public string? PullRequestUrl { get; set; } = null;
-
     public SolutionSnapshot() { }
 
     public SolutionSnapshot(Solution solution, BlockReference block)

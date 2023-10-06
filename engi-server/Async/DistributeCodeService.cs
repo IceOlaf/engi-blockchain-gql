@@ -67,6 +67,7 @@ public class DistributeCodeService : SubscriptionProcessingBase<DistributeCodeCo
 
                 if (prUrl != null)
                 {
+                    job.Solution.PullRequestUrl = prUrl;
                     command.PullRequestUrl = prUrl;
                     command.ProcessedOn = DateTime.UtcNow;
                 }

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text.Json;
 using System.Linq.Expressions;
 using Engi.Substrate.Identity;
@@ -56,6 +57,10 @@ public class RootQuery : ObjectGraphType
         Field<ListGraphType<JobDraftGraphType>>("drafts")
             .Argument<ListDraftsArgumentsGraphType>("args")
             .ResolveAsync(GetJobDrafts);
+
+        Field<EngineerGraphType>("engineer")
+            .Argument<StringGraphType>("id")
+            .ResolveAsync(GetEngineer);
 
         Field<EngiHealthGraphType>("health")
             .ResolveAsync(GetHealthAsync);
@@ -234,6 +239,81 @@ public class RootQuery : ObjectGraphType
                 Status = EngiHealthStatus.Offline
             };
         }
+    }
+
+    private async Task<object?> GetEngineer(IResolveFieldContext context)
+    {
+        string id = context.GetValidatedArgument<string>("id", new AccountIdAttribute());
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var substrate = scope.ServiceProvider.GetRequiredService<SubstrateClient>();
+
+        var address = Address.Parse(id);
+        var balance = new BigInteger(0);
+
+        try
+        {
+            var info = await substrate.GetSystemAccountAsync(address);
+            balance = info == null ? 0 : info.Data.Free;
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
+
+        var addressKey = UserAddressReference.KeyFrom(id);
+        var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
+
+        if (addressReference == null)
+        {
+            return null;
+        }
+
+        var user = await session.LoadAsync<User>(addressReference.UserId);
+
+        var creatorAggregatesReference = await session
+            .LoadAsync<ReduceOutputReference>(
+                JobUserAggregatesIndex.Result.ReferenceKeyFrom(id),
+                include => include.IncludeDocuments(x => x.ReduceOutputs));
+
+        var solved = 0;
+        var created = 0;
+
+        if (creatorAggregatesReference?.ReduceOutputs.Any() == true)
+        {
+            var creatorAggregates = await session
+                .LoadAsync<JobUserAggregatesIndex.Result>(
+                    creatorAggregatesReference.ReduceOutputs.FirstOrDefault()
+                );
+
+            solved = creatorAggregates.SolvedCount;
+            created = creatorAggregates.CreatedCount;
+        }
+
+        var earnings = new EngineerEarnings {
+            PastDay = 0,
+            PastWeek = 0,
+            PastMonth = 0,
+            Lifetime = 0,
+        };
+
+        var engineer = new Engineer {
+            DisplayName = user.Display,
+            ProfileImageUrl = user.ProfileImageUrl,
+            Email = user.Email,
+            Balance = balance,
+            BountiesSolved = solved,
+            BountiesCreated = created,
+            Earnings = earnings,
+            Techologies = new Technology[0],
+            RepositoriesWorkedOn = new string[0],
+            RootOrganisation = "",
+        };
+
+        return null;
     }
 
     private async Task<object?> GetJobAsync(IResolveFieldContext context)

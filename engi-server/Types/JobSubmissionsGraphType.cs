@@ -16,7 +16,7 @@ public class JobSubmissionsGraphType : ObjectGraphType<JobSubmissionsDetails>
         Field(x => x.UserInfo, type: typeof(UserInfoGraphType))
             .Description("User info of attempter.");
 
-        Field(x => x.AttemptId)
+        Field(x => x.AttemptId, type: typeof(IdGraphType))
             .Description("Attempt id.");
 
         Field(x => x.Attempt, type: typeof(AttemptStageGraphType))

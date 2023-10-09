@@ -1,5 +1,7 @@
 version: "3.8"
 
+x-test-framework: dotnet
+
 services:
   localstack:
     image: localstack/localstack
@@ -37,6 +39,17 @@ services:
     extends:
       file: docker-compose-services.yml
       service: api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      start_interval: 5s
+    depends_on:
+      - localstack
+      - ravendb
+      - substrate
     ports:
       - "8000:8000"
     environment:
@@ -52,11 +65,21 @@ services:
     build:
       context: .
       target: test
+    command: dotnet test --filter FullyQualifiedName~Engi.Substrate.Integration --logger "trx;LogFileName=$ENGI_WORKING_DIR/dotnet_test.trx" -r .
+    depends_on:
+      api:
+        condition: service_healthy
+      setup:
+        condition: service_started
     environment:
       - WAIT_HOSTS=api:8000
       - WAIT_TIMEOUT=90
     volumes:
-      - ./integration-test-results/:/source/engi-tests/TestResults/
+      - type: volume
+        source: output
+        target: $ENGI_WORKING_DIR
 
 volumes:
-  integration-test-results:
+  output:
+    external: true
+    name: $ENGI_WORKING_VOL

@@ -53,5 +53,6 @@ up_sns_sqs_pair() {
 }
 
 up_iam
+echo "IAM up"
 up_sns_sqs_pair "graphql-engine-in-test.fifo"
 up_sns_sqs_pair "graphql-engine-out-test.fifo"

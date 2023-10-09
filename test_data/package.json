@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@polkadot/api": "^10.3.4",
+    "bn.js": "^5.2.1",
+    "ravendb": "^5.2.8"
+  }
+}

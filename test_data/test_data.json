@@ -1,0 +1,182 @@
+[
+    {
+        "id": "UserAddressReferences/5F7GV7DTZUr9p2eJZzdjd9mnzJZvjoJic4Po3pBtLzJMAPAA",
+        "doc": {
+            "Address": "5F7GV7DTZUr9p2eJZzdjd9mnzJZvjoJic4Po3pBtLzJMAPAA",
+            "UserId": "users/320-A",
+            "@metadata": {
+                "@collection": "UserAddressReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserAddressReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "UserAddressReferences/5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+        "doc": {
+            "Address": "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+            "UserId": "users/320-B",
+            "@metadata": {
+                "@collection": "UserAddressReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserAddressReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "UserAddressReferences/5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+        "doc": {
+            "Address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "UserId": "users/320-C",
+            "@metadata": {
+                "@collection": "UserAddressReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserAddressReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "users/320-A",
+        "doc": {
+            "Email": "guy@engi.network",
+            "Address": "5F7GV7DTZUr9p2eJZzdjd9mnzJZvjoJic4Po3pBtLzJMAPAA",
+            "Display": "Guy's Engi acct",
+            "ProfileImageUrl": null,
+            "FreelancerSettings": null,
+            "BusinessSettings": null,
+            "EmailSettings": {
+                "WeeklyNewsletter": false,
+                "JobAlerts": false,
+                "TechnicalUpdates": false
+            },
+            "KeypairPkcs8": null,
+            "SystemRoles": [],
+            "Tokens": [
+                {
+                    "$type": "Engi.Substrate.Identity.EmailConfirmationToken, Engi.Substrate",
+                    "Id": "4b79c1d8-54ea-46a6-9231-7319707bae0a",
+                    "Type": "EmailConfirmationToken",
+                    "Value": "bd43e3ed7c7f4fdb8954e062a2de58a2",
+                    "CreatedOn": "2023-04-11T20:36:51.9397240Z",
+                    "ExpiresOn": null
+                }
+            ],
+            "CreatedOn": "2023-04-11T20:36:51.9397268Z",
+            "EmailConfirmedOn": null,
+            "GithubEnrollments": { },
+            "@metadata": {
+                "@collection": "Users",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.User, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "users/320-B",
+        "doc": {
+            "Email": "d00d@engi.network",
+            "Address": "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+            "Display": "D00d's Engi acct",
+            "ProfileImageUrl": null,
+            "FreelancerSettings": null,
+            "BusinessSettings": null,
+            "EmailSettings": {
+                "WeeklyNewsletter": false,
+                "JobAlerts": false,
+                "TechnicalUpdates": false
+            },
+            "KeypairPkcs8": null,
+            "SystemRoles": [],
+            "Tokens": [
+                {
+                    "$type": "Engi.Substrate.Identity.EmailConfirmationToken, Engi.Substrate",
+                    "Id": "4b79c1d8-54ea-46a6-9231-7319707bae0a",
+                    "Type": "EmailConfirmationToken",
+                    "Value": "bd43e3ed7c7f4fdb8954e062a2de58a2",
+                    "CreatedOn": "2023-04-11T20:36:51.9397240Z",
+                    "ExpiresOn": null
+                }
+            ],
+            "CreatedOn": "2023-04-11T20:36:51.9397268Z",
+            "EmailConfirmedOn": null,
+            "GithubEnrollments": { },
+            "@metadata": {
+                "@collection": "Users",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.User, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "users/320-C",
+        "doc": {
+            "Email": "alice@engi.network",
+            "Address": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "Display": "Alice",
+            "ProfileImageUrl": "https://some.url.com/blehblahblah",
+            "FreelancerSettings": null,
+            "BusinessSettings": null,
+            "EmailSettings": {
+                "WeeklyNewsletter": false,
+                "JobAlerts": false,
+                "TechnicalUpdates": false
+            },
+            "KeypairPkcs8": null,
+            "SystemRoles": [],
+            "Tokens": [
+                {
+                    "$type": "Engi.Substrate.Identity.EmailConfirmationToken, Engi.Substrate",
+                    "Id": "4b79c1d8-54ea-46a6-9231-7319707bae0a",
+                    "Type": "EmailConfirmationToken",
+                    "Value": "bd43e3ed7c7f4fdb8954e062a2de58a2",
+                    "CreatedOn": "2023-04-11T20:36:51.9397240Z",
+                    "ExpiresOn": null
+                }
+            ],
+            "CreatedOn": "2023-04-11T20:36:51.9397268Z",
+            "EmailConfirmedOn": null,
+            "GithubEnrollments": { },
+            "@metadata": {
+                "@collection": "Users",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.User, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "UserEmailReferences/d00d@engi.network",
+        "doc": {
+            "Email": "d00d@engi.network",
+            "UserId": "users/320-B",
+            "@metadata": {
+                "@collection": "UserEmailReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserEmailReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "UserEmailReferences/guy@engi.network",
+        "doc": {
+            "Email": "guy@engi.network",
+            "UserId": "users/320-A",
+            "@metadata": {
+                "@collection": "UserEmailReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserEmailReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    },
+    {
+        "id": "UserEmailReferences/alice@engi.network",
+        "doc": {
+            "Email": "alice@engi.network",
+            "UserId": "users/320-C",
+            "@metadata": {
+                "@collection": "UserEmailReferences",
+                "Raven-Clr-Type": "Engi.Substrate.Identity.UserEmailReference, Engi.Substrate",
+                "@flags": "FromClusterTransaction"
+            }
+        }
+    }
+]

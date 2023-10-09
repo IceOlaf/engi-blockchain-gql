@@ -14,5 +14,5 @@ public class Engineer
     public EngineerEarnings Earnings { get; set; } = null!;
     public Technology[] Techologies { get; set; } = null!;
     public string[] RepositoriesWorkedOn { get; set; } = null!;
-    public string RootOrganisation { get; set; } = null!;
+    public string RootOrganization { get; set; } = null!;
 }

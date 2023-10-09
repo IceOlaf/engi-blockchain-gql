@@ -310,7 +310,7 @@ public class RootQuery : ObjectGraphType
             Earnings = earnings,
             Techologies = new Technology[0],
             RepositoriesWorkedOn = new string[0],
-            RootOrganisation = "",
+            RootOrganization = "",
         };
 
         return null;

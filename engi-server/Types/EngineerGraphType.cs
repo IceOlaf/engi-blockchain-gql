@@ -35,7 +35,7 @@ public class EngineerGraphType : ObjectGraphType<Engineer>
         Field(x => x.RepositoriesWorkedOn, type: typeof(ListGraphType<StringGraphType>))
             .Description("Repositories worked on.");
 
-        Field(x => x.RootOrganisation)
+        Field(x => x.RootOrganization)
             .Description("Root org this person belongs to.");
     }
 }

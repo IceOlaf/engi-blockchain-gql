@@ -11,7 +11,7 @@ public class EngineerGraphType : ObjectGraphType<Engineer>
         Field(x => x.DisplayName)
             .Description("Display name.");
 
-        Field(x => x.ProfileImageUrl)
+        Field(x => x.ProfileImageUrl, nullable: true)
             .Description("Profile image location.");
 
         Field(x => x.Email) 

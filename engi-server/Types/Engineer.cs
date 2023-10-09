@@ -6,7 +6,7 @@ namespace Engi.Substrate.Server.Types;
 public class Engineer
 {
     public string DisplayName { get; set; } = null!;
-    public string ProfileImageUrl { get; set; } = null!;
+    public string? ProfileImageUrl { get; set; } = null!;
     public string Email { get; set; } = null!;
     public BigInteger Balance { get; set; }
     public int BountiesSolved { get; set; }

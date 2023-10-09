@@ -313,7 +313,7 @@ public class RootQuery : ObjectGraphType
             RootOrganization = "",
         };
 
-        return null;
+        return engineer;
     }
 
     private async Task<object?> GetJobAsync(IResolveFieldContext context)

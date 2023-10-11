@@ -18,6 +18,8 @@ public class SolutionGraphType : ObjectGraphType<Solution>
             .Description("The address of the solution author.");
         Field(x => x.PatchUrl)
             .Description("The URL of the patch.");
+        Field(x => x.PullRequestUrl, nullable: true)
+            .Description("The URL of the PR.");
         Field(x => x.Attempt, type: typeof(AttemptGraphType))
             .Description("The attempt that resulted in this solution.");
     }

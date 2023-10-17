@@ -16,8 +16,6 @@ public class SolutionGraphType : ObjectGraphType<Solution>
             .Description("The id of the job related to this solution.");
         Field(x => x.Author, type: typeof(AddressGraphType))
             .Description("The address of the solution author.");
-        Field(x => x.Awards, nullable: true, type: typeof(ListGraphType<AwardGraphType>))
-            .Description("The awards list.");
         Field(x => x.PatchUrl)
             .Description("The URL of the patch.");
         Field(x => x.PullRequestUrl, nullable: true)

@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using System.Text;
-using System.Numerics;
 using Dasync.Collections;
 using Engi.Substrate.HealthChecks;
 using Engi.Substrate.Jobs;
@@ -287,8 +286,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                     // solutions are copies to each test so can be dupes
                     .DistinctBy(x => x!.SolutionId))
                 {
-                    solution.Awards = solutionIndexable.Awards;
-
                     var solutionSnapshot = new SolutionSnapshot(solution!, block);
 
                     // in case it was added from job.Solution
@@ -371,21 +368,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         var tests = (object[]) attempt["tests"];
 
                         ulong jobId = (ulong)solveJob["job"];
-                        var awards = new List<Award>();
-
-                        foreach (var e in extrinsic.Events)
-                        {
-                            var evt = e.Event;
-
-                            if (evt.Section == "Balances" && evt.Method == "Transfer")
-                            {
-                                var data = (Dictionary<string, string>)evt.Data;
-                                awards.Add(new Award {
-                                    Who = data["to"],
-                                    Amount = BigInteger.Parse(data["amount"])	
-                                });
-                            }
-                        }
 
                         yield return new JobIndexable
                         {
@@ -396,7 +378,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
                         {
                             JobId = jobId,
                             SolutionId = (ulong) solveJob["id"],
-                            Awards = awards.ToArray(),
                             TestIds = tests
                                 .Cast<Dictionary<string, object>>()
                                 .Select(test => Encoding.UTF8.GetString(Hex.GetBytes0X((string) test["id"])))
@@ -430,8 +411,6 @@ public class IndexingBackgroundService : SubscriptionProcessingBase<ExpandedBloc
         public ulong JobId { get; init; }
 
         public ulong SolutionId { get; init; }
-
-        public Award[] Awards { get; init; } = null!;
 
         public string[] TestIds { get; init; } = null!;
     }

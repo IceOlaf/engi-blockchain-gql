@@ -12,6 +12,7 @@ public class SolutionSnapshot : Solution, IBlockSnapshot
     {
         Id = KeyFrom(solution.SolutionId, block.Number);
         SolutionId = solution.SolutionId;
+        Awards = solution.Awards;
         JobId = solution.JobId;
         Author = solution.Author;
         PatchUrl = solution.PatchUrl;

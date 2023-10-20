@@ -176,21 +176,21 @@ public class UserMutations : ObjectGraphType
                 throw new AccessDeniedError(nameof(args.ProfileImageUrl));
             }
 
-            var s3 = CreateS3Client(awsOptions);
+            // var s3 = CreateS3Client(awsOptions);
 
-            var request = new GetObjectAttributesRequest
-            {
-                BucketName = awsOptions.BucketName,
-                Key = s3Uri.Key,
-                ObjectAttributes = new List<ObjectAttributes> { ObjectAttributes.ObjectSize }
-            };
+            // var request = new GetObjectAttributesRequest
+            // {
+            //     BucketName = awsOptions.BucketName,
+            //     Key = s3Uri.Key,
+            //     ObjectAttributes = new List<ObjectAttributes> { ObjectAttributes.ObjectSize }
+            // };
 
-            var attributes = await s3.GetObjectAttributesAsync(request);
+            // var attributes = await s3.GetObjectAttributesAsync(request);
 
-            if (attributes.ObjectSize == 0)
-            {
-                throw new ExecutionError("File has size zero.");
-            }
+            // if (attributes.ObjectSize == 0)
+            // {
+            //     throw new ExecutionError("File has size zero.");
+            // }
 
             user.ProfileImageUrl = args.ProfileImageUrl;
         }

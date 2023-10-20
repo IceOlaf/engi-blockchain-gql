@@ -178,11 +178,14 @@ public class UserMutations : ObjectGraphType
 
             var s3 = CreateS3Client(awsOptions);
 
-            var attributes = await s3.GetObjectAttributesAsync(new()
+            var request = new GetObjectAttributesRequest
             {
                 BucketName = awsOptions.BucketName,
-                Key = s3Uri.Key
-            });
+                Key = s3Uri.Key,
+                ObjectAttributes = new List<ObjectAttributes> { ObjectAttributes.ObjectSize }
+            };
+
+            var attributes = await s3.GetObjectAttributesAsync(request);
 
             if (attributes.ObjectSize == 0)
             {

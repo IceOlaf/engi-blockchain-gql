@@ -50,6 +50,13 @@ public class Job
         {
             try
             {
+                var count = Tests.Count(x => x.Id == submittedTest.Id);
+
+                if (count == 0)
+                {
+                    return false;
+                }
+
                 var test = Tests.Single(x => x.Id == submittedTest.Id);
 
                 return test.Required

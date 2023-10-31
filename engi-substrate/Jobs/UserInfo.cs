@@ -1,3 +1,4 @@
+using Engi.Substrate.Identity;
 namespace Engi.Substrate.Jobs;
 
 public class UserInfo
@@ -7,6 +8,8 @@ public class UserInfo
     public string? Display { get; set; } = null!;
 
     public string? ProfileImageUrl { get; set; }
+
+    public UserType? UserType { get; set; }
 
     public DateTime? CreatedOn { get; set; }
 

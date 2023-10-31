@@ -210,6 +210,11 @@ public class UserMutations : ObjectGraphType
             user.EmailSettings = args.EmailSettings;
         }
 
+        if (args.UserType != null)
+        {
+            user.UserType = args.UserType;
+        }
+
         try
         {
             await session.SaveChangesAsync();

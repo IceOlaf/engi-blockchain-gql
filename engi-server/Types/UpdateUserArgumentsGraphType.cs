@@ -15,6 +15,9 @@ public class UpdateUserArgumentsGraphType : InputObjectGraphType<UpdateUserArgum
         Field(x => x.ProfileImageUrl, nullable: true)
             .Description("The user's profile image URL. Must reside in the pre-approved S3 bucket.");
 
+        Field(x => x.UserType, nullable: true)
+            .Description("The user type.");
+
         Field(x => x.FreelancerSettings, nullable: true, type: typeof(UserFreelancerSettingsInputGraphType))
             .Description("The user's freelancer settings (if any).");
 

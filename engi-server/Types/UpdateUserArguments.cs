@@ -12,6 +12,8 @@ public class UpdateUserArguments
 
     public string? ProfileImageUrl { get; set; }
 
+    public UserType? UserType { get; set; }
+
     public UserFreelancerSettings? FreelancerSettings { get; set; }
 
     public UserBusinessSettings? BusinessSettings { get; set; }

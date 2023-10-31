@@ -16,6 +16,9 @@ public class UserInfoGraphType : ObjectGraphType<UserInfo>
         Field(x => x.ProfileImageUrl, nullable: true)
             .Description("The user's profile image URL, if available.");
 
+        Field(x => x.UserType, nullable: true)
+            .Description("The user's type.");
+
         Field(x => x.CreatedOn, nullable: true)
             .Description("The date when this user was created, if available.");
 

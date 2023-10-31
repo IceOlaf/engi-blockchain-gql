@@ -26,6 +26,8 @@ public class CurrentUserInfo
 
     public Address? Wallet { get; set; }
 
+    public UserType? UserType { get; set; }
+
     public static implicit operator CurrentUserInfo(User user)
     {
         return new CurrentUserInfo(user, null, null);
@@ -43,5 +45,6 @@ public class CurrentUserInfo
         GithubEnrollments = user.GithubEnrollments.Values.ToArray();
         Balance = info == null ? 0 : info.Data.Free;
         Wallet = address;
+        UserType = user.UserType;
     }
 }

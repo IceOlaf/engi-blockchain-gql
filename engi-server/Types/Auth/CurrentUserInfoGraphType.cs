@@ -35,5 +35,8 @@ public class CurrentUserInfoGraphType : ObjectGraphType<CurrentUserInfo>
 
         Field(x => x.Wallet, nullable: true, type: typeof(AddressGraphType))
             .Description("Wallet address for this user.");
+
+        Field(x => x.UserType, nullable: true)
+            .Description("Type of user (freelancer or business).");
     }
 }

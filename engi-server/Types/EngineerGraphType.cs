@@ -17,6 +17,9 @@ public class EngineerGraphType : ObjectGraphType<Engineer>
         Field(x => x.Email) 
             .Description("Contact email");
 
+        Field(x => x.UserType, nullable: true) 
+            .Description("User type");
+
         Field(x => x.Balance, type: typeof(BigIntGraphType))
             .Description("ENGI balance.");
 

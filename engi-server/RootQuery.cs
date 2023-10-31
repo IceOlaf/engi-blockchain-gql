@@ -304,6 +304,7 @@ public class RootQuery : ObjectGraphType
             DisplayName = user.Display,
             ProfileImageUrl = user.ProfileImageUrl,
             Email = user.Email,
+            UserType = user.UserType,
             Balance = balance,
             BountiesSolved = solved,
             BountiesCreated = created,

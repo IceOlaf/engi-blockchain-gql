@@ -34,6 +34,10 @@ public class GithubMutations : ObjectGraphType
 
         long installationId = long.Parse(args.InstallationId);
 
+        var logger = loggerFactory.CreateLogger<GithubMutations>();
+
+        logger.LogInformation($"Enrolling installation {installationId}");
+
         var octokitFactory = scope.ServiceProvider.GetRequiredService<GithubClientFactory>();
 
         Installation installation;
@@ -49,8 +53,6 @@ public class GithubMutations : ObjectGraphType
         }
         catch (Exception ex)
         {
-            var logger = loggerFactory.CreateLogger<GithubMutations>();
-
             logger.LogError(ex, "Enrollment could not be verified.");
 
             throw new AuthenticationError();
@@ -59,6 +61,9 @@ public class GithubMutations : ObjectGraphType
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
 
         var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        var displayName = user.Display;
+        logger.LogInformation($"User is {displayName}");
 
         IReadOnlyList<Octokit.Repository> repositories;
 
@@ -92,6 +97,11 @@ public class GithubMutations : ObjectGraphType
                 })
                 .ToList()
         };
+
+        if (enrollment == null)
+        {
+            logger.LogInformation("Enrollment is null");
+        }
 
         session.Advanced.Defer(
             new PatchCommandData(

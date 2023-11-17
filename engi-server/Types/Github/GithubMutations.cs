@@ -103,6 +103,8 @@ public class GithubMutations : ObjectGraphType
             logger.LogInformation("Enrollment is null");
         }
 
+        session.Advanced.Clear();
+
         session.Advanced.Defer(
             new PatchCommandData(
                 user.Id, null, new UpdateGithubEnrollmentPatchRequest(enrollment)));

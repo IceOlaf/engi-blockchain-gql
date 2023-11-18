@@ -508,7 +508,7 @@ public class RootQuery : ObjectGraphType
 
         return new JobsQueryResult
         {
-            Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.LongTotalResults),
+            Result = new PagedResult<Job>(resultsLazy.Value.Result, stats.TotalResults),
             Suggestions = suggestionsLazy?.Value.Result.Values.First().Suggestions.ToArray(),
             Facets = new()
             {

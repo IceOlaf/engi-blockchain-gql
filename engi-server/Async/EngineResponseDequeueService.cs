@@ -134,7 +134,7 @@ public class EngineResponseDequeueService : BackgroundService
                             throw new InvalidOperationException("Engine returned non-zero return code, not sure how to proceed.");
                         }
 
-                        var rawResult = JsonSerializer.Deserialize<JsonElement>(executionResult.Stdout);
+                        var rawResult = JsonSerializer.Deserialize<JsonElement>(executionResult.Stdout!);
                         var attempt = rawResult.GetProperty("attempt");
 
                         await session.StoreAsync(new SolveJobCommand
@@ -196,7 +196,7 @@ public class EngineResponseDequeueService : BackgroundService
         {
             try
             {
-                var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout);
+                var result = EngineJson.Deserialize<EngineAnalysisResult>(executionResult.Stdout!);
 
                 analysis.Technologies = result.Technologies;
                 analysis.Files = result.Files;

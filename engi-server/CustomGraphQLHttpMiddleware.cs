@@ -48,7 +48,7 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
         var userData = context.Session.GetString(SessionKey);
         if (userData != null)
         {
-            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData);
+            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData)!;
 
             var principal = new ClaimsPrincipal();
             var identity = new ClaimsIdentity();

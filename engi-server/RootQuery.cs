@@ -662,10 +662,9 @@ public class RootQuery : ObjectGraphType
         var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
         var user = await session.LoadAsync<User>(addressReference.UserId);
         var creatorAggregates = await session
-                .Query<JobUserAggregatesIndex.Result>()
-                .Where(x => x.UserId == addressReference.UserId)
-                .FirstOrDefaultAsync();
-
+            .Query<JobUserAggregatesIndex.Result>()
+            .ProjectInto<JobUserAggregatesIndex.Result>()
+            .FirstOrDefaultAsync(x => x.UserId == addressReference.UserId);
 
         UserInfo userInfo = new ()
         {

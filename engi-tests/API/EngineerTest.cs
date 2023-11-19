@@ -87,7 +87,6 @@ public class EngineerTest
 
         var query = JsonConvert.DeserializeObject<EngineerQuery>(queryjson);
         var content = JsonContent.Create(query);
-        content.Headers.ContentType.MediaType = "application/json";
 
         var response = await http.PostAsync("http://api:8000/api/graphql", content);
 

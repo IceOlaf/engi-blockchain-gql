@@ -350,7 +350,7 @@ public class RootQuery : ObjectGraphType
                 List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
                 foreach (var id in job.AttemptIds)
                 {
-                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+                    var submission = await GetJobSubmissionsDetailsAsync(id, userAddress, session);
 
                     if (submission != null)
                     {
@@ -482,7 +482,7 @@ public class RootQuery : ObjectGraphType
 
                 foreach (var id in job.AttemptIds)
                 {
-                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+                    var submission = await GetJobSubmissionsDetailsAsync(id, userAddress, session);
 
                     if (submission != null)
                     {
@@ -597,9 +597,11 @@ public class RootQuery : ObjectGraphType
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        ulong id = context.GetArgument<ulong>("id");
+        ulong attemptId = context.GetArgument<ulong>("id");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        string id = JobAttemptedSnapshot.KeyFrom(attemptId);
 
         return await GetJobSubmissionsDetailsAsync(id, null, session);
     }
@@ -630,7 +632,8 @@ public class RootQuery : ObjectGraphType
             List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
             foreach (var id in job.AttemptIds)
             {
-                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), null, session);
+                var submission = await GetJobSubmissionsDetailsAsync(id, null, session);
+
                 if (submission != null)
                 {
                     submissions.Add(submission);
@@ -642,23 +645,21 @@ public class RootQuery : ObjectGraphType
         return new PagedResult<JobSubmissionsDetails>(new JobSubmissionsDetails[] {}, 0);
     }
 
-    private async Task<JobSubmissionsDetails?> GetJobSubmissionsDetailsAsync(ulong id, Address? filterAddress, IAsyncDocumentSession session)
+    private async Task<JobSubmissionsDetails?> GetJobSubmissionsDetailsAsync(string attemptId, Address? filterAddress, IAsyncDocumentSession session)
     {
-        var attemptId = JobAttemptedSnapshot.KeyFrom(id);
+        var attempt = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
 
-        var query = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
-
-        if (query == null)
+        if (attempt == null)
         {
             return null;
         }
 
-        if (filterAddress != null && filterAddress != query.Attempter)
+        if (filterAddress != null && filterAddress != attempt.Attempter)
         {
             return null;
         }
 
-        var addressKey = UserAddressReference.KeyFrom(query.Attempter);
+        var addressKey = UserAddressReference.KeyFrom(attempt.Attempter);
         var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
         var user = await session.LoadAsync<User>(addressReference.UserId);
         var creatorAggregates = await session
@@ -668,16 +669,16 @@ public class RootQuery : ObjectGraphType
 
         UserInfo userInfo = new ()
         {
-            Address = query.Attempter,
+            Address = attempt.Attempter,
             Display = user.Display,
             ProfileImageUrl = user.ProfileImageUrl,
             CreatedOn = user.CreatedOn,
             CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
             SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
         };
-        var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
+        var submission = new JobSubmissionsDetails(userInfo, attempt.AttemptId, attempt.SnapshotOn.DateTime);
 
-        var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
+        var commandRequestId = QueueEngineRequestCommand.KeyFrom(attempt.AttemptId);
         var engineCmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
 
         if (engineCmd == null)

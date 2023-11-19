@@ -91,7 +91,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Repository_Organization = null,
                  SolvedBy = new string[0],
                  SolutionIds = new string[0],
-                 AttemptIds = new string[] { Convert.ToString(attempt.AttemptId) },
+                 AttemptIds = new[] { attempt.Id },
                  Status = JobStatus.None,
                  Complexity = null
              });
@@ -119,7 +119,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Repository_FullName = null,
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
-                  SolutionIds = new [] { solution.Id },
+                  SolutionIds = new[] { solution.Id },
                   AttemptIds = new string[0],
                   Status = JobStatus.None,
                   Complexity = null

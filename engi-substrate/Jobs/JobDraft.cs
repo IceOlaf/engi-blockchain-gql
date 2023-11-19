@@ -1,6 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
-
 namespace Engi.Substrate.Jobs;
 
 public class JobDraft : IDispatched

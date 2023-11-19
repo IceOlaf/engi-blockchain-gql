@@ -1,7 +1,5 @@
 using Engi.Substrate.Github;
 using Engi.Substrate.Identity;
-using Engi.Substrate.Jobs;
-using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;

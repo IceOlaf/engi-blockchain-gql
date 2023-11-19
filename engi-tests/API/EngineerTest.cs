@@ -1,6 +1,4 @@
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -8,7 +6,6 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Engi.Substrate.Integration.EngineerTest;
 

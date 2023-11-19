@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Engi.Substrate.Identity;
-
 namespace Engi.Substrate.Server.Types;
 
 public class ListDraftsArguments

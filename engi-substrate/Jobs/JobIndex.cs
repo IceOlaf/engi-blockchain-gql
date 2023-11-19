@@ -23,8 +23,6 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
         public string[] SolutionIds { get; set; } = null!;
 
         public string[] AttemptIds { get; set; } = null!;
-
-        public RepositoryComplexity? Complexity { get; set; }
     }
 
     public JobIndex()

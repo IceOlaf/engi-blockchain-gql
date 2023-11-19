@@ -143,6 +143,7 @@ public class GithubQuery : ObjectGraphType
         if (commits == null)
         {
             logger.LogInformation($"No matching enrollment for {repoOwner} {repoName}, trying as public repo.");
+
             // try as a public repo
 
             var octokit = octokitFactory.CreateAnonymous();
@@ -166,7 +167,10 @@ public class GithubQuery : ObjectGraphType
 
         if (commits == null)
         {
-            logger.LogInformation($"Commits is still null for {repoOwner} {repoName}.");
+            throw new ExecutionError($"Failed to fetch commits for {repoOwner} {repoName}; no matching enrollment found and anonymous access failed.")
+            {
+                Code = "NOT_FOUND"
+            };
         }
 
         return commits

@@ -96,11 +96,6 @@ public class GithubMutations : ObjectGraphType
                 .ToList()
         };
 
-        if (enrollment == null)
-        {
-            logger.LogInformation("Enrollment is null");
-        }
-
         session.Advanced.Clear();
 
         session.Advanced.Defer(

@@ -39,9 +39,9 @@ public class RepositoryAnalysis : IDispatched
     [Newtonsoft.Json.JsonIgnore]
     public string DirectoryEntries {
         get {
-            if (this.Files != null)
+            if (Files != null)
             {
-                var result = DirectoryEntry.DirectoryEntries(this.Files);
+                var result = DirectoryEntry.DirectoryEntries(Files);
                 return JsonSerializer.Serialize(result);
             }
             else

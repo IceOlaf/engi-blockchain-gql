@@ -648,11 +648,13 @@ public class RootQuery : ObjectGraphType
 
         var query = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
 
-        if (query == null) {
+        if (query == null)
+        {
             return null;
         }
 
-        if (filterAddress != null && filterAddress != query.Attempter) {
+        if (filterAddress != null && filterAddress != query.Attempter)
+        {
             return null;
         }
 
@@ -665,7 +667,8 @@ public class RootQuery : ObjectGraphType
                 .FirstOrDefaultAsync();
 
 
-        UserInfo userInfo = new () {
+        UserInfo userInfo = new ()
+        {
             Address = query.Attempter,
             Display = user.Display,
             ProfileImageUrl = user.ProfileImageUrl,
@@ -676,16 +679,15 @@ public class RootQuery : ObjectGraphType
         var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
 
         var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
-        var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
+        var engineCmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
 
-        if (engine_cmd == null) {
+        if (engineCmd == null)
+        {
             return submission;
         }
 
-        var attempt = new AttemptStage { };
-
         submission.Status = SubmissionStatus.EngineAttempting;
-        submission.Attempt = new AttemptStage { };
+        submission.Attempt = new AttemptStage();
 
         var commandResponseId = EngineCommandResponse.KeyFrom(attemptId);;
         var engineResponse = await session.LoadAsync<EngineCommandResponse>(commandResponseId);
@@ -713,35 +715,25 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
-
-        var solve = new SolveStage { };
-
-        submission.Solve = solve;
+        submission.Solve = new SolveStage();
 
         var solveCommandId = SolveJobCommand.KeyFrom(attemptId);
         var solveCommand = await session.LoadAsync<SolveJobCommand>(solveCommandId);
 
-        if (solveCommand == null || solveCommand.ResultHash == null)
+        if (solveCommand?.ResultHash == null)
         {
             return submission;
         }
 
         submission.Status = SubmissionStatus.SolvedOnChain;
 
-        var result = new SolutionResult {
+        var result = new SolutionResult
+        {
             SolutionId = solveCommand.SolutionId,
             ResultHash = solveCommand.ResultHash
         };
 
-        if (solveCommand.SolutionId == null)
-        {
-            submission.Solve.Status = StageStatus.Failed;
-        }
-        else
-        {
-            submission.Solve.Status = StageStatus.Passed;
-        }
-
+        submission.Solve.Status = solveCommand.SolutionId == null ? StageStatus.Failed : StageStatus.Passed;
         submission.Solve.Results = result;
 
         return submission;

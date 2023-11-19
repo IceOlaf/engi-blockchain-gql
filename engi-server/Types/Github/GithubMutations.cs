@@ -63,7 +63,7 @@ public class GithubMutations : ObjectGraphType
         var displayName = user.Display;
         logger.LogInformation($"User is {displayName}");
 
-        IReadOnlyList<Octokit.Repository> repositories;
+        IReadOnlyList<Repository> repositories;
 
         if (installation.TargetType.Value == AccountType.User)
         {

@@ -100,7 +100,7 @@ public class WebhooksController : ControllerBase
 
                 await session.StoreAsync(@event, null, @event.Id);
             }
-            else if ((action == "removed") || (action == "added"))
+            else if (action == "removed" || action == "added")
             {
                 var payload = octokitSerializer.Deserialize<GithubAppInstallationRepositoriesChangedPayload>(json.ToString());
 

@@ -115,7 +115,7 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
                 {
                     context.Session.SetString(SessionKey, loginResult.SessionToken);
                 }
-                else if (childNode.SubFields![0].Result is LogoutResult logoutResult)
+                else if (childNode.SubFields![0].Result is LogoutResult)
                 {
                     context.Session.Remove(SessionKey);
                 }

@@ -52,7 +52,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                     snapshot.JobId.ToString().TrimStart('0'),
                     snapshot.Name,
                     repositoryFullName,
-                    String.Join(",", snapshot.Technologies.Select(p=>p.ToString()).ToArray()),
+                    string.Join(",", snapshot.Technologies.Select(p=>p.ToString()).ToArray()),
                     readme.Content
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
@@ -188,7 +188,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
                 AttemptIds = g.SelectMany(x => x.AttemptIds).Distinct().ToArray(),
                 Status = CalculateStatus(latest.Solution, attemptCount),
-                Complexity = (analysis != null) ? analysis.Complexity : latest.Complexity
+                Complexity = analysis != null ? analysis.Complexity : latest.Complexity
             };
 
         Index(x => x.Technologies, FieldIndexing.Search);

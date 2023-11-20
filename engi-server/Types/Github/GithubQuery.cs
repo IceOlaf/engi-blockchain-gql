@@ -41,6 +41,60 @@ public class GithubQuery : ObjectGraphType
             .Argument<NonNullGraphType<StringGraphType>>("repositoryUrl")
             .ResolveAsync(GetAuthorizationForRepositoryAsync)
             .AuthorizeWithPolicy(PolicyNames.Sudo);
+
+        Field<StringGraphType>("patchfile")
+            .Description("Return the patchfile for the specified repositories.")
+            .Argument<NonNullGraphType<PatchFileRequestArgumentsGraphType>>("args")
+            .ResolveAsync(GetPatchFile)
+            .AuthorizeWithPolicy(PolicyNames.Authenticated);
+    }
+
+    private async Task<object?> GetPatchFile(IResolveFieldContext<object?> context)
+    {
+        var args = context.GetArgument<PatchFileRequestArguments>("args");
+
+        await using var scope = context.RequestServices!.CreateAsyncScope();
+
+        using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        var (baseRepoOwner, baseRepoName) = ParseOrThrowRepositoryUrl(args.BaseRepositoryUrl);
+        var (forkRepoOwner, forkRepoName) = ParseOrThrowRepositoryUrl(args.ForkRepositoryUrl);
+
+        var octokitFactory =
+            scope.ServiceProvider.GetRequiredService<GithubClientFactory>();
+        var http = scope.ServiceProvider.GetRequiredService<HttpClient>();
+
+        var user = await session.LoadAsync<User>(context.User!.Identity!.Name);
+
+        string response = null;
+
+        if (user.GithubEnrollments.Any())
+        {
+            var (matchingEnrollment, matchingRepo) = user.GithubEnrollments.Find(forkRepoOwner, forkRepoName);
+
+            if (matchingEnrollment != null)
+            {
+                var octokit = await octokitFactory.CreateForAsync(matchingEnrollment.InstallationId);
+
+                string @base = $"{baseRepoOwner}:{args.BaseRepositoryCommit}";
+                string head = $"{forkRepoOwner}:{args.ForkRepositoryCommit}";
+
+                var compare_result = await octokit.Repository.Commit.Compare(baseRepoOwner, baseRepoName, @base, head);
+
+                var gist = new NewGist();
+                var now = DateTime.UtcNow;
+                string filename = $"{@base}-{head}-{now}";
+                string content = http.GetStringAsync(compare_result.PatchUrl).Result;
+
+                gist.Files[filename] = content;
+
+                var newGist = await octokit.Gist.Create(gist);
+
+                response = newGist.Url;
+            }
+        }
+
+        return response;
     }
 
     private async Task<object?> GetBranchesAsync(IResolveFieldContext<object?> context)

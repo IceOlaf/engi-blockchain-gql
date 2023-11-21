@@ -12,7 +12,7 @@ public class JobAggregateIndex : AbstractIndexCreationTask<Job, JobAggregateInde
 
         public string TotalAmountFunded { get; set; } = null!;
 
-        public Technology[] Technologies { get; set; } = Array.Empty<Technology>();
+        public IEnumerable<Technology> Technologies { get; set; } = null!;
 
         public int TechnologyCount { get; set; }
     }
@@ -34,7 +34,7 @@ public class JobAggregateIndex : AbstractIndexCreationTask<Job, JobAggregateInde
             {
                 ActiveJobCount = g.Sum(x => x.ActiveJobCount),
                 TechnologyCount = g.Select(x => x.Technologies).Distinct().Count(),
-                Technologies = new Technology[] { Technology.CSharp },
+                Technologies = g.SelectMany(x => x.Technologies).Distinct(),
                 TotalAmountFunded = Sum(g.Select(x => x.TotalAmountFunded))
             };
 

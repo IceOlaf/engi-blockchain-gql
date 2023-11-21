@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Reactive.Linq;
-using System.Reactive.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -335,7 +334,7 @@ public static class Program
             RepositoryUrl = "https://github.com/georgiosd/engi-test",
             BranchName = "main",
             CommitHash = "808ef04c00362c9d3b7800909fbe0e7672ac86ae",
-            Technologies = new Technology[] { Technology.CSharp },
+            Technologies = new[] { Technology.CSharp },
             Name = "README job",
             Tests = Enumerable.Range(0, numberOfTests)
                 .Select(offset => new Test

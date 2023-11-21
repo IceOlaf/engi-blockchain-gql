@@ -10,7 +10,7 @@ public class DirectoryEntry
 
     public static string FileType(string path)
     {
-        if (System.IO.Path.HasExtension(path))
+        if (Path.HasExtension(path))
         {
             return "file";
         }
@@ -20,16 +20,9 @@ public class DirectoryEntry
         }
     }
 
-    public static string FileExtension(string path)
+    public static string? FileExtension(string path)
     {
-        if (System.IO.Path.HasExtension(path))
-        {
-            return System.IO.Path.GetExtension(path);
-        }
-        else
-        {
-            return null;
-        }
+        return Path.HasExtension(path) ? Path.GetExtension(path) : null;
     }
 
     public static List<DirectoryEntry> DirectoryEntries(string[] files)

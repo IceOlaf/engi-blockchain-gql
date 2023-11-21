@@ -1,7 +1,5 @@
 using Engi.Substrate.Github;
 using Engi.Substrate.Identity;
-using Engi.Substrate.Jobs;
-using Engi.Substrate.Server.Async;
 using Engi.Substrate.Server.Github;
 using Engi.Substrate.Server.Types.Authentication;
 using GraphQL;
@@ -65,7 +63,7 @@ public class GithubMutations : ObjectGraphType
         var displayName = user.Display;
         logger.LogInformation($"User is {displayName}");
 
-        IReadOnlyList<Octokit.Repository> repositories;
+        IReadOnlyList<Repository> repositories;
 
         if (installation.TargetType.Value == AccountType.User)
         {
@@ -97,11 +95,6 @@ public class GithubMutations : ObjectGraphType
                 })
                 .ToList()
         };
-
-        if (enrollment == null)
-        {
-            logger.LogInformation("Enrollment is null");
-        }
 
         session.Advanced.Clear();
 

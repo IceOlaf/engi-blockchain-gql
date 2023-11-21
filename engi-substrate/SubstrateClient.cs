@@ -109,7 +109,7 @@ public class SubstrateClient
             }
             else if (code == 1010)
             {
-                var args = String.Join(", ", @params);
+                var args = string.Join(", ", @params);
                 throw new InvalidOperationException($"{method} had a bad signature: args={args}");
             }
 

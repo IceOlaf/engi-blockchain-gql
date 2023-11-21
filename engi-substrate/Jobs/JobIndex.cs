@@ -23,8 +23,6 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
         public string[] SolutionIds { get; set; } = null!;
 
         public string[] AttemptIds { get; set; } = null!;
-
-        public RepositoryComplexity? Complexity { get; set; }
     }
 
     public JobIndex()
@@ -52,7 +50,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                     snapshot.JobId.ToString().TrimStart('0'),
                     snapshot.Name,
                     repositoryFullName,
-                    String.Join(",", snapshot.Technologies.Select(p=>p.ToString()).ToArray()),
+                    string.Join(",", snapshot.Technologies.Select(p=>p.ToString()).ToArray()),
                     readme.Content
                 },
                 CreatedOn_DateTime = snapshot.IsCreation ? snapshot.SnapshotOn.DateTime : null,
@@ -74,7 +72,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Creator = null!,
                  Funding = null!,
                  Repository = null!,
-                 Technologies = new Technology[] { Technology.CSharp },
+                 Technologies = new Technology[0],
                  Name = null!,
                  Tests = null!,
                  Requirements = null!,
@@ -91,7 +89,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                  Repository_Organization = null,
                  SolvedBy = new string[0],
                  SolutionIds = new string[0],
-                 AttemptIds = new string[] { Convert.ToString(attempt.AttemptId) },
+                 AttemptIds = new[] { attempt.Id },
                  Status = JobStatus.None,
                  Complexity = null
              });
@@ -103,7 +101,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Creator = null!,
                   Funding = null!,
                   Repository = null!,
-                  Technologies = new Technology[] { Technology.CSharp },
+                  Technologies = new Technology[0],
                   Name = null!,
                   Tests = null!,
                   Requirements = null!,
@@ -119,7 +117,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                   Repository_FullName = null,
                   Repository_Organization = null,
                   SolvedBy = new [] { (string)(object)solution.Author },
-                  SolutionIds = new [] { solution.Id },
+                  SolutionIds = new[] { solution.Id },
                   AttemptIds = new string[0],
                   Status = JobStatus.None,
                   Complexity = null
@@ -188,7 +186,7 @@ public class JobIndex : AbstractMultiMapIndexCreationTask<JobIndex.Result>
                 SolutionIds = g.SelectMany(x => x.SolutionIds).Distinct().ToArray(),
                 AttemptIds = g.SelectMany(x => x.AttemptIds).Distinct().ToArray(),
                 Status = CalculateStatus(latest.Solution, attemptCount),
-                Complexity = (analysis != null) ? analysis.Complexity : latest.Complexity
+                Complexity = analysis != null ? analysis.Complexity : latest.Complexity
             };
 
         Index(x => x.Technologies, FieldIndexing.Search);

@@ -48,7 +48,7 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
         var userData = context.Session.GetString(SessionKey);
         if (userData != null)
         {
-            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData);
+            var sessionInfo = JsonSerializer.Deserialize<SessionInfo>(userData)!;
 
             var principal = new ClaimsPrincipal();
             var identity = new ClaimsIdentity();
@@ -115,7 +115,7 @@ public class CustomGraphQLHttpMiddleware : GraphQLHttpMiddleware<RootSchema>
                 {
                     context.Session.SetString(SessionKey, loginResult.SessionToken);
                 }
-                else if (childNode.SubFields![0].Result is LogoutResult logoutResult)
+                else if (childNode.SubFields![0].Result is LogoutResult)
                 {
                     context.Session.Remove(SessionKey);
                 }

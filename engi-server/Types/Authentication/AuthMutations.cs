@@ -1,13 +1,9 @@
 using System.Text.Json;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Authentication;
-using System.Security.Claims;
 using Engi.Substrate.Identity;
 using Engi.Substrate.Server.Email;
 using GraphQL;
 using GraphQL.Types;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using Raven.Client.Exceptions;

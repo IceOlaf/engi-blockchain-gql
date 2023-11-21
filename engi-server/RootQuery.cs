@@ -350,7 +350,7 @@ public class RootQuery : ObjectGraphType
                 List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
                 foreach (var id in job.AttemptIds)
                 {
-                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+                    var submission = await GetJobSubmissionsDetailsAsync(id, userAddress, session);
 
                     if (submission != null)
                     {
@@ -482,7 +482,7 @@ public class RootQuery : ObjectGraphType
 
                 foreach (var id in job.AttemptIds)
                 {
-                    var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), userAddress, session);
+                    var submission = await GetJobSubmissionsDetailsAsync(id, userAddress, session);
 
                     if (submission != null)
                     {
@@ -597,9 +597,11 @@ public class RootQuery : ObjectGraphType
     {
         await using var scope = context.RequestServices!.CreateAsyncScope();
 
-        ulong id = context.GetArgument<ulong>("id");
+        ulong attemptId = context.GetArgument<ulong>("id");
 
         using var session = scope.ServiceProvider.GetRequiredService<IAsyncDocumentSession>();
+
+        string id = JobAttemptedSnapshot.KeyFrom(attemptId);
 
         return await GetJobSubmissionsDetailsAsync(id, null, session);
     }
@@ -630,7 +632,8 @@ public class RootQuery : ObjectGraphType
             List<JobSubmissionsDetails> submissions = new List<JobSubmissionsDetails>();
             foreach (var id in job.AttemptIds)
             {
-                var submission = await GetJobSubmissionsDetailsAsync(Convert.ToUInt64(id, 10), null, session);
+                var submission = await GetJobSubmissionsDetailsAsync(id, null, session);
+
                 if (submission != null)
                 {
                     submissions.Add(submission);
@@ -642,50 +645,49 @@ public class RootQuery : ObjectGraphType
         return new PagedResult<JobSubmissionsDetails>(new JobSubmissionsDetails[] {}, 0);
     }
 
-    private async Task<JobSubmissionsDetails?> GetJobSubmissionsDetailsAsync(ulong id, Address? filterAddress, IAsyncDocumentSession session)
+    private async Task<JobSubmissionsDetails?> GetJobSubmissionsDetailsAsync(string attemptId, Address? filterAddress, IAsyncDocumentSession session)
     {
-        var attemptId = JobAttemptedSnapshot.KeyFrom(id);
+        var attempt = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
 
-        var query = await session.LoadAsync<JobAttemptedSnapshot>(attemptId);
-
-        if (query == null) {
+        if (attempt == null)
+        {
             return null;
         }
 
-        if (filterAddress != null && filterAddress != query.Attempter) {
+        if (filterAddress != null && filterAddress != attempt.Attempter)
+        {
             return null;
         }
 
-        var addressKey = UserAddressReference.KeyFrom(query.Attempter);
+        var addressKey = UserAddressReference.KeyFrom(attempt.Attempter);
         var addressReference = await session.LoadAsync<UserAddressReference>(addressKey);
         var user = await session.LoadAsync<User>(addressReference.UserId);
         var creatorAggregates = await session
-                .Query<JobUserAggregatesIndex.Result>()
-                .Where(x => x.UserId == addressReference.UserId)
-                .FirstOrDefaultAsync();
+            .Query<JobUserAggregatesIndex.Result>()
+            .ProjectInto<JobUserAggregatesIndex.Result>()
+            .FirstOrDefaultAsync(x => x.UserId == addressReference.UserId);
 
-
-        UserInfo userInfo = new () {
-            Address = query.Attempter,
+        UserInfo userInfo = new ()
+        {
+            Address = attempt.Attempter,
             Display = user.Display,
             ProfileImageUrl = user.ProfileImageUrl,
             CreatedOn = user.CreatedOn,
             CreatedJobsCount = creatorAggregates?.CreatedCount ?? 0,
             SolvedJobsCount = creatorAggregates?.SolvedCount ?? 0
         };
-        var submission = new JobSubmissionsDetails(userInfo, id, query.SnapshotOn.DateTime);
+        var submission = new JobSubmissionsDetails(userInfo, attempt.AttemptId, attempt.SnapshotOn.DateTime);
 
-        var commandRequestId = QueueEngineRequestCommand.KeyFrom(id);
-        var engine_cmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
+        var commandRequestId = QueueEngineRequestCommand.KeyFrom(attempt.AttemptId);
+        var engineCmd = await session.LoadAsync<QueueEngineRequestCommand>(commandRequestId);
 
-        if (engine_cmd == null) {
+        if (engineCmd == null)
+        {
             return submission;
         }
 
-        var attempt = new AttemptStage { };
-
         submission.Status = SubmissionStatus.EngineAttempting;
-        submission.Attempt = new AttemptStage { };
+        submission.Attempt = new AttemptStage();
 
         var commandResponseId = EngineCommandResponse.KeyFrom(attemptId);;
         var engineResponse = await session.LoadAsync<EngineCommandResponse>(commandResponseId);
@@ -695,7 +697,7 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
-        var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout);
+        var rawResult = JsonSerializer.Deserialize<JsonElement>(engineResponse.ExecutionResult.Stdout!);
         var attemptJson = rawResult.GetProperty("attempt");
         var testAttempts = EngineJson.Deserialize<EngineAttemptResult>(attemptJson).Tests;
 
@@ -713,35 +715,25 @@ public class RootQuery : ObjectGraphType
             return submission;
         }
 
-
-        var solve = new SolveStage { };
-
-        submission.Solve = solve;
+        submission.Solve = new SolveStage();
 
         var solveCommandId = SolveJobCommand.KeyFrom(attemptId);
         var solveCommand = await session.LoadAsync<SolveJobCommand>(solveCommandId);
 
-        if (solveCommand == null || solveCommand.ResultHash == null)
+        if (solveCommand?.ResultHash == null)
         {
             return submission;
         }
 
         submission.Status = SubmissionStatus.SolvedOnChain;
 
-        var result = new SolutionResult {
+        var result = new SolutionResult
+        {
             SolutionId = solveCommand.SolutionId,
             ResultHash = solveCommand.ResultHash
         };
 
-        if (solveCommand.SolutionId == null)
-        {
-            submission.Solve.Status = StageStatus.Failed;
-        }
-        else
-        {
-            submission.Solve.Status = StageStatus.Passed;
-        }
-
+        submission.Solve.Status = solveCommand.SolutionId == null ? StageStatus.Failed : StageStatus.Passed;
         submission.Solve.Results = result;
 
         return submission;

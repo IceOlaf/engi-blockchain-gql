@@ -4,5 +4,5 @@ namespace Engi.Substrate.Server.Types.Authentication;
 
 public class GraphQLUserContext : Dictionary<string, object?>
 {
-    public ClaimsPrincipal User { get; set; }
+    public ClaimsPrincipal User { get; set; } = null!;
 }

@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Engi.Substrate.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 

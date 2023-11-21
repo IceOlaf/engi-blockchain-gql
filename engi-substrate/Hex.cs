@@ -221,8 +221,8 @@ public static class Hex
             {
                 byte upper = pData[i];
                 byte lower = pData[i + 1];
-                int upperNibble = ((upper & 0xF) + (upper >> 6) | ((upper >> 3) & 0x8));
-                int lowerNibble = ((lower & 0xF) + (lower >> 6) | ((lower >> 3) & 0x8));
+                int upperNibble = (upper & 0xF) + (upper >> 6) | ((upper >> 3) & 0x8);
+                int lowerNibble = (lower & 0xF) + (lower >> 6) | ((lower >> 3) & 0x8);
                 pResultBuffer[j] = (byte)((upperNibble << 4) | lowerNibble);
             }
         }
